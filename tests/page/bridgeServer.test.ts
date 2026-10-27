@@ -1,0 +1,84 @@
+import { BridgeServer, type Handlers } from "../../src/page/bridgeServer";
+
+function event(
+  data: unknown,
+  origin = "https://www.instagram.com",
+  withPort = true,
+) {
+  const port = { postMessage: vi.fn() };
+  return {
+    port,
+    event: {
+      data,
+      origin,
+      ports: withPort ? [port] : [],
+    } as unknown as MessageEvent,
+  };
+}
+
+const handlers = {
+  viewer: () => Promise.resolve({ id: "1", username: "me" }),
+  media: () => Promise.reject(new Error("broken")),
+  account: () => Promise.reject(new Error("x")),
+  // Instagram's code can reject with things that are not Errors.
+  // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
+  postsPage: () => Promise.reject("plain string"),
+} as unknown as Handlers;
+
+describe("BridgeServer", () => {
+  const server = new BridgeServer(handlers);
+
+  it("answers a request on its port", async () => {
+    const { port, event: e } = event({ igdlProcedure: "viewer", input: {} });
+    await server.handle(e);
+    expect(port.postMessage).toHaveBeenCalledWith({
+      ok: true,
+      value: { id: "1", username: "me" },
+    });
+  });
+
+  it("reports failures as messages", async () => {
+    const failed = event({ igdlProcedure: "media", input: {} });
+    await server.handle(failed.event);
+    expect(failed.port.postMessage).toHaveBeenCalledWith({
+      ok: false,
+      error: "broken",
+    });
+    const thrown = event({ igdlProcedure: "postsPage", input: {} });
+    await server.handle(thrown.event);
+    expect(thrown.port.postMessage).toHaveBeenCalledWith({
+      ok: false,
+      error: "plain string",
+    });
+    const unknown = event({ igdlProcedure: "nothing", input: {} });
+    await server.handle(unknown.event);
+    expect(unknown.port.postMessage).toHaveBeenCalledWith({
+      ok: false,
+      error: "Unknown request",
+    });
+  });
+
+  it("ignores other origins, port-less messages and unrelated data", async () => {
+    for (const { port, event: e } of [
+      event({ igdlProcedure: "viewer" }, "https://evil.example"),
+      event({ igdlProcedure: "viewer" }, undefined, false),
+      event({ hello: true }),
+    ]) {
+      await server.handle(e);
+      expect(port.postMessage).not.toHaveBeenCalled();
+    }
+  });
+
+  it("listens for window messages", async () => {
+    const target = { addEventListener: vi.fn() };
+    server.listen(target);
+    const listener = target.addEventListener.mock.calls[0]?.[1] as (
+      e: MessageEvent,
+    ) => void;
+    const { port, event: e } = event({ igdlProcedure: "viewer", input: {} });
+    listener(e);
+    await vi.waitFor(() => {
+      expect(port.postMessage).toHaveBeenCalled();
+    });
+  });
+});
