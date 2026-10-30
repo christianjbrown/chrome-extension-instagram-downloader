@@ -1,5 +1,5 @@
 {
-  "name": "instagram-downloader-chrome-extension",
+  "name": "chrome-extension-instagram-downloader",
   "version": "1.0.0",
   "private": true,
   "description": "Chrome extension that downloads photos, videos, stories and whole accounts from Instagram.",

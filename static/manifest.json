@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Instagram Downloader Chrome Extension",
+  "name": "Christian's Instagram Downloader",
   "version": "1.0.0",
   "description": "Download photos, videos, stories and whole accounts from Instagram.",
   "icons": {
