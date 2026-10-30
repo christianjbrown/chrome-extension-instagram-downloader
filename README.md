@@ -1,6 +1,6 @@
 # Instagram Downloader Chrome Extension 📸
 
-![Logo](assets/logo.svg)
+![Logo](assets/icons/icon.svg)
 
 Ever wanted to keep that photo, reel or story before it vanishes into the
 algorithm? This Chrome extension sticks a little download button on pretty much
