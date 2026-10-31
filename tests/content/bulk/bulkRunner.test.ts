@@ -14,7 +14,11 @@ function setup(
     waiting: vi.fn(),
   };
   const notes = notifier();
-  return { panel, notes, runner: new BulkRunner({ pick }, panel, notes) };
+  return {
+    panel,
+    notes,
+    runner: new BulkRunner({ pick }, panel, notes, AbortController),
+  };
 }
 
 describe("BulkRunner", () => {

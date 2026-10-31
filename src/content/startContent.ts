@@ -67,6 +67,7 @@ function bulk(
     folders,
     new ProgressPanel(env.window.document),
     notifier,
+    env.window.AbortController,
   );
   return { archiver, following, folders, runner, runs, fetchBlob };
 }
