@@ -1,3 +1,5 @@
+import type { Scheduler } from "../scheduler";
+
 export interface Notifier {
   error(message: string): void;
 }
@@ -6,6 +8,7 @@ export interface Notifier {
 export class ToastNotifier implements Notifier {
   constructor(
     private readonly document: Document,
+    private readonly scheduler: Scheduler,
     private readonly lifetimeMs = 6000,
   ) {}
 
@@ -15,8 +18,8 @@ export class ToastNotifier implements Notifier {
     toast.setAttribute("role", "alert");
     toast.textContent = message;
     this.document.body.append(toast);
-    setTimeout(() => {
+    this.scheduler.after(this.lifetimeMs, () => {
       toast.remove();
-    }, this.lifetimeMs);
+    });
   }
 }

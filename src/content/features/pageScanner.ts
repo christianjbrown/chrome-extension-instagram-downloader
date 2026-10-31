@@ -1,3 +1,4 @@
+import type { Scheduler } from "../scheduler";
 import type { Feature } from "./feature";
 
 // Runs every feature once, then again shortly after the page changes.
@@ -8,6 +9,7 @@ export class PageScanner {
 
   constructor(
     private readonly features: readonly Feature[],
+    private readonly scheduler: Scheduler,
     private readonly delayMs = 250,
   ) {}
 
@@ -24,10 +26,10 @@ export class PageScanner {
   private schedule(): void {
     if (this.scheduled) return;
     this.scheduled = true;
-    setTimeout(() => {
+    this.scheduler.after(this.delayMs, () => {
       this.scheduled = false;
       this.scanAll();
-    }, this.delayMs);
+    });
   }
 
   private scanAll(): void {

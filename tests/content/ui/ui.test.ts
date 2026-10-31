@@ -4,6 +4,7 @@ import {
 } from "../../../src/content/ui/buttons";
 import { ToastNotifier } from "../../../src/content/ui/notifier";
 import { ProgressPanel } from "../../../src/content/ui/progressPanel";
+import { ManualScheduler } from "../helpers";
 
 describe("buttons", () => {
   it("runs its action without letting the click reach the page", () => {
@@ -31,12 +32,12 @@ describe("buttons", () => {
 
 describe("ToastNotifier", () => {
   it("shows an error, then removes it", () => {
-    vi.useFakeTimers();
-    new ToastNotifier(document, 100).error("Nope");
+    const scheduler = new ManualScheduler();
+    new ToastNotifier(document, scheduler, 100).error("Nope");
     expect(document.querySelector(".igdl-toast")?.textContent).toBe("Nope");
-    vi.advanceTimersByTime(100);
+    expect([...scheduler.pending.values()][0]?.ms).toBe(100);
+    scheduler.runAll();
     expect(document.querySelector(".igdl-toast")).toBeNull();
-    vi.useRealTimers();
   });
 });
 

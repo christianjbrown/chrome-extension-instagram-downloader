@@ -14,7 +14,7 @@ import { AccountArchiver } from "./bulk/accountArchiver";
 import { BulkRunner } from "./bulk/bulkRunner";
 import { FollowingDownloader } from "./bulk/followingDownloader";
 import { RunStore, type KeyValueArea } from "./bulk/runStore";
-import type { PageView } from "./features/feature";
+import type { Feature, PageView } from "./features/feature";
 import { GridButtons } from "./features/gridButtons";
 import { PageScanner } from "./features/pageScanner";
 import { PostActions } from "./features/postActions";
@@ -32,7 +32,7 @@ import { IndexedDbFolderStore } from "./saving/folderStore";
 import { pageOrigin } from "../shared/bridge";
 import { isMediaUrl } from "../shared/mediaUrl";
 import { ValidatedBridge } from "./validatedBridge";
-import { TimeoutScheduler } from "./scheduler";
+import { TimeoutScheduler, type Scheduler } from "./scheduler";
 import { ToastNotifier } from "./ui/notifier";
 import { ProgressPanel } from "./ui/progressPanel";
 
@@ -72,7 +72,7 @@ function bulk(
   return { archiver, following, folders, runner, runs, fetchBlob };
 }
 
-function pageBridge(env: ContentEnvironment): Bridge {
+function pageBridge(env: ContentEnvironment, scheduler: Scheduler): Bridge {
   return new ValidatedBridge(
     new PageBridge(
       (message, origin, transfer) => {
@@ -81,21 +81,23 @@ function pageBridge(env: ContentEnvironment): Bridge {
       {
         pageOrigin,
         newChannel: () => new env.window.MessageChannel(),
-        scheduler: new TimeoutScheduler(),
+        scheduler,
       },
     ),
   );
 }
 
-export function startContent(env: ContentEnvironment): void {
+function features(
+  env: ContentEnvironment,
+  bridge: Bridge,
+  notifier: ToastNotifier,
+): Feature[] {
   const { document } = env.window;
   const view: PageView = {
     document,
     pathname: () => env.window.location.pathname,
     viewportHeight: () => env.window.innerHeight,
   };
-  const bridge = pageBridge(env);
-  const notifier = new ToastNotifier(document);
   const parts = bulk(env, bridge, notifier);
   const downloader = new FileDownloader(
     document,
@@ -114,12 +116,20 @@ export function startContent(env: ContentEnvironment): void {
     picture: new ProfilePictureCommand(bridge, downloader, notifier),
     folder: new ChangeFolderCommand(parts.folders, notifier),
   };
-  new PageScanner([
+  return [
     new PostActions(view, posts, notifier),
     new GridButtons(view, posts),
     new ProfileToolbar(view, commands, viewers, parts.runs),
     new StoryToolbar(view, new StoryDownloader(bridge, downloader, notifier)),
-  ]).start(
+  ];
+}
+
+export function startContent(env: ContentEnvironment): void {
+  const { document } = env.window;
+  const scheduler = new TimeoutScheduler();
+  const notifier = new ToastNotifier(document, scheduler);
+  const bridge = pageBridge(env, scheduler);
+  new PageScanner(features(env, bridge, notifier), scheduler).start(
     document.body,
     (callback) => new env.window.MutationObserver(callback),
   );
