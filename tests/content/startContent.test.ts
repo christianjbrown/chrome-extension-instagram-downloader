@@ -40,6 +40,7 @@ function environment() {
     showDirectoryPicker,
     indexedDB: new IDBFactory(),
     MutationObserver,
+    MessageChannel,
     URL: { createObjectURL: () => "blob:1", revokeObjectURL: vi.fn() },
   };
   const storage = {

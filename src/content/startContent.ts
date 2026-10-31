@@ -29,8 +29,10 @@ import { blobFetcher } from "./saving/fetchBlob";
 import { FileDownloader } from "./saving/fileDownloader";
 import { FolderPicker, type ShowDirectoryPicker } from "./saving/folderPicker";
 import { IndexedDbFolderStore } from "./saving/folderStore";
+import { pageOrigin } from "../shared/bridge";
 import { isMediaUrl } from "../shared/mediaUrl";
 import { ValidatedBridge } from "./validatedBridge";
+import { TimeoutScheduler } from "./scheduler";
 import { ToastNotifier } from "./ui/notifier";
 import { ProgressPanel } from "./ui/progressPanel";
 
@@ -71,9 +73,16 @@ function bulk(
 
 function pageBridge(env: ContentEnvironment): Bridge {
   return new ValidatedBridge(
-    new PageBridge((message, origin, transfer) => {
-      env.window.postMessage(message, origin, transfer);
-    }),
+    new PageBridge(
+      (message, origin, transfer) => {
+        env.window.postMessage(message, origin, transfer);
+      },
+      {
+        pageOrigin,
+        newChannel: () => new env.window.MessageChannel(),
+        scheduler: new TimeoutScheduler(),
+      },
+    ),
   );
 }
 

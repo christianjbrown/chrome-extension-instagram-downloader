@@ -1,4 +1,5 @@
 import type { Mock } from "vitest";
+import type { Scheduler } from "../../src/content/scheduler";
 import type { Bridge } from "../../src/content/bridgeClient";
 import type { RunReporter } from "../../src/content/ui/progressPanel";
 import type { Input, Output, ProcedureName } from "../../src/shared/bridge";
@@ -78,3 +79,25 @@ export class MemoryFolder {
 
 export const asFolder = (folder: MemoryFolder): FileSystemDirectoryHandle =>
   folder as unknown as FileSystemDirectoryHandle;
+
+/** A scheduler that runs nothing until the test says so. */
+export class ManualScheduler implements Scheduler {
+  readonly pending = new Map<number, { ms: number; callback: () => void }>();
+  private next = 0;
+
+  after(ms: number, callback: () => void): () => void {
+    const id = this.next++;
+    this.pending.set(id, { ms, callback });
+    return () => {
+      this.pending.delete(id);
+    };
+  }
+
+  /** Runs everything still waiting. */
+  runAll(): void {
+    for (const [id, { callback }] of [...this.pending]) {
+      this.pending.delete(id);
+      callback();
+    }
+  }
+}
