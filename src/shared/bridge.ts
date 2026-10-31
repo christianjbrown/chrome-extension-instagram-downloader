@@ -68,3 +68,9 @@ export function isBridgeRequest(data: unknown): data is BridgeRequest {
     typeof (data as { igdlProcedure?: unknown }).igdlProcedure === "string"
   );
 }
+
+export function isBridgeResponse(data: unknown): data is BridgeResponse {
+  if (typeof data !== "object" || data === null) return false;
+  const { ok, error } = data as { ok?: unknown; error?: unknown };
+  return ok === true || (ok === false && typeof error === "string");
+}

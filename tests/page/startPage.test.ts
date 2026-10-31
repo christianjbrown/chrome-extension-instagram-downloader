@@ -45,6 +45,7 @@ function fakeWindow(readyState: DocumentReadyState) {
     const port = { postMessage: vi.fn() };
     listeners[0]?.({
       origin: "https://www.instagram.com",
+      source: target,
       ports: [port],
       data: { igdlProcedure, input },
     } as never);

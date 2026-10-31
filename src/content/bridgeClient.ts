@@ -1,11 +1,11 @@
 // Sends requests to the page script and waits for its answer on a private port.
 import {
-  pageOrigin,
-  type BridgeResponse,
+  isBridgeResponse,
   type Input,
   type Output,
   type ProcedureName,
 } from "../shared/bridge";
+import type { Scheduler } from "./scheduler";
 
 export interface Bridge {
   call<N extends ProcedureName>(name: N, input: Input<N>): Promise<Output<N>>;
@@ -17,27 +17,41 @@ type PostMessage = (
   transfer: Transferable[],
 ) => void;
 
+type ChannelFactory = () => Pick<MessageChannel, "port1" | "port2">;
+
+export interface BridgeEnvironment {
+  readonly pageOrigin: string;
+  readonly newChannel: ChannelFactory;
+  readonly scheduler: Scheduler;
+  readonly timeoutMs?: number;
+}
+
 export class PageBridge implements Bridge {
   constructor(
     private readonly postMessage: PostMessage,
-    private readonly timeoutMs = 60_000,
+    private readonly env: BridgeEnvironment,
   ) {}
 
   call<N extends ProcedureName>(name: N, input: Input<N>): Promise<Output<N>> {
     return new Promise((resolve, reject) => {
-      const channel = new MessageChannel();
-      const timer = setTimeout(() => {
-        channel.port1.close();
-        reject(new Error("The page did not answer"));
-      }, this.timeoutMs);
-      channel.port1.onmessage = (event: MessageEvent<BridgeResponse>) => {
-        clearTimeout(timer);
+      const channel = this.env.newChannel();
+      const cancel = this.env.scheduler.after(
+        this.env.timeoutMs ?? 60_000,
+        () => {
+          channel.port1.close();
+          reject(new Error("The page did not answer"));
+        },
+      );
+      channel.port1.onmessage = (event: MessageEvent<unknown>) => {
+        cancel();
         channel.port1.close();
         const response = event.data;
-        if (response.ok) resolve(response.value as Output<N>);
+        if (!isBridgeResponse(response))
+          reject(new Error("The page sent an unreadable answer"));
+        else if (response.ok) resolve(response.value as Output<N>);
         else reject(new Error(response.error));
       };
-      this.postMessage({ igdlProcedure: name, input }, pageOrigin, [
+      this.postMessage({ igdlProcedure: name, input }, this.env.pageOrigin, [
         channel.port2,
       ]);
     });

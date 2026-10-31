@@ -22,6 +22,7 @@ export interface DownloadItem {
   readonly username: string;
   readonly takenAt: number;
   readonly url: string;
+  readonly video?: true;
 }
 
 const area = (version: MediaVersion): number => version.width * version.height;
@@ -50,7 +51,9 @@ function itemFor(
   const url = bestUrl(media);
   if (url === undefined) return [];
   const id = media.id ?? String(media.pk);
-  return [{ id, username, takenAt: media.taken_at ?? takenAt, url }];
+  const video =
+    media.video_versions !== undefined ? ({ video: true } as const) : {};
+  return [{ id, username, takenAt: media.taken_at ?? takenAt, url, ...video }];
 }
 
 // One item per file: a carousel gives one per slide.
@@ -62,19 +65,6 @@ export function downloadItems(
   const takenAt = media.taken_at ?? 0;
   const slides = media.carousel_media ?? [media];
   return slides.flatMap((slide) => itemFor(slide, username, takenAt));
-}
-
-const extensionPattern = /\.([0-9a-z]+)(?:[?#]|$)/i;
-
-export function fileExtension(url: string): string {
-  return extensionPattern.exec(new URL(url).pathname)?.[1] ?? "jpg";
-}
-
-// Matches the names earlier versions wrote, so files already on disk are
-// recognised and skipped.
-export function fileName(item: DownloadItem): string {
-  const name = `${item.username}_${String(item.takenAt)}_${item.id}.${fileExtension(item.url)}`;
-  return name.replace(/[<>:"/\\|?*]/g, "");
 }
 
 // The last path segment of a CDN URL is the same for every size of a picture,

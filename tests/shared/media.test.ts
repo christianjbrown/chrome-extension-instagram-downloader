@@ -3,8 +3,6 @@ import {
   assetNames,
   bestUrl,
   downloadItems,
-  fileExtension,
-  fileName,
   largestVersion,
 } from "../../src/shared/media";
 import { cdn, photo } from "../fixtures";
@@ -46,6 +44,16 @@ describe("downloadItems", () => {
     ]);
   });
 
+  it("marks video items so they get a video extension", () => {
+    const media = {
+      ...photo("2"),
+      video_versions: [
+        { url: "https://x.cdninstagram.com/v", width: 1, height: 1 },
+      ],
+    };
+    expect(downloadItems(media)[0]?.video).toBe(true);
+  });
+
   it("gives one item per carousel slide, borrowing the post's details", () => {
     const slide = {
       pk: 9,
@@ -67,23 +75,6 @@ describe("downloadItems", () => {
       { id: "3", username: "bob", takenAt: 0, url: "x.jpg" },
     ]);
     expect(downloadItems(media)[0]?.username).toBe("unknown");
-  });
-});
-
-describe("file names", () => {
-  it("takes the extension from the URL path", () => {
-    expect(fileExtension("https://x.com/a/b.mp4?x=.jpg")).toBe("mp4");
-    expect(fileExtension("https://x.com/a/b")).toBe("jpg");
-  });
-
-  it("joins username, time and id, without characters a file system refuses", () => {
-    const item = {
-      id: "1_2",
-      username: "a:b",
-      takenAt: 5,
-      url: "https://x.com/f.webp",
-    };
-    expect(fileName(item)).toBe("ab_5_1_2.webp");
   });
 });
 

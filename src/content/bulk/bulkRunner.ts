@@ -21,6 +21,7 @@ export class BulkRunner {
     private readonly folders: FolderSource,
     private readonly panel: RunPanel,
     private readonly notifier: Notifier,
+    private readonly controllerClass: new () => AbortController,
   ) {}
 
   async run(job: BulkJob): Promise<void> {
@@ -44,7 +45,7 @@ export class BulkRunner {
       this.notifier.error("Could not get access to the download folder.");
       return;
     }
-    const controller = new AbortController();
+    const controller = new this.controllerClass();
     this.panel.open(job.title, () => {
       controller.abort();
     });

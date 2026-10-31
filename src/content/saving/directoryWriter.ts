@@ -1,5 +1,6 @@
-import { fileName, type DownloadItem } from "../../shared/media";
+import type { DownloadItem } from "../../shared/media";
 import type { FetchBlob } from "./fetchBlob";
+import type { FileNamer } from "./fileNamer";
 
 export type WriteOutcome = "saved" | "skipped" | "failed";
 
@@ -14,17 +15,27 @@ export interface ItemWriter {
   ): Promise<WriteOutcome>;
 }
 
-// Writes files into a folder the user chose. A file that fails is left empty
-// so the next run tries it again.
+// Writes files into a folder the user chose. A file that fails is not
+// kept, so the next run tries it again.
 export class DirectoryWriter implements ItemWriter {
-  constructor(private readonly fetchBlob: FetchBlob) {}
+  constructor(
+    private readonly fetchBlob: FetchBlob,
+    private readonly namer: FileNamer,
+  ) {}
 
   async exists(
     folder: FileSystemDirectoryHandle,
     item: DownloadItem,
   ): Promise<boolean> {
-    const handle = await folder.getFileHandle(fileName(item), { create: true });
-    return (await handle.getFile()).size > 0;
+    try {
+      const handle = await folder.getFileHandle(this.namer.nameFor(item));
+      return (await handle.getFile()).size > 0;
+    } catch (error) {
+      // A file that is not there is a plain no; asking must not create it.
+      if (error instanceof DOMException && error.name === "NotFoundError")
+        return false;
+      throw error;
+    }
   }
 
   async write(
@@ -34,7 +45,7 @@ export class DirectoryWriter implements ItemWriter {
     if (await this.exists(folder, item)) return "skipped";
     try {
       const blob = await this.fetchBlob(item.url);
-      const handle = await folder.getFileHandle(fileName(item), {
+      const handle = await folder.getFileHandle(this.namer.nameFor(item), {
         create: true,
       });
       const writable = await handle.createWritable();

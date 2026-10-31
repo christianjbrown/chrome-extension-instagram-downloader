@@ -1,5 +1,5 @@
 import {
-  isWatchedUrl,
+  InstagramApiPolicy,
   parseResponse,
   tapFetch,
   tapXhr,
@@ -14,11 +14,25 @@ describe("parseResponse", () => {
   });
 });
 
-describe("isWatchedUrl", () => {
-  it("watches GraphQL and API calls only", () => {
-    expect(isWatchedUrl("https://www.instagram.com/graphql/query")).toBe(true);
-    expect(isWatchedUrl("/api/v1/feed/")).toBe(true);
-    expect(isWatchedUrl("/ajax/navigation/")).toBe(false);
+const policy = new InstagramApiPolicy("https://www.instagram.com");
+
+describe("InstagramApiPolicy", () => {
+  it("watches Instagram's GraphQL and API calls only", () => {
+    expect(policy.isWatched("https://www.instagram.com/graphql/query")).toBe(
+      true,
+    );
+    expect(policy.isWatched("/api/v1/feed/")).toBe(true);
+    expect(policy.isWatched("/ajax/navigation/")).toBe(false);
+  });
+
+  it("ignores other hosts, lookalike paths and unparseable URLs", () => {
+    expect(policy.isWatched("https://evil.example/api/v1/feed/")).toBe(false);
+    expect(
+      policy.isWatched("https://www.instagram.com.evil.example/api/x/"),
+    ).toBe(false);
+    expect(policy.isWatched("/static/api/x.js")).toBe(false);
+    expect(policy.isWatched("/path?next=/api/")).toBe(false);
+    expect(policy.isWatched("https://[")).toBe(false);
   });
 });
 
@@ -45,7 +59,7 @@ class FakeXhr {
 describe("tapXhr", () => {
   const sink = vi.fn();
   beforeAll(() => {
-    tapXhr(FakeXhr.prototype as unknown as XMLHttpRequest, sink);
+    tapXhr(FakeXhr.prototype as unknown as XMLHttpRequest, sink, policy);
   });
 
   it("feeds watched text responses to the sink and still sends", () => {
@@ -92,7 +106,7 @@ describe("tapFetch", () => {
     const target = {
       fetch: vi.fn(() => Promise.resolve(response)),
     } as unknown as { fetch: typeof fetch };
-    tapFetch(target, sink);
+    tapFetch(target, sink, policy);
     await expect(target.fetch("/api/v1/x")).resolves.toBe(response);
     await target.fetch(new Request("https://www.instagram.com/graphql/query"));
     await settle();
@@ -107,7 +121,7 @@ describe("tapFetch", () => {
     const target = {
       fetch: vi.fn(() => Promise.resolve(broken)),
     } as unknown as { fetch: typeof fetch };
-    tapFetch(target, sink);
+    tapFetch(target, sink, policy);
     await target.fetch("/static/app.js");
     await target.fetch("/api/v1/x");
     await settle();

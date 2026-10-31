@@ -32,10 +32,11 @@ export class FollowingClient {
   }
 
   async page(userId: string, next: string | undefined): Promise<FollowingPage> {
+    if (!/^\d+$/.test(userId)) throw new Error("Invalid user id");
     const query = new URLSearchParams({ count: "25" });
     if (next !== undefined) query.set("max_id", next);
     const response = await this.fetch(
-      `/api/v1/friendships/${userId}/following/?${query.toString()}`,
+      `/api/v1/friendships/${encodeURIComponent(userId)}/following/?${query.toString()}`,
       { headers: this.headers() },
     );
     const body: unknown = await response.json().catch(() => undefined);

@@ -1,5 +1,6 @@
 import type { AccountArchiver } from "../../../src/content/bulk/accountArchiver";
 import { FollowingDownloader } from "../../../src/content/bulk/followingDownloader";
+import { FollowingLister } from "../../../src/content/bulk/followingLister";
 import { RunStore } from "../../../src/content/bulk/runStore";
 import { defaultPacing } from "../../../src/content/pacing/pacing";
 import {
@@ -36,12 +37,13 @@ function setup(initial?: unknown) {
     sleeper: { sleep: vi.fn(), between: vi.fn(() => Promise.resolve()) },
     pacing: defaultPacing,
   };
-  const downloader = new FollowingDownloader(
-    bridge,
-    archiver as unknown as AccountArchiver,
+  const downloader = new FollowingDownloader({
+    lister: new FollowingLister(bridge, pacer as never),
+    archiver: archiver as unknown as AccountArchiver,
     store,
-    pacer as never,
-  );
+    pacer: pacer as never,
+    now: () => 1234,
+  });
   const run = () =>
     downloader.run({
       viewer: { id: "1", username: "me" },
@@ -69,6 +71,9 @@ describe("FollowingDownloader", () => {
         (data["followingDownload:1"] as { completed: object }).completed,
       ),
     ).toEqual(["a", "b", "c"]);
+    expect(
+      (data["followingDownload:1"] as { completed: object }).completed,
+    ).toEqual({ a: 1234, b: 1234, c: 1234 });
   });
 
   it("carries on a stopped run without listing again, and only fetches new posts for finished accounts", async () => {

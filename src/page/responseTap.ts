@@ -2,10 +2,26 @@
 
 type Sink = (value: unknown) => void;
 
-const watched = /\/(?:graphql|api)\//;
+export interface UrlPolicy {
+  isWatched(url: string): boolean;
+}
 
-export function isWatchedUrl(url: string): boolean {
-  return watched.test(url);
+const watchedPath = /^\/(?:graphql|api)\//;
+
+// Instagram's own GraphQL and API calls, and nothing on any other site.
+export class InstagramApiPolicy implements UrlPolicy {
+  constructor(private readonly origin: string) {}
+
+  isWatched(url: string): boolean {
+    try {
+      const resolved = new URL(url, this.origin);
+      return (
+        resolved.origin === this.origin && watchedPath.test(resolved.pathname)
+      );
+    } catch {
+      return false;
+    }
+  }
 }
 
 // Responses can carry a "for (;;);" guard and several JSON documents, one per
@@ -31,7 +47,11 @@ interface TappedRequest extends XMLHttpRequest {
   igdlUrl?: string;
 }
 
-export function tapXhr(prototype: XMLHttpRequest, sink: Sink): void {
+export function tapXhr(
+  prototype: XMLHttpRequest,
+  sink: Sink,
+  policy: UrlPolicy,
+): void {
   type Method = (...args: unknown[]) => void;
   const originalOpen = Reflect.get(prototype, "open") as Method;
   const originalSend = Reflect.get(prototype, "send") as Method;
@@ -40,7 +60,7 @@ export function tapXhr(prototype: XMLHttpRequest, sink: Sink): void {
     Reflect.apply(originalOpen, this, args);
   };
   prototype.send = function (this: TappedRequest, ...args: unknown[]) {
-    if (isWatchedUrl(this.igdlUrl ?? "")) {
+    if (policy.isWatched(this.igdlUrl ?? "")) {
       this.addEventListener("load", () => {
         if (this.responseType === "" || this.responseType === "text")
           feed(this.responseText, sink);
@@ -50,12 +70,16 @@ export function tapXhr(prototype: XMLHttpRequest, sink: Sink): void {
   };
 }
 
-export function tapFetch(target: { fetch: typeof fetch }, sink: Sink): void {
+export function tapFetch(
+  target: { fetch: typeof fetch },
+  sink: Sink,
+  policy: UrlPolicy,
+): void {
   const original = target.fetch.bind(target);
   target.fetch = async (input, init) => {
     const response = await original(input, init);
     const url = input instanceof Request ? input.url : String(input);
-    if (isWatchedUrl(url)) {
+    if (policy.isWatched(url)) {
       void response
         .clone()
         .text()
