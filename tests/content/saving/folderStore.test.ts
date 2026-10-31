@@ -1,44 +1,41 @@
 import { IDBFactory } from "fake-indexeddb";
-import { IndexedDbFolderStore } from "../../../src/content/saving/folderStore";
+import { MemoryFolderStore } from "../../../src/content/saving/folderStore";
+import { LegacyFolderDatabase } from "../../../src/content/saving/legacyFolderDatabase";
 
-describe("IndexedDbFolderStore", () => {
-  it("remembers a folder", async () => {
-    const store = new IndexedDbFolderStore(new IDBFactory());
+describe("MemoryFolderStore", () => {
+  it("remembers a folder until the page goes away", async () => {
+    const store = new MemoryFolderStore();
     await expect(store.get()).resolves.toBeUndefined();
     const folder = {
       kind: "directory",
       name: "Downloads",
     } as unknown as FileSystemDirectoryHandle;
     await store.set(folder);
-    await expect(store.get()).resolves.toEqual(folder);
+    await expect(store.get()).resolves.toBe(folder);
+    await expect(new MemoryFolderStore().get()).resolves.toBeUndefined();
+  });
+});
+
+describe("LegacyFolderDatabase", () => {
+  it("deletes the database earlier versions stored the folder in", async () => {
+    const factory = new IDBFactory();
+    const opening = factory.open("instagram-downloader-extension", 1);
+    await new Promise((resolve) => {
+      opening.onsuccess = resolve;
+    });
+    opening.result.close();
+    new LegacyFolderDatabase(factory).remove();
+    await vi.waitFor(async () => {
+      const names = (await factory.databases()).map((d) => d.name);
+      expect(names).not.toContain("instagram-downloader-extension");
+    });
   });
 
-  it("ignores anything stored that is not a folder", async () => {
-    const store = new IndexedDbFolderStore(new IDBFactory());
-    await store.set({ kind: "file" } as unknown as FileSystemDirectoryHandle);
-    await expect(store.get()).resolves.toBeUndefined();
-  });
-
-  it("reports a database that cannot be opened", async () => {
-    const failing = (error: DOMException | null) =>
-      ({
-        open: () => {
-          const request = {} as IDBOpenDBRequest & {
-            error: DOMException | null;
-          };
-          request.error = error;
-          queueMicrotask(() => {
-            request.onerror?.call(request, new Event("error"));
-          });
-          return request;
-        },
-      }) as unknown as IDBFactory;
-    const blocked = new DOMException("blocked");
-    await expect(new IndexedDbFolderStore(failing(blocked)).get()).rejects.toBe(
-      blocked,
-    );
-    await expect(new IndexedDbFolderStore(failing(null)).get()).rejects.toThrow(
-      "IndexedDB request failed",
+  it("does nothing when there is no such database", () => {
+    const factory = { deleteDatabase: vi.fn() };
+    new LegacyFolderDatabase(factory).remove();
+    expect(factory.deleteDatabase).toHaveBeenCalledWith(
+      "instagram-downloader-extension",
     );
   });
 });

@@ -30,7 +30,8 @@ import { blobFetcher } from "./saving/fetchBlob";
 import { SafeFileNamer } from "./saving/fileNamer";
 import { FileDownloader } from "./saving/fileDownloader";
 import { FolderPicker, type ShowDirectoryPicker } from "./saving/folderPicker";
-import { IndexedDbFolderStore } from "./saving/folderStore";
+import { MemoryFolderStore } from "./saving/folderStore";
+import { LegacyFolderDatabase } from "./saving/legacyFolderDatabase";
 import { pageOrigin } from "../shared/bridge";
 import { isMediaUrl } from "../shared/mediaUrl";
 import { ValidatedBridge } from "./validatedBridge";
@@ -68,9 +69,8 @@ function bulk(
     pacer,
     now: Date.now,
   });
-  const folders = new FolderPicker(
-    new IndexedDbFolderStore(env.window.indexedDB),
-    (options) => env.window.showDirectoryPicker(options),
+  const folders = new FolderPicker(new MemoryFolderStore(), (options) =>
+    env.window.showDirectoryPicker(options),
   );
   const runner = new BulkRunner(
     folders,
@@ -136,6 +136,7 @@ function features(
 
 export function startContent(env: ContentEnvironment): void {
   const { document } = env.window;
+  new LegacyFolderDatabase(env.window.indexedDB).remove();
   const scheduler = new TimeoutScheduler();
   const notifier = new ToastNotifier(document, scheduler);
   const bridge = pageBridge(env, scheduler);

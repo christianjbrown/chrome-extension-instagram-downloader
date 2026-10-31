@@ -32,8 +32,9 @@ the extension and you're good.
 | The story viewer                         | **Download this story** and **Download all**, for stories and highlights.                                            |
 
 Single downloads land in Chrome's usual download folder. Bulk downloads ask you
-for a folder once, put each account in `<folder>/<username>/`, and skip
-anything already there, so running one again only fetches what's new.
+for a folder once per tab (it forgets when you close the tab, on purpose), put
+each account in `<folder>/<username>/`, and skip anything already there, so
+running one again only fetches what's new.
 
 ## Slow and steady 🐢
 
