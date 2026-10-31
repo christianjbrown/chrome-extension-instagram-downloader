@@ -17,6 +17,14 @@ function client(status: number, body: unknown) {
 }
 
 describe("FollowingClient", () => {
+  it("refuses a user id that is not digits", async () => {
+    const { fetch, client: c } = client(200, {});
+    await expect(c.page("9/../x", undefined)).rejects.toThrow(
+      "Invalid user id",
+    );
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
   it("returns usernames and the next page marker", async () => {
     const { fetch, client: c } = client(200, {
       users: [{ username: "a" }, { pk: 1 }, "x", { username: "b" }],

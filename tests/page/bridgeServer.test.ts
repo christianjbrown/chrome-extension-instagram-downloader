@@ -1,9 +1,12 @@
 import { BridgeServer, type Handlers } from "../../src/page/bridgeServer";
 
+const pageWindow = {} as unknown as MessageEventSource;
+
 function event(
   data: unknown,
   origin = "https://www.instagram.com",
   withPort = true,
+  source: unknown = pageWindow,
 ) {
   const port = { postMessage: vi.fn() };
   return {
@@ -11,6 +14,7 @@ function event(
     event: {
       data,
       origin,
+      source,
       ports: withPort ? [port] : [],
     } as unknown as MessageEvent,
   };
@@ -26,7 +30,11 @@ const handlers = {
 } as unknown as Handlers;
 
 describe("BridgeServer", () => {
-  const server = new BridgeServer(handlers);
+  const server = new BridgeServer(
+    handlers,
+    "https://www.instagram.com",
+    pageWindow,
+  );
 
   it("answers a request on its port", async () => {
     const { port, event: e } = event({ igdlProcedure: "viewer", input: {} });
@@ -38,13 +46,16 @@ describe("BridgeServer", () => {
   });
 
   it("reports failures as messages", async () => {
-    const failed = event({ igdlProcedure: "media", input: {} });
+    const failed = event({ igdlProcedure: "media", input: { mediaId: "1" } });
     await server.handle(failed.event);
     expect(failed.port.postMessage).toHaveBeenCalledWith({
       ok: false,
       error: "broken",
     });
-    const thrown = event({ igdlProcedure: "postsPage", input: {} });
+    const thrown = event({
+      igdlProcedure: "postsPage",
+      input: { username: "a" },
+    });
     await server.handle(thrown.event);
     expect(thrown.port.postMessage).toHaveBeenCalledWith({
       ok: false,
@@ -58,10 +69,30 @@ describe("BridgeServer", () => {
     });
   });
 
+  it("rejects inherited names and inputs of the wrong shape", async () => {
+    for (const name of ["constructor", "toString", "__proto__", "reel"]) {
+      const { port, event: e } = event({ igdlProcedure: name, input: {} });
+      await server.handle(e);
+      expect(port.postMessage).toHaveBeenCalledWith({
+        ok: false,
+        error: "Unknown request",
+      });
+    }
+    for (const input of [null, [], { mediaId: "../x" }, "x"]) {
+      const { port, event: e } = event({ igdlProcedure: "media", input });
+      await server.handle(e);
+      expect(port.postMessage).toHaveBeenCalledWith({
+        ok: false,
+        error: "Invalid request",
+      });
+    }
+  });
+
   it("ignores other origins, port-less messages and unrelated data", async () => {
     for (const { port, event: e } of [
       event({ igdlProcedure: "viewer" }, "https://evil.example"),
       event({ igdlProcedure: "viewer" }, undefined, false),
+      event({ igdlProcedure: "viewer", input: {} }, undefined, true, {}),
       event({ hello: true }),
     ]) {
       await server.handle(e);

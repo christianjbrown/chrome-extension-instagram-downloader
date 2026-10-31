@@ -1,4 +1,5 @@
 // Wires up the page script. Runs at document_start in Instagram's own world.
+import { pageOrigin } from "../shared/bridge";
 import { BridgeServer } from "./bridgeServer";
 import { FollowingClient } from "./followingClient";
 import { InstagramQueries } from "./instagramQueries";
@@ -42,5 +43,5 @@ export function startPage(target: PageWindow): void {
       target.fetch(url, init),
     ),
   });
-  new BridgeServer(procedures).listen(target);
+  new BridgeServer(procedures, pageOrigin, target).listen(target);
 }
