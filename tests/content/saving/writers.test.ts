@@ -1,7 +1,10 @@
 import { DirectoryWriter } from "../../../src/content/saving/directoryWriter";
 import { blobFetcher } from "../../../src/content/saving/fetchBlob";
 import { FileDownloader } from "../../../src/content/saving/fileDownloader";
+import { SafeFileNamer } from "../../../src/content/saving/fileNamer";
 import { MemoryFolder, asFolder } from "../helpers";
+
+const namer = new SafeFileNamer();
 
 const item = {
   id: "1_2",
@@ -42,7 +45,10 @@ describe("blobFetcher policy", () => {
 describe("DirectoryWriter", () => {
   it("writes a new file, then skips it", async () => {
     const folder = new MemoryFolder();
-    const writer = new DirectoryWriter(() => Promise.resolve(new Blob(["x"])));
+    const writer = new DirectoryWriter(
+      () => Promise.resolve(new Blob(["x"])),
+      namer,
+    );
     await expect(writer.exists(asFolder(folder), item)).resolves.toBe(false);
     await expect(writer.write(asFolder(folder), item)).resolves.toBe("saved");
     await expect(writer.write(asFolder(folder), item)).resolves.toBe("skipped");
@@ -51,13 +57,19 @@ describe("DirectoryWriter", () => {
 
   it("asking whether a file exists creates nothing", async () => {
     const folder = new MemoryFolder();
-    const writer = new DirectoryWriter(() => Promise.resolve(new Blob(["x"])));
+    const writer = new DirectoryWriter(
+      () => Promise.resolve(new Blob(["x"])),
+      namer,
+    );
     await expect(writer.exists(asFolder(folder), item)).resolves.toBe(false);
     expect(folder.files.size).toBe(0);
   });
 
   it("passes on errors other than a missing file", async () => {
-    const writer = new DirectoryWriter(() => Promise.resolve(new Blob(["x"])));
+    const writer = new DirectoryWriter(
+      () => Promise.resolve(new Blob(["x"])),
+      namer,
+    );
     for (const error of [
       new DOMException("no", "NotAllowedError"),
       new Error("boom"),
@@ -71,7 +83,10 @@ describe("DirectoryWriter", () => {
 
   it("leaves nothing behind for a failed file so it is tried again", async () => {
     const folder = new MemoryFolder();
-    const writer = new DirectoryWriter(() => Promise.reject(new Error("403")));
+    const writer = new DirectoryWriter(
+      () => Promise.reject(new Error("403")),
+      namer,
+    );
     await expect(writer.write(asFolder(folder), item)).resolves.toBe("failed");
     expect(folder.files.has("alice_5_1_2.jpg")).toBe(false);
     await expect(writer.exists(asFolder(folder), item)).resolves.toBe(false);
@@ -91,6 +106,7 @@ describe("FileDownloader", () => {
       document,
       () => Promise.resolve(new Blob(["x"])),
       urls,
+      namer,
     ).download(item);
     const link = click.mock.contexts[0] as HTMLAnchorElement;
     expect(link.download).toBe("alice_5_1_2.jpg");

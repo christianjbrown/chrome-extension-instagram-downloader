@@ -26,6 +26,7 @@ import { defaultPacing } from "./pacing/pacing";
 import { TimerSleeper } from "./pacing/sleeper";
 import { DirectoryWriter } from "./saving/directoryWriter";
 import { blobFetcher } from "./saving/fetchBlob";
+import { SafeFileNamer } from "./saving/fileNamer";
 import { FileDownloader } from "./saving/fileDownloader";
 import { FolderPicker, type ShowDirectoryPicker } from "./saving/folderPicker";
 import { IndexedDbFolderStore } from "./saving/folderStore";
@@ -53,8 +54,9 @@ function bulk(
     new HourlyBudget(defaultPacing.apiCallsPerHour, sleeper, Date.now),
     defaultPacing,
   );
+  const namer = new SafeFileNamer();
   const fetchBlob = blobFetcher((url) => env.window.fetch(url), isMediaUrl);
-  const writer = new DirectoryWriter(fetchBlob);
+  const writer = new DirectoryWriter(fetchBlob, namer);
   const pacer = { gate, sleeper, pacing: defaultPacing };
   const archiver = new AccountArchiver(bridge, writer, pacer);
   const runs = new RunStore(env.storage);
@@ -69,7 +71,7 @@ function bulk(
     notifier,
     env.window.AbortController,
   );
-  return { archiver, following, folders, runner, runs, fetchBlob };
+  return { archiver, following, folders, runner, runs, fetchBlob, namer };
 }
 
 function pageBridge(env: ContentEnvironment, scheduler: Scheduler): Bridge {
@@ -103,6 +105,7 @@ function features(
     document,
     parts.fetchBlob,
     env.window.URL,
+    parts.namer,
   );
   const posts = new PostDownloader(bridge, downloader, notifier);
   const viewers = new ViewerSource(bridge, Date.now);

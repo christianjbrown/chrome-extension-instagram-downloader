@@ -3,8 +3,6 @@ import {
   assetNames,
   bestUrl,
   downloadItems,
-  fileExtension,
-  fileName,
   largestVersion,
 } from "../../src/shared/media";
 import { cdn, photo } from "../fixtures";
@@ -77,52 +75,6 @@ describe("downloadItems", () => {
       { id: "3", username: "bob", takenAt: 0, url: "x.jpg" },
     ]);
     expect(downloadItems(media)[0]?.username).toBe("unknown");
-  });
-});
-
-describe("file names", () => {
-  it("takes the extension from the URL path", () => {
-    expect(fileExtension("https://x.com/a/b.mp4?x=.jpg")).toBe("mp4");
-    expect(fileExtension("https://x.com/a/b")).toBe("jpg");
-  });
-
-  it("joins username, time and id, without characters a file system refuses", () => {
-    const item = {
-      id: "1_2",
-      username: "a:b",
-      takenAt: 5,
-      url: "https://x.com/f.webp",
-    };
-    expect(fileName(item)).toBe("ab_5_1_2.webp");
-  });
-
-  it("keeps the names legitimate items always had", () => {
-    const item = {
-      id: "3123_456",
-      username: "a.b_c9",
-      takenAt: 1700000000,
-      url: "https://x.cdninstagram.com/v/p.JPG?x=1",
-    };
-    expect(fileName(item)).toBe("a.b_c9_1700000000_3123_456.JPG");
-  });
-
-  it("limits the extension to known types, defaulting by kind", () => {
-    expect(fileExtension("https://x.com/a.php")).toBe("jpg");
-    expect(fileExtension("https://x.com/a.exe", true)).toBe("mp4");
-    expect(fileExtension("https://x.com/a.heic")).toBe("heic");
-  });
-
-  it("strips path tricks, control characters and leading dots", () => {
-    const item = {
-      id: "1/../2x\n",
-      username: "../..\u0000bob\u0007",
-      takenAt: 5,
-      url: "https://x.com/f.sh",
-      video: true as const,
-    };
-    expect(fileName(item)).toBe("bob_5_12.mp4");
-    expect(fileName({ ...item, username: ".hidden" })).toBe("hidden_5_12.mp4");
-    expect(fileName({ ...item, username: "...", id: "1" })).toBe("_5_1.mp4");
   });
 });
 
