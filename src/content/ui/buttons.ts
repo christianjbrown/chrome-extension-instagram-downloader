@@ -30,3 +30,10 @@ export function createTextButton(
   button.textContent = spec.label;
   return button;
 }
+
+export type ButtonIcon =
+  "download" | "download-all" | "picture" | "folder" | "following";
+
+// A labelled button with its icon before the text; the icon is drawn in CSS.
+export const textButtonClass = (icon: ButtonIcon): string =>
+  `igdl-text-button igdl-icon-${icon}`;

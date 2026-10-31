@@ -77,14 +77,68 @@
   transform: translateX(-50%);
 }
 
-.igdl-link-button {
-  padding: 0;
+.igdl-text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 14px;
   border: 0;
-  background: none;
-  color: var(--igdl-accent);
+  border-radius: 8px;
+  background: var(--igdl-ink);
+  color: var(--igdl-paper);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+}
+
+.igdl-text-button:hover,
+.igdl-text-button:focus-visible {
+  outline: 2px solid var(--igdl-accent);
+}
+
+/* On the story bar's own ink background the buttons flip to paper. */
+.igdl-story-toolbar .igdl-text-button {
+  background: var(--igdl-paper);
+  color: var(--igdl-ink);
+}
+
+/* The icon is a mask filled with the text colour, so it follows both looks. */
+.igdl-text-button::before {
+  content: "";
+  flex: none;
+  width: 16px;
+  height: 16px;
+  background-color: currentcolor;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+.igdl-icon-download::before {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 4v11M7 11l5 5 5-5M5 20h14' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 4v11M7 11l5 5 5-5M5 20h14' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.igdl-icon-download-all::before {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 3v9M5 9l4 4 4-4M15 7v9M11 13l4 4 4-4M4 21h16' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 3v9M5 9l4 4 4-4M15 7v9M11 13l4 4 4-4M4 21h16' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.igdl-icon-picture::before {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3.5a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM4.5 21c0-4.2 3.4-7 7.5-7s7.5 2.8 7.5 7' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3.5a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM4.5 21c0-4.2 3.4-7 7.5-7s7.5 2.8 7.5 7' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.igdl-icon-folder::before {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 7.5a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 7.5a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.igdl-icon-following::before {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 4.5a3.3 3.3 0 1 0 0 6.6 3.3 3.3 0 0 0 0-6.6zM2.5 20c0-3.5 2.8-5.8 6.5-5.8s6.5 2.3 6.5 5.8M16 4.8a3.3 3.3 0 0 1 0 6.2M18 14.4c2.2.6 3.5 2.4 3.5 5.6' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 4.5a3.3 3.3 0 1 0 0 6.6 3.3 3.3 0 0 0 0-6.6zM2.5 20c0-3.5 2.8-5.8 6.5-5.8s6.5 2.3 6.5 5.8M16 4.8a3.3 3.3 0 0 1 0 6.2M18 14.4c2.2.6 3.5 2.4 3.5 5.6' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
 
 .igdl-toast,

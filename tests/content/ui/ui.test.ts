@@ -1,6 +1,7 @@
 import {
   createButton,
   createTextButton,
+  textButtonClass,
 } from "../../../src/content/ui/buttons";
 import { ToastNotifier } from "../../../src/content/ui/notifier";
 import { ProgressPanel } from "../../../src/content/ui/progressPanel";
@@ -27,6 +28,15 @@ describe("buttons", () => {
       createTextButton(document, { label: "Go", className: "b", onClick })
         .textContent,
     ).toBe("Go");
+  });
+});
+
+describe("textButtonClass", () => {
+  it("names the shared look and one icon", () => {
+    expect(textButtonClass("folder")).toBe("igdl-text-button igdl-icon-folder");
+    expect(textButtonClass("download-all")).toBe(
+      "igdl-text-button igdl-icon-download-all",
+    );
   });
 });
 

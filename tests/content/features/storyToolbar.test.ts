@@ -30,6 +30,15 @@ describe("StoryToolbar", () => {
     const { downloader, feature } = setup("/stories/carol/5/");
     feature.scan();
     expect(document.querySelectorAll(".igdl-story-toolbar")).toHaveLength(1);
+    expect(
+      Array.from(
+        document.querySelectorAll(".igdl-story-toolbar button"),
+        (b) => b.className,
+      ),
+    ).toEqual([
+      "igdl-text-button igdl-icon-download",
+      "igdl-text-button igdl-icon-download-all",
+    ]);
     press("Download this story");
     press("Download all");
     expect(downloader.current).toHaveBeenCalledWith(

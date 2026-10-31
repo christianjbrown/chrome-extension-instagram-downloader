@@ -51,6 +51,16 @@ describe("ProfileToolbar", () => {
       "Download profile picture",
       "Change download folder",
     ]);
+    expect(
+      Array.from(
+        document.querySelectorAll(".igdl-profile-toolbar button"),
+        (b) => b.className,
+      ),
+    ).toEqual([
+      "igdl-text-button igdl-icon-download-all",
+      "igdl-text-button igdl-icon-picture",
+      "igdl-text-button igdl-icon-folder",
+    ]);
     press("Download all posts");
     press("Download profile picture");
     press("Change download folder");

@@ -7,7 +7,11 @@ import type {
 import type { ViewerSource } from "../actions/viewerSource";
 import type { RunStore } from "../bulk/runStore";
 import { parseRoute } from "../dom/route";
-import { createTextButton } from "../ui/buttons";
+import {
+  createTextButton,
+  textButtonClass,
+  type ButtonIcon,
+} from "../ui/buttons";
 import type { Feature, PageView } from "./feature";
 
 export interface ProfileCommands {
@@ -42,22 +46,27 @@ export class ProfileToolbar implements Feature {
     toolbar.className = "igdl-profile-toolbar";
     toolbar.dataset.username = username;
     const { account, picture, folder } = this.commands;
-    this.add(toolbar, "Download all posts", () => account.run(username));
-    this.add(toolbar, "Download profile picture", () => picture.run(username));
-    this.add(toolbar, "Change download folder", () => folder.run());
+    this.add(toolbar, "download-all", "Download all posts", () =>
+      account.run(username),
+    );
+    this.add(toolbar, "picture", "Download profile picture", () =>
+      picture.run(username),
+    );
+    this.add(toolbar, "folder", "Change download folder", () => folder.run());
     void this.addFollowing(toolbar, username);
     return toolbar;
   }
 
   private add(
     toolbar: HTMLElement,
+    icon: ButtonIcon,
     label: string,
     run: () => Promise<void>,
   ): void {
     toolbar.append(
       createTextButton(this.view.document, {
         label,
-        className: "igdl-link-button",
+        className: textButtonClass(icon),
         onClick: () => void run(),
       }),
     );
@@ -72,6 +81,6 @@ export class ProfileToolbar implements Feature {
     const label = (await this.runs.inProgress(viewer.id))
       ? "Resume downloading following"
       : "Download following";
-    this.add(toolbar, label, () => this.commands.following.run());
+    this.add(toolbar, "following", label, () => this.commands.following.run());
   }
 }
