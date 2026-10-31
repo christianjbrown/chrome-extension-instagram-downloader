@@ -9,7 +9,7 @@ export class HourlyBudget {
   constructor(
     private readonly limit: number,
     private readonly sleeper: Sleeper,
-    private readonly now: () => number = Date.now,
+    private readonly now: () => number,
   ) {}
 
   async take(signal: AbortSignal, onWait: (ms: number) => void): Promise<void> {

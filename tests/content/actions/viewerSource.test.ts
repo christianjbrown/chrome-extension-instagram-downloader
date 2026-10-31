@@ -4,7 +4,7 @@ import { fakeBridge } from "../helpers";
 describe("ViewerSource", () => {
   it("looks the account up once", async () => {
     const bridge = fakeBridge({ viewer: () => ({ id: "1", username: "me" }) });
-    const source = new ViewerSource(bridge);
+    const source = new ViewerSource(bridge, () => 0);
     await source.current();
     await expect(source.current()).resolves.toEqual({
       id: "1",

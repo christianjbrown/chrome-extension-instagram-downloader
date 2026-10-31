@@ -11,7 +11,7 @@ export class ViewerSource {
 
   constructor(
     private readonly bridge: Bridge,
-    private readonly now: () => number = Date.now,
+    private readonly now: () => number,
   ) {}
 
   async current(): Promise<Viewer | undefined> {

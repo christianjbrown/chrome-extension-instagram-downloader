@@ -50,7 +50,7 @@ function bulk(
   const sleeper = new TimerSleeper();
   const gate = new ApiGate(
     sleeper,
-    new HourlyBudget(defaultPacing.apiCallsPerHour, sleeper),
+    new HourlyBudget(defaultPacing.apiCallsPerHour, sleeper, Date.now),
     defaultPacing,
   );
   const fetchBlob = blobFetcher((url) => env.window.fetch(url), isMediaUrl);
@@ -102,7 +102,7 @@ export function startContent(env: ContentEnvironment): void {
     env.window.URL,
   );
   const posts = new PostDownloader(bridge, downloader, notifier);
-  const viewers = new ViewerSource(bridge);
+  const viewers = new ViewerSource(bridge, Date.now);
   const commands = {
     account: new DownloadAccountCommand(parts.runner, parts.archiver),
     following: new DownloadFollowingCommand(
