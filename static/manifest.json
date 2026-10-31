@@ -10,20 +10,15 @@
     "128": "icons/icon-128.png"
   },
   "permissions": ["storage"],
-  "host_permissions": [
-    "*://*.instagram.com/*",
-    "*://*.cdninstagram.com/*",
-    "*://*.fbcdn.net/*"
-  ],
   "content_scripts": [
     {
-      "matches": ["*://*.instagram.com/*"],
+      "matches": ["https://www.instagram.com/*"],
       "js": ["page.js"],
       "run_at": "document_start",
       "world": "MAIN"
     },
     {
-      "matches": ["*://*.instagram.com/*"],
+      "matches": ["https://www.instagram.com/*"],
       "js": ["content.js"],
       "css": ["content.css"],
       "run_at": "document_idle"
