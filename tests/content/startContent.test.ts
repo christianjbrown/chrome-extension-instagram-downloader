@@ -10,7 +10,7 @@ function environment() {
     account: {
       id: "9",
       username: "alice",
-      profilePicUrl: "https://cdn.example/p.jpg",
+      profilePicUrl: "https://scontent.cdninstagram.com/p.jpg",
       totalPosts: 1,
     },
     viewer: { id: "1", username: "me" },
@@ -68,7 +68,9 @@ describe("startContent", () => {
       "https://www.instagram.com",
       expect.anything(),
     );
-    expect(fetch).toHaveBeenCalledWith("https://cdn.example/p.jpg");
+    expect(fetch).toHaveBeenCalledWith(
+      "https://scontent.cdninstagram.com/p.jpg",
+    );
     press("Change download folder");
     await vi.waitFor(() => {
       expect(showDirectoryPicker).toHaveBeenCalled();

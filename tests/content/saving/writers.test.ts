@@ -12,15 +12,30 @@ const item = {
 
 describe("blobFetcher", () => {
   it("returns the body of a successful response", async () => {
-    const fetch = blobFetcher(() => Promise.resolve(new Response("data")));
+    const fetch = blobFetcher(
+      () => Promise.resolve(new Response("data")),
+      () => true,
+    );
     await expect((await fetch("u")).text()).resolves.toBe("data");
   });
 
   it("fails on an error status", async () => {
-    const fetch = blobFetcher(() =>
-      Promise.resolve(new Response("", { status: 403 })),
+    const fetch = blobFetcher(
+      () => Promise.resolve(new Response("", { status: 403 })),
+      () => true,
     );
     await expect(fetch("u")).rejects.toThrow("Download failed (403)");
+  });
+});
+
+describe("blobFetcher policy", () => {
+  it("refuses an address the policy rejects without fetching it", async () => {
+    const fetchFn = vi.fn(() => Promise.resolve(new Response("data")));
+    const fetch = blobFetcher(fetchFn, () => false);
+    await expect(fetch("https://evil.example/a.jpg")).rejects.toThrow(
+      "Refusing to download",
+    );
+    expect(fetchFn).not.toHaveBeenCalled();
   });
 });
 

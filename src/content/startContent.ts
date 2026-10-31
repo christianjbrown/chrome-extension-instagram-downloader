@@ -9,7 +9,7 @@ import {
 } from "./actions/profileCommands";
 import { StoryDownloader } from "./actions/storyDownloader";
 import { ViewerSource } from "./actions/viewerSource";
-import { PageBridge } from "./bridgeClient";
+import { type Bridge, PageBridge } from "./bridgeClient";
 import { AccountArchiver } from "./bulk/accountArchiver";
 import { BulkRunner } from "./bulk/bulkRunner";
 import { FollowingDownloader } from "./bulk/followingDownloader";
@@ -29,6 +29,8 @@ import { blobFetcher } from "./saving/fetchBlob";
 import { FileDownloader } from "./saving/fileDownloader";
 import { FolderPicker, type ShowDirectoryPicker } from "./saving/folderPicker";
 import { IndexedDbFolderStore } from "./saving/folderStore";
+import { isMediaUrl } from "../shared/mediaUrl";
+import { ValidatedBridge } from "./validatedBridge";
 import { ToastNotifier } from "./ui/notifier";
 import { ProgressPanel } from "./ui/progressPanel";
 
@@ -40,7 +42,7 @@ export interface ContentEnvironment {
 
 function bulk(
   env: ContentEnvironment,
-  bridge: PageBridge,
+  bridge: Bridge,
   notifier: ToastNotifier,
 ) {
   const sleeper = new TimerSleeper();
@@ -49,7 +51,7 @@ function bulk(
     new HourlyBudget(defaultPacing.apiCallsPerHour, sleeper),
     defaultPacing,
   );
-  const fetchBlob = blobFetcher((url) => env.window.fetch(url));
+  const fetchBlob = blobFetcher((url) => env.window.fetch(url), isMediaUrl);
   const writer = new DirectoryWriter(fetchBlob);
   const pacer = { gate, sleeper, pacing: defaultPacing };
   const archiver = new AccountArchiver(bridge, writer, pacer);
@@ -67,6 +69,14 @@ function bulk(
   return { archiver, following, folders, runner, runs, fetchBlob };
 }
 
+function pageBridge(env: ContentEnvironment): Bridge {
+  return new ValidatedBridge(
+    new PageBridge((message, origin, transfer) => {
+      env.window.postMessage(message, origin, transfer);
+    }),
+  );
+}
+
 export function startContent(env: ContentEnvironment): void {
   const { document } = env.window;
   const view: PageView = {
@@ -74,9 +84,7 @@ export function startContent(env: ContentEnvironment): void {
     pathname: () => env.window.location.pathname,
     viewportHeight: () => env.window.innerHeight,
   };
-  const bridge = new PageBridge((message, origin, transfer) => {
-    env.window.postMessage(message, origin, transfer);
-  });
+  const bridge = pageBridge(env);
   const notifier = new ToastNotifier(document);
   const parts = bulk(env, bridge, notifier);
   const downloader = new FileDownloader(

@@ -22,6 +22,7 @@ export interface DownloadItem {
   readonly username: string;
   readonly takenAt: number;
   readonly url: string;
+  readonly video?: true;
 }
 
 const area = (version: MediaVersion): number => version.width * version.height;
@@ -50,7 +51,9 @@ function itemFor(
   const url = bestUrl(media);
   if (url === undefined) return [];
   const id = media.id ?? String(media.pk);
-  return [{ id, username, takenAt: media.taken_at ?? takenAt, url }];
+  const video =
+    media.video_versions !== undefined ? ({ video: true } as const) : {};
+  return [{ id, username, takenAt: media.taken_at ?? takenAt, url, ...video }];
 }
 
 // One item per file: a carousel gives one per slide.
@@ -65,16 +68,27 @@ export function downloadItems(
 }
 
 const extensionPattern = /\.([0-9a-z]+)(?:[?#]|$)/i;
+const knownExtensions = new Set(["jpg", "jpeg", "png", "webp", "heic", "mp4"]);
 
-export function fileExtension(url: string): string {
-  return extensionPattern.exec(new URL(url).pathname)?.[1] ?? "jpg";
+// Only extensions Instagram really serves; anything else gets the usual one
+// for the kind of file.
+export function fileExtension(url: string, video = false): string {
+  const found = extensionPattern.exec(new URL(url).pathname)?.[1];
+  if (found !== undefined && knownExtensions.has(found.toLowerCase()))
+    return found;
+  return video ? "mp4" : "jpg";
 }
 
-// Matches the names earlier versions wrote, so files already on disk are
-// recognised and skipped.
+// Names are built from the page's data, so only the characters real
+// usernames and ids use are kept. That is what earlier versions wrote for
+// real posts, so files already on disk are recognised and skipped.
 export function fileName(item: DownloadItem): string {
-  const name = `${item.username}_${String(item.takenAt)}_${item.id}.${fileExtension(item.url)}`;
-  return name.replace(/[<>:"/\\|?*]/g, "");
+  const username = item.username.replace(/[^A-Za-z0-9._]/g, "");
+  const id = item.id.replace(/[^0-9_]/g, "");
+  const extension = fileExtension(item.url, item.video === true);
+  return `${username}_${String(item.takenAt)}_${id}.${extension}`
+    .replace(/\p{Cc}/gu, "")
+    .replace(/^\.+/, "");
 }
 
 // The last path segment of a CDN URL is the same for every size of a picture,

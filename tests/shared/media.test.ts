@@ -46,6 +46,16 @@ describe("downloadItems", () => {
     ]);
   });
 
+  it("marks video items so they get a video extension", () => {
+    const media = {
+      ...photo("2"),
+      video_versions: [
+        { url: "https://x.cdninstagram.com/v", width: 1, height: 1 },
+      ],
+    };
+    expect(downloadItems(media)[0]?.video).toBe(true);
+  });
+
   it("gives one item per carousel slide, borrowing the post's details", () => {
     const slide = {
       pk: 9,
@@ -84,6 +94,35 @@ describe("file names", () => {
       url: "https://x.com/f.webp",
     };
     expect(fileName(item)).toBe("ab_5_1_2.webp");
+  });
+
+  it("keeps the names legitimate items always had", () => {
+    const item = {
+      id: "3123_456",
+      username: "a.b_c9",
+      takenAt: 1700000000,
+      url: "https://x.cdninstagram.com/v/p.JPG?x=1",
+    };
+    expect(fileName(item)).toBe("a.b_c9_1700000000_3123_456.JPG");
+  });
+
+  it("limits the extension to known types, defaulting by kind", () => {
+    expect(fileExtension("https://x.com/a.php")).toBe("jpg");
+    expect(fileExtension("https://x.com/a.exe", true)).toBe("mp4");
+    expect(fileExtension("https://x.com/a.heic")).toBe("heic");
+  });
+
+  it("strips path tricks, control characters and leading dots", () => {
+    const item = {
+      id: "1/../2x\n",
+      username: "../..\u0000bob\u0007",
+      takenAt: 5,
+      url: "https://x.com/f.sh",
+      video: true as const,
+    };
+    expect(fileName(item)).toBe("bob_5_12.mp4");
+    expect(fileName({ ...item, username: ".hidden" })).toBe("hidden_5_12.mp4");
+    expect(fileName({ ...item, username: "...", id: "1" })).toBe("_5_1.mp4");
   });
 });
 
