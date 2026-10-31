@@ -5,7 +5,7 @@ import { createProcedures } from "../../src/page/procedures";
 import { photo } from "../fixtures";
 
 function setup() {
-  const cache = new MediaCache();
+  const cache = new MediaCache(100);
   const queries = {
     viewerId: vi.fn(() => "1"),
     profile: vi.fn(() =>

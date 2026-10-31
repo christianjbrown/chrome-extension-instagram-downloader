@@ -39,10 +39,28 @@ function ownerOf(reel: Json): string | undefined {
     : undefined;
 }
 
+// Remembers a value as the newest entry, forgetting the oldest past the limit.
+function remember<V>(
+  map: Map<string, V>,
+  limit: number,
+  key: string,
+  value: V,
+): void {
+  map.delete(key);
+  map.set(key, value);
+  if (map.size <= limit) return;
+  for (const oldest of map.keys()) {
+    map.delete(oldest);
+    return;
+  }
+}
+
 export class MediaCache {
   private readonly media = new Map<string, InstagramMedia>();
   private readonly users = new Map<string, string>();
   private readonly reels = new Map<string, Reel>();
+
+  constructor(private readonly limit: number) {}
 
   ingest(root: unknown): void {
     const pending: unknown[] = [root];
@@ -57,16 +75,16 @@ export class MediaCache {
   private remember(value: Json): void {
     if (isMedia(value)) {
       const media = value as unknown as InstagramMedia;
-      this.media.set(String(media.pk), media);
+      remember(this.media, this.limit, String(media.pk), media);
     }
     if (isUser(value)) {
       const id = String(value.pk ?? value.id);
-      this.users.set(value.username as string, id);
+      remember(this.users, this.limit, value.username as string, id);
     }
     if (isReel(value)) {
       const items = (value.items as unknown[]).filter(isObject).filter(isMedia);
       const reel = { owner: ownerOf(value), items } as unknown as Reel;
-      this.reels.set(String(value.id), reel);
+      remember(this.reels, this.limit, String(value.id), reel);
     }
   }
 
