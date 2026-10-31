@@ -23,6 +23,16 @@ describe("SafeFileNamer", () => {
     expect(namer.nameFor(item)).toBe("a.b_c9_1700000000_3123_456.JPG");
   });
 
+  it("keeps the profile picture's name", () => {
+    const item = {
+      id: "123_profile",
+      username: "bob",
+      takenAt: 0,
+      url: "https://x.cdninstagram.com/v/p.jpg",
+    };
+    expect(namer.nameFor(item)).toBe("bob_0_123_profile.jpg");
+  });
+
   it("takes the extension from the URL path, limited to known types", () => {
     const named = (url: string, video?: true) =>
       namer.nameFor({
@@ -47,9 +57,9 @@ describe("SafeFileNamer", () => {
       url: "https://x.com/f.sh",
       video: true as const,
     };
-    expect(namer.nameFor(item)).toBe("bob_5_12.mp4");
+    expect(namer.nameFor(item)).toBe("bob_5_12x.mp4");
     expect(namer.nameFor({ ...item, username: ".hidden" })).toBe(
-      "hidden_5_12.mp4",
+      "hidden_5_12x.mp4",
     );
     expect(namer.nameFor({ ...item, username: "...", id: "1" })).toBe(
       "_5_1.mp4",

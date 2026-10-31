@@ -22,7 +22,7 @@ function fileExtension(url: string, video = false): string {
 export class SafeFileNamer implements FileNamer {
   nameFor(item: DownloadItem): string {
     const username = item.username.replace(/[^A-Za-z0-9._]/g, "");
-    const id = item.id.replace(/[^0-9_]/g, "");
+    const id = item.id.replace(/\W/g, "");
     const extension = fileExtension(item.url, item.video === true);
     return `${username}_${String(item.takenAt)}_${id}.${extension}`
       .replace(/\p{Cc}/gu, "")
