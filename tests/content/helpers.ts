@@ -61,8 +61,15 @@ export class MemoryFolder {
     return Promise.resolve(folder);
   }
 
-  getFileHandle(name: string): Promise<MemoryFile> {
-    if (!this.files.has(name)) this.files.set(name, new Blob([]));
+  getFileHandle(
+    name: string,
+    options?: { create?: boolean },
+  ): Promise<MemoryFile> {
+    if (!this.files.has(name)) {
+      if (options?.create !== true)
+        return Promise.reject(new DOMException("missing", "NotFoundError"));
+      this.files.set(name, new Blob([]));
+    }
     return Promise.resolve({
       getFile: () => Promise.resolve(this.files.get(name)!),
       createWritable: () =>

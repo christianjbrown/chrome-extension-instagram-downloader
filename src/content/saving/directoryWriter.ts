@@ -14,8 +14,8 @@ export interface ItemWriter {
   ): Promise<WriteOutcome>;
 }
 
-// Writes files into a folder the user chose. A file that fails is left empty
-// so the next run tries it again.
+// Writes files into a folder the user chose. A file that fails is not
+// kept, so the next run tries it again.
 export class DirectoryWriter implements ItemWriter {
   constructor(private readonly fetchBlob: FetchBlob) {}
 
@@ -23,8 +23,15 @@ export class DirectoryWriter implements ItemWriter {
     folder: FileSystemDirectoryHandle,
     item: DownloadItem,
   ): Promise<boolean> {
-    const handle = await folder.getFileHandle(fileName(item), { create: true });
-    return (await handle.getFile()).size > 0;
+    try {
+      const handle = await folder.getFileHandle(fileName(item));
+      return (await handle.getFile()).size > 0;
+    } catch (error) {
+      // A file that is not there is a plain no; asking must not create it.
+      if (error instanceof DOMException && error.name === "NotFoundError")
+        return false;
+      throw error;
+    }
   }
 
   async write(

@@ -49,11 +49,32 @@ describe("DirectoryWriter", () => {
     expect(folder.files.get("alice_5_1_2.jpg")?.size).toBe(1);
   });
 
-  it("leaves a failed file empty so it is tried again", async () => {
+  it("asking whether a file exists creates nothing", async () => {
+    const folder = new MemoryFolder();
+    const writer = new DirectoryWriter(() => Promise.resolve(new Blob(["x"])));
+    await expect(writer.exists(asFolder(folder), item)).resolves.toBe(false);
+    expect(folder.files.size).toBe(0);
+  });
+
+  it("passes on errors other than a missing file", async () => {
+    const writer = new DirectoryWriter(() => Promise.resolve(new Blob(["x"])));
+    for (const error of [
+      new DOMException("no", "NotAllowedError"),
+      new Error("boom"),
+    ]) {
+      const folder = {
+        getFileHandle: () => Promise.reject(error),
+      } as unknown as FileSystemDirectoryHandle;
+      await expect(writer.exists(folder, item)).rejects.toBe(error);
+    }
+  });
+
+  it("leaves nothing behind for a failed file so it is tried again", async () => {
     const folder = new MemoryFolder();
     const writer = new DirectoryWriter(() => Promise.reject(new Error("403")));
     await expect(writer.write(asFolder(folder), item)).resolves.toBe("failed");
-    expect(folder.files.get("alice_5_1_2.jpg")?.size).toBe(0);
+    expect(folder.files.has("alice_5_1_2.jpg")).toBe(false);
+    await expect(writer.exists(asFolder(folder), item)).resolves.toBe(false);
   });
 });
 
