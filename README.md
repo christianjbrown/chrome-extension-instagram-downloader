@@ -51,6 +51,13 @@ reaches posts you already have. Want to fiddle with the numbers? They live in
 Most single downloads don't cost a request at all. The page script just reads
 the post and story data Instagram already sent to draw the page. Sneaky. 🕵️
 
+## No tracking 🔒
+
+No analytics, no tracking, no ads, no accounts, and nothing phoning home. The
+only things it ever fetches come from Instagram itself: the posts you asked for
+and the photos and videos in them. Files go straight into the folder you
+picked, and nothing about what you download goes anywhere else.
+
 ## How it's put together 🧩
 
 TypeScript, bundled by esbuild into two scripts that talk to each other:
