@@ -13,6 +13,7 @@ import { type Bridge, PageBridge } from "./bridgeClient";
 import { AccountArchiver } from "./bulk/accountArchiver";
 import { BulkRunner } from "./bulk/bulkRunner";
 import { FollowingDownloader } from "./bulk/followingDownloader";
+import { FollowingLister } from "./bulk/followingLister";
 import { RunStore, type KeyValueArea } from "./bulk/runStore";
 import type { Feature, PageView } from "./features/feature";
 import { GridButtons } from "./features/gridButtons";
@@ -60,7 +61,13 @@ function bulk(
   const pacer = { gate, sleeper, pacing: defaultPacing };
   const archiver = new AccountArchiver(bridge, writer, pacer);
   const runs = new RunStore(env.storage);
-  const following = new FollowingDownloader(bridge, archiver, runs, pacer);
+  const following = new FollowingDownloader({
+    lister: new FollowingLister(bridge, pacer),
+    archiver,
+    store: runs,
+    pacer,
+    now: Date.now,
+  });
   const folders = new FolderPicker(
     new IndexedDbFolderStore(env.window.indexedDB),
     (options) => env.window.showDirectoryPicker(options),
