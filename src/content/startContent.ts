@@ -15,6 +15,8 @@ import { BulkRunner } from "./bulk/bulkRunner";
 import { ConsecutiveFailureTally } from "./bulk/failureTally";
 import { FollowingDownloader } from "./bulk/followingDownloader";
 import { FollowingLister } from "./bulk/followingLister";
+import { GatedPostTotals } from "./bulk/postTotals";
+import type { Pacer } from "./pacing/pacer";
 import { RunStore, type KeyValueArea } from "./bulk/runStore";
 import type { Feature, PageView } from "./features/feature";
 import { GridButtons } from "./features/gridButtons";
@@ -47,22 +49,31 @@ export interface ContentEnvironment {
   readonly storage: KeyValueArea;
 }
 
-function bulk(
-  env: ContentEnvironment,
-  bridge: Bridge,
-  notifier: ToastNotifier,
-) {
+function bulkPacer(): Pacer {
   const sleeper = new TimerSleeper();
   const gate = new ApiGate(
     sleeper,
     new HourlyBudget(defaultPacing.apiCallsPerHour, sleeper, Date.now),
     defaultPacing,
   );
+  return { gate, sleeper, pacing: defaultPacing };
+}
+
+function bulk(
+  env: ContentEnvironment,
+  bridge: Bridge,
+  notifier: ToastNotifier,
+) {
+  const pacer = bulkPacer();
   const namer = new SafeFileNamer();
   const fetchBlob = blobFetcher((url) => env.window.fetch(url), isMediaUrl);
   const writer = new DirectoryWriter(fetchBlob, namer);
-  const pacer = { gate, sleeper, pacing: defaultPacing };
-  const archiver = new AccountArchiver(bridge, writer, pacer);
+  const archiver = new AccountArchiver(
+    bridge,
+    writer,
+    pacer,
+    new GatedPostTotals(bridge, pacer.gate),
+  );
   const runs = new RunStore(env.storage);
   const following = new FollowingDownloader({
     lister: new FollowingLister(bridge, pacer),

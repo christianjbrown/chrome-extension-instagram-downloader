@@ -31,7 +31,7 @@ it("downloading an account archives it in full", async () => {
   ).run("alice");
   const report = reporter();
   await expect(jobs[0]?.run(folder, signal(), report)).resolves.toBe(
-    "Finished: 2 saved, 1 already there.",
+    "Finished: 2 new files, 1 already exists.",
   );
   expect(jobs[0]?.title).toBe("Downloading alice");
   expect(archiver.archive).toHaveBeenCalledWith(

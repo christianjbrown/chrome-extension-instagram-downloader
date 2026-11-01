@@ -1,8 +1,4 @@
-import {
-  AccountArchiver,
-  describeCounts,
-  describeProgress,
-} from "../../../src/content/bulk/accountArchiver";
+import { AccountArchiver } from "../../../src/content/bulk/accountArchiver";
 import { defaultPacing } from "../../../src/content/pacing/pacing";
 import type { ItemWriter } from "../../../src/content/saving/directoryWriter";
 import { photo } from "../../fixtures";
@@ -20,7 +16,11 @@ const pages = [
   { items: [photo("4", "d.jpg")], cursor: undefined },
 ];
 
-function setup(existing: string[] = [], outcome: "saved" | "failed" = "saved") {
+function setup(
+  existing: string[] = [],
+  outcome: "saved" | "failed" = "saved",
+  total?: number,
+) {
   const bridge = fakeBridge({
     postsPage: ({ cursor }) =>
       pages[cursor === undefined ? 0 : Number(cursor.slice(1))]!,
@@ -38,32 +38,15 @@ function setup(existing: string[] = [], outcome: "saved" | "failed" = "saved") {
     sleeper: { sleep: vi.fn(), between: vi.fn(() => Promise.resolve()) },
     pacing: defaultPacing,
   };
+  const totals = { find: vi.fn(() => Promise.resolve(total)) };
   return {
     bridge,
     writer,
     pacer,
-    archiver: new AccountArchiver(bridge, writer, pacer as never),
+    totals,
+    archiver: new AccountArchiver(bridge, writer, pacer as never, totals),
   };
 }
-
-it("describes counts, mentioning failures only when there are some", () => {
-  expect(describeCounts({ saved: 1, skipped: 2, failed: 0 })).toBe(
-    "1 saved, 2 already there",
-  );
-  expect(describeCounts({ saved: 1, skipped: 2, failed: 3 })).toBe(
-    "1 saved, 2 already there, 3 failed",
-  );
-});
-
-it("counts posts against the account's total when it is known", () => {
-  const counts = { saved: 1, skipped: 2, failed: 0 };
-  expect(describeProgress(3, 640, counts)).toBe(
-    "Post 3 of 640: 1 saved, 2 already there",
-  );
-  expect(describeProgress(641, 640, counts)).toBe(
-    "Post 641: 1 saved, 2 already there",
-  );
-});
 
 describe("AccountArchiver", () => {
   it("saves every post of every page into the account's folder", async () => {
@@ -86,7 +69,48 @@ describe("AccountArchiver", () => {
       expect.anything(),
     );
     expect(report.detail).toHaveBeenLastCalledWith(
-      "Post 4: 3 saved, 1 already there",
+      "Post 4: 3 new files, 1 already exists",
+    );
+    expect(report.accountBar).toHaveBeenCalledTimes(1);
+    expect(report.accountBar).toHaveBeenCalledWith(undefined);
+  });
+
+  it("counts posts against the account's total and fills its bar", async () => {
+    const { archiver, totals } = setup([], "saved", 8);
+    const report = reporter();
+    await archiver.archive({
+      username: "alice",
+      folder: asFolder(new MemoryFolder()),
+      onlyNew: false,
+      signal: signal(),
+      reporter: report,
+    });
+    expect(totals.find).toHaveBeenCalledTimes(1);
+    expect(totals.find).toHaveBeenCalledWith(
+      "alice",
+      pages[0],
+      expect.anything(),
+      report,
+    );
+    expect(report.detail).toHaveBeenLastCalledWith(
+      "Post 4 of 8 (50%): 4 new files, 0 already exist",
+    );
+    expect(report.accountBar).toHaveBeenLastCalledWith(0.5);
+  });
+
+  it("caps the bar when Instagram's count is behind", async () => {
+    const { archiver } = setup([], "saved", 2);
+    const report = reporter();
+    await archiver.archive({
+      username: "alice",
+      folder: asFolder(new MemoryFolder()),
+      onlyNew: false,
+      signal: signal(),
+      reporter: report,
+    });
+    expect(report.accountBar).toHaveBeenLastCalledWith(1);
+    expect(report.detail).toHaveBeenLastCalledWith(
+      "Post 4: 4 new files, 0 already exist",
     );
   });
 
@@ -120,7 +144,7 @@ describe("AccountArchiver", () => {
   });
 
   it("stops at the first later page with nothing new for an account archived before", async () => {
-    const { archiver, pacer } = setup(["a.jpg", "b.jpg", "c.jpg"]);
+    const { archiver, pacer, totals } = setup(["a.jpg", "b.jpg", "c.jpg"]);
     await archiver.archive({
       username: "a",
       folder: asFolder(new MemoryFolder()),
@@ -129,6 +153,7 @@ describe("AccountArchiver", () => {
       reporter: reporter(),
     });
     expect(pacer.gate.call).toHaveBeenCalledTimes(2);
+    expect(totals.find).not.toHaveBeenCalled();
   });
 
   it("stops when the run is stopped", async () => {

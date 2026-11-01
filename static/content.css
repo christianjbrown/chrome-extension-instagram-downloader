@@ -171,6 +171,33 @@
   margin-bottom: 4px;
 }
 
+.igdl-panel-overall {
+  color: var(--igdl-muted);
+  font-size: 12px;
+}
+
+.igdl-panel-overall-bar,
+.igdl-panel-account-bar {
+  height: 6px;
+  margin: 4px 0 8px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: rgb(0 0 0 / 10%);
+}
+
+.igdl-panel-overall-bar[hidden],
+.igdl-panel-account-bar[hidden] {
+  display: none;
+}
+
+.igdl-panel-overall-bar > div,
+.igdl-panel-account-bar > div {
+  width: 0;
+  height: 100%;
+  background: var(--igdl-accent);
+  transition: width 0.3s ease;
+}
+
 .igdl-panel-note {
   margin: 6px 0 10px;
   color: var(--igdl-muted);

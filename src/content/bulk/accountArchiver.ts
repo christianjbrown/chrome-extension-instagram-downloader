@@ -2,31 +2,15 @@ import { downloadItems } from "../../shared/media";
 import type { PostsPage } from "../../shared/bridge";
 import type { Bridge } from "../bridgeClient";
 import type { Pacer } from "../pacing/pacer";
-import type { ItemWriter, WriteOutcome } from "../saving/directoryWriter";
+import type { ItemWriter } from "../saving/directoryWriter";
 import type { RunReporter } from "../ui/progressPanel";
-
-export type Counts = Record<WriteOutcome, number>;
+import type { PostTotals } from "./postTotals";
+import { describeProgress, type Counts } from "./progressText";
 
 interface Tally {
   readonly counts: Counts;
   post: number;
-}
-
-export function describeCounts(counts: Counts): string {
-  const failed = counts.failed > 0 ? `, ${String(counts.failed)} failed` : "";
-  return `${String(counts.saved)} saved, ${String(counts.skipped)} already there${failed}`;
-}
-
-// Where the run has got to. Posts are counted against the account's total
-// when the page knows it; the counts after the colon are files, since a
-// carousel post holds several.
-export function describeProgress(
-  post: number,
-  total: number | undefined,
-  counts: Counts,
-): string {
-  const of = total !== undefined && post <= total ? ` of ${String(total)}` : "";
-  return `Post ${String(post)}${of}: ${describeCounts(counts)}`;
+  total: number | undefined;
 }
 
 export interface ArchiveRequest {
@@ -45,6 +29,7 @@ export class AccountArchiver {
     private readonly bridge: Bridge,
     private readonly writer: ItemWriter,
     private readonly pacer: Pacer,
+    private readonly totals: PostTotals,
   ) {}
 
   async archive(request: ArchiveRequest): Promise<Counts> {
@@ -52,7 +37,12 @@ export class AccountArchiver {
     const folder = await request.folder.getDirectoryHandle(username, {
       create: true,
     });
-    const tally = { counts: { saved: 0, skipped: 0, failed: 0 }, post: 0 };
+    const tally: Tally = {
+      counts: { saved: 0, skipped: 0, failed: 0 },
+      post: 0,
+      total: undefined,
+    };
+    reporter.accountBar(undefined);
     let cursor: string | undefined;
     let page = 0;
     do {
@@ -62,6 +52,14 @@ export class AccountArchiver {
         reporter,
       );
       page += 1;
+      // A rerun stops at the first old page, so a total would only mislead.
+      if (page === 1 && !request.onlyNew)
+        tally.total = await this.totals.find(
+          username,
+          result,
+          signal,
+          reporter,
+        );
       const saved = tally.counts.saved;
       await this.writePage(folder, result, tally, request);
       // Page one can be all pinned posts, so only trust a later page.
@@ -82,10 +80,12 @@ export class AccountArchiver {
     tally.post += unreadable;
     for (const media of result.items) {
       tally.post += 1;
+      if (tally.total !== undefined)
+        reporter.accountBar(Math.min(1, tally.post / tally.total));
       for (const item of downloadItems(media, username)) {
         await this.writeOne(folder, item, tally.counts, signal);
         reporter.detail(
-          describeProgress(tally.post, result.total, tally.counts),
+          describeProgress(tally.post, tally.total, tally.counts),
         );
       }
     }

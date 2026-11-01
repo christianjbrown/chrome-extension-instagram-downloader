@@ -31,6 +31,8 @@ export const reporter = (): Mocked<RunReporter> => ({
   heading: vi.fn(),
   detail: vi.fn(),
   waiting: vi.fn(),
+  overall: vi.fn(),
+  accountBar: vi.fn(),
 });
 
 export const notifier = (): { error: Mock<(message: string) => void> } => ({
