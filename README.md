@@ -63,7 +63,7 @@ Then hit the reload arrow on the Christian's Instagram Downloader card in `chrom
 
 No analytics, no tracking, no ads, no accounts, and nothing phoning home. The only things it ever fetches come from Instagram itself: the posts you asked for and the photos and videos in them. Files go straight into the folder you picked, and nothing about what you download goes anywhere else.
 
-## Hacking on it 🛠️
+## Development 🛠️
 
 It's TypeScript, bundled with esbuild, tested with Vitest.
 
