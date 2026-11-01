@@ -2,6 +2,8 @@
 
 Ever wanted to keep that photo, reel or story before it vanishes into the algorithm? This Chrome extension sticks a little download button on pretty much everything Instagram shows you. Photos, videos, carousels, stories, highlights, a whole account, even every account you follow. Yes, all of them. 🙃
 
+![The extension's buttons on a stand-in Instagram profile: download all posts, the profile picture or change the folder, plus a download button on a thumbnail](docs/screenshot.png)
+
 ## What you get ⬇️
 
 | Where you are                            | What shows up                                                                                                        |
