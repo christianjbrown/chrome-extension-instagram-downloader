@@ -1,5 +1,5 @@
 import { PostDownloader } from "../../../src/content/actions/postDownloader";
-import { photo } from "../../fixtures";
+import { cdn, photo } from "../../fixtures";
 import { fakeBridge, notifier } from "../helpers";
 
 function setup() {
@@ -31,6 +31,29 @@ describe("PostDownloader", () => {
     downloader.download.mockClear();
     await posts.download({ mediaId: "1", slide: 1 });
     expect(ids(downloader)).toEqual(["12_1"]);
+  });
+
+  it("names the files after the given owner when the post does not say", async () => {
+    const { posts, downloader } = setup();
+    const anonymous = {
+      pk: "3",
+      image_versions2: {
+        candidates: [{ url: cdn("3.jpg"), width: 1, height: 1 }],
+      },
+    };
+    const bridge = fakeBridge({ media: () => anonymous });
+    await new PostDownloader(bridge, downloader, notifier()).download(
+      { mediaId: "3", slide: undefined },
+      "bob",
+    );
+    expect(downloader.download).toHaveBeenCalledWith(
+      expect.objectContaining({ username: "bob" }),
+    );
+    downloader.download.mockClear();
+    await posts.download({ mediaId: "1", slide: 0 }, "bob");
+    expect(downloader.download).toHaveBeenCalledWith(
+      expect.objectContaining({ username: "alice" }),
+    );
   });
 
   it("finds a post by the picture on screen", async () => {

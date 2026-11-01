@@ -2,10 +2,10 @@ import type { PostDownloader } from "../../../src/content/actions/postDownloader
 import { GridButtons } from "../../../src/content/features/gridButtons";
 import { click, view } from "./view";
 
-function setup(html: string, width = 300) {
+function setup(html: string, width = 300, path = "/alice/") {
   const downloader = { download: vi.fn(() => Promise.resolve()) };
   const feature = new GridButtons(
-    view("/alice/", html),
+    view(path, html),
     downloader as unknown as PostDownloader,
   );
   for (const link of document.querySelectorAll("a"))
@@ -22,10 +22,23 @@ describe("GridButtons", () => {
     );
     expect(document.querySelectorAll(".igdl-grid-button")).toHaveLength(2);
     click(".igdl-grid-button");
-    expect(downloader.download).toHaveBeenCalledWith({
-      mediaId: "4017076322398781430",
-      slide: undefined,
-    });
+    expect(downloader.download).toHaveBeenCalledWith(
+      { mediaId: "4017076322398781430", slide: undefined },
+      "alice",
+    );
+  });
+
+  it("names no owner on a grid that is not a profile", () => {
+    const downloader = setup(
+      '<a href="/p/De_haHANj_2/"><img></a>',
+      300,
+      "/explore/",
+    );
+    click(".igdl-grid-button");
+    expect(downloader.download).toHaveBeenCalledWith(
+      { mediaId: "4017076322398781430", slide: undefined },
+      undefined,
+    );
   });
 
   it("leaves feed posts, small thumbnails and odd links alone", () => {

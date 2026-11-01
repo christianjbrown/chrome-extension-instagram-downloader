@@ -56,7 +56,6 @@ describe("parseOutput", () => {
       ["media", { pk: {} }],
       ["media", { pk: 1, taken_at: "x" }],
       ["media", { pk: 1, taken_at: Infinity }],
-      ["media", { pk: 1, user: { username: 3 } }],
       ["media", { pk: 1, carousel_media: "x" }],
       ["media", { pk: 1, image_versions2: {} }],
       ["media", { pk: 1, video_versions: [{ url: cdn("a"), width: "1" }] }],
@@ -88,6 +87,14 @@ describe("parseOutput", () => {
     expect(parseOutput("media", { pk: 1, image_versions2: null })).toEqual({
       pk: 1,
     });
+  });
+
+  it("drops an owner that cannot name anybody, keeping the post", () => {
+    for (const owner of [{ pk: "9" }, { username: 3 }, "alice", 7])
+      expect(parseOutput("media", { pk: 1, user: owner })).toEqual({ pk: 1 });
+    expect(
+      parseOutput("media", { pk: 1, user: { username: "u", pk: {} } }),
+    ).toEqual({ pk: 1, user: { username: "u" } });
   });
 
   it("leaves out an odd post and counts it, keeping the rest of the page", () => {
