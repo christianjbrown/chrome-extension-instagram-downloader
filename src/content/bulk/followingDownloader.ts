@@ -1,5 +1,4 @@
 import type { Viewer } from "../../shared/bridge";
-import type { Pacer } from "../pacing/pacer";
 import type { RunReporter } from "../ui/progressPanel";
 import type { AccountArchiver } from "./accountArchiver";
 import type { FailureTally } from "./failureTally";
@@ -14,12 +13,13 @@ export interface FollowingRequest {
 }
 
 // Archives every account the viewer follows, one at a time, keeping its
-// place so a stopped run carries on where it left off.
+// place so a stopped run carries on where it left off. The pacing lives in
+// the API gate every call goes through, so a small account costs what it
+// costs and nothing more.
 export interface FollowingDependencies {
   readonly lister: FollowingSource;
   readonly archiver: AccountArchiver;
   readonly store: RunStore;
-  readonly pacer: Pacer;
   readonly now: () => number;
   readonly tally: FailureTally;
 }
@@ -28,7 +28,7 @@ export class FollowingDownloader {
   constructor(private readonly deps: FollowingDependencies) {}
 
   async run(request: FollowingRequest): Promise<string> {
-    const { viewer, signal, reporter } = request;
+    const { viewer, reporter } = request;
     const state = await this.deps.store.load(viewer.id);
     const following = state.following ?? (await this.deps.lister.list(request));
     state.following = following;
@@ -41,13 +41,6 @@ export class FollowingDownloader {
         `${username} (${String(before + index + 1)} of ${String(following.length)})`,
       );
       await this.archiveOne(request, state, username);
-      if (index < remaining.length - 1) {
-        reporter.detail("Resting before the next account");
-        await this.deps.pacer.sleeper.between(
-          this.deps.pacer.pacing.accountDelayMs,
-          signal,
-        );
-      }
     }
     await this.deps.store.save(viewer.id, {
       ...state,

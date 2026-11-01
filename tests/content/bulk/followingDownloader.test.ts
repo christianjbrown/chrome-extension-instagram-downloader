@@ -42,7 +42,6 @@ function setup(initial?: unknown) {
     lister: new FollowingLister(bridge, pacer as never),
     archiver: archiver as unknown as AccountArchiver,
     store,
-    pacer: pacer as never,
     now: () => 1234,
     tally: new ConsecutiveFailureTally(2),
   });
@@ -57,13 +56,13 @@ function setup(initial?: unknown) {
 }
 
 describe("FollowingDownloader", () => {
-  it("lists everyone followed, archives each, rests between them and clears the run", async () => {
+  it("lists everyone followed, archives each straight after the last and clears the run", async () => {
     const { run, archiver, pacer, data } = setup();
     await expect(run()).resolves.toBe("Finished all 3 accounts you follow.");
     expect(
       archiver.archive.mock.calls.map(([request]) => request.username),
     ).toEqual(["a", "b", "c"]);
-    expect(pacer.sleeper.between).toHaveBeenCalledTimes(2);
+    expect(pacer.sleeper.between).not.toHaveBeenCalled();
     expect(data["followingDownload:1"]).toMatchObject({
       following: null,
       done: [],
