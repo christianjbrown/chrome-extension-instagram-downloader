@@ -23,8 +23,10 @@ const text = (value: unknown, what: string): string =>
 const count = (value: unknown, what: string): number =>
   typeof value === "number" && Number.isFinite(value) ? value : reject(what);
 
+// Instagram marks a missing field with null as often as it leaves it out: a
+// photo arrives with video_versions and carousel_media set to null.
 const optional = <T>(value: unknown, parse: Parser<T>): T | undefined =>
-  value === undefined ? undefined : parse(value);
+  value === undefined || value === null ? undefined : parse(value);
 
 const list = <T>(value: unknown, parse: Parser<T>, what: string): T[] =>
   Array.isArray(value) ? (value as unknown[]).map(parse) : reject(what);
