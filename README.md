@@ -55,7 +55,7 @@ Then hit the reload arrow on the Christian's Instagram Downloader card in `chrom
 ## Good to know 🤓
 
 - **Single downloads land in Chrome's usual download folder.** No questions asked.
-- **Bulk downloads ask you for a folder,** once per tab (it forgets when you close the tab, on purpose). Each account goes in `<folder>/<username>/`, and anything already there is skipped, so running one again only fetches what's new. The panel counts the posts as it goes, out of the account's total when you started from its profile page.
+- **Bulk downloads ask you for a folder,** once per tab (it forgets when you close the tab, on purpose). Each account goes in `<folder>/<username>/`, and anything already there is skipped, so running one again only fetches what's new. The panel shows which post it's on out of the account's total, with a progress bar, plus a second bar for the whole run when you're grabbing everyone you follow. 📊 Finding the total costs one extra call per account unless Instagram already sent it, and reruns that only look for new posts skip it.
 - **It asks for one permission,** `storage`, which is where a stopped bulk run keeps its place so **Resume** can carry on. That's your following list and when each account was last finished, on your machine only.
 - **It only runs on `www.instagram.com`,** so Chrome will say it can read and change your data there, and that's the whole list.
 

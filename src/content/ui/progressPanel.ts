@@ -6,12 +6,29 @@ export interface RunReporter {
   heading(text: string): void;
   detail(text: string): void;
   waiting(reason: string, ms: number): void;
+  /** Where a run over many accounts has got to, as words and a fraction done. */
+  overall(text: string, fraction: number): void;
+  /** How far through the current account, or undefined to hide the bar. */
+  accountBar(fraction: number | undefined): void;
 }
 
 export interface RunPanel extends RunReporter {
   open(title: string, onStop: () => void): void;
   finish(message: string): void;
 }
+
+// Top to bottom. Bars stay hidden until something reports a fraction.
+const parts = [
+  "title",
+  "overall",
+  "overall-bar",
+  "heading",
+  "detail",
+  "account-bar",
+  "note",
+] as const;
+type Part = (typeof parts)[number];
+const isBar = (part: Part): boolean => part.endsWith("-bar");
 
 // A fixed panel showing what a bulk download is doing, with a Stop button.
 export class ProgressPanel implements RunPanel {
@@ -28,11 +45,7 @@ export class ProgressPanel implements RunPanel {
     this.element?.remove();
     const panel = this.document.createElement("div");
     panel.className = "igdl-panel";
-    for (const part of ["title", "heading", "detail", "note"]) {
-      const line = this.document.createElement("div");
-      line.className = `igdl-panel-${part}`;
-      panel.append(line);
-    }
+    for (const part of parts) panel.append(this.line(part));
     this.set("title", title, panel);
     this.set("note", "Keep this tab open while it runs.", panel);
     panel.append(
@@ -46,9 +59,35 @@ export class ProgressPanel implements RunPanel {
     this.element = panel;
   }
 
-  private set(part: string, text: string, panel = this.element): void {
-    const line = panel?.querySelector(`.igdl-panel-${part}`);
+  private line(part: Part): HTMLElement {
+    const line = this.document.createElement("div");
+    line.className = `igdl-panel-${part}`;
+    if (!isBar(part)) return line;
+    line.hidden = true;
+    line.setAttribute("role", "progressbar");
+    line.setAttribute("aria-valuemin", "0");
+    line.setAttribute("aria-valuemax", "100");
+    line.append(this.document.createElement("div"));
+    return line;
+  }
+
+  private find(part: Part, panel = this.element): HTMLElement | null {
+    return panel?.querySelector<HTMLElement>(`.igdl-panel-${part}`) ?? null;
+  }
+
+  private set(part: Part, text: string, panel = this.element): void {
+    const line = this.find(part, panel);
     if (line) line.textContent = text;
+  }
+
+  private bar(part: Part, fraction: number | undefined): void {
+    const bar = this.find(part);
+    if (!bar) return;
+    bar.hidden = fraction === undefined;
+    const value = Math.round((fraction ?? 0) * 100);
+    bar.setAttribute("aria-valuenow", String(value));
+    const fill = bar.firstElementChild as HTMLElement;
+    fill.style.width = `${String(value)}%`;
   }
 
   heading(text: string): void {
@@ -66,6 +105,15 @@ export class ProgressPanel implements RunPanel {
     this.stopCountdown = this.countdown.start(ms, (remaining) => {
       this.set("detail", describeWait(reason, remaining));
     });
+  }
+
+  overall(text: string, fraction: number): void {
+    this.set("overall", text);
+    this.bar("overall-bar", fraction);
+  }
+
+  accountBar(fraction: number | undefined): void {
+    this.bar("account-bar", fraction);
   }
 
   finish(message: string): void {

@@ -129,3 +129,38 @@ describe("ProgressPanel countdown", () => {
     expect(scheduler.pending.size).toBe(0);
   });
 });
+
+describe("ProgressPanel bars", () => {
+  beforeEach(() => {
+    document.body.replaceChildren();
+  });
+
+  const bar = (part: string) =>
+    document.querySelector<HTMLElement>(`.igdl-panel-${part}-bar`)!;
+
+  it("keeps both bars hidden until a fraction arrives", () => {
+    const panel = new ProgressPanel(document, {
+      start: () => vi.fn(),
+    });
+    panel.overall("ignored before opening", 0.5);
+    panel.open("Downloading", vi.fn());
+    expect(bar("overall").hidden).toBe(true);
+    expect(bar("account").hidden).toBe(true);
+    expect(bar("account").getAttribute("role")).toBe("progressbar");
+
+    panel.overall("Account 3 of 4 (50%)", 0.5);
+    expect(document.querySelector(".igdl-panel-overall")?.textContent).toBe(
+      "Account 3 of 4 (50%)",
+    );
+    expect(bar("overall").hidden).toBe(false);
+    expect(bar("overall").getAttribute("aria-valuenow")).toBe("50");
+
+    panel.accountBar(0.214);
+    expect(bar("account").hidden).toBe(false);
+    expect((bar("account").firstElementChild as HTMLElement).style.width).toBe(
+      "21%",
+    );
+    panel.accountBar(undefined);
+    expect(bar("account").hidden).toBe(true);
+  });
+});

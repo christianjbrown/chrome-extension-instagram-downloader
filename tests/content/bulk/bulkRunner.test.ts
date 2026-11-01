@@ -12,6 +12,8 @@ function setup(
     heading: vi.fn(),
     detail: vi.fn(),
     waiting: vi.fn(),
+    overall: vi.fn(),
+    accountBar: vi.fn(),
   };
   const notes = notifier();
   return {

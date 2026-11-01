@@ -1,7 +1,8 @@
 // What the buttons on a profile do.
-import { describeCounts, type AccountArchiver } from "../bulk/accountArchiver";
+import type { AccountArchiver } from "../bulk/accountArchiver";
 import type { BulkJob, BulkRunner } from "../bulk/bulkRunner";
 import type { FollowingDownloader } from "../bulk/followingDownloader";
+import { describeCounts } from "../bulk/progressText";
 import type { Bridge } from "../bridgeClient";
 import { errorMessage } from "../errors";
 import type { FolderSource } from "../saving/folderPicker";

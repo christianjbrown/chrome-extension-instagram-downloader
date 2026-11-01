@@ -45,20 +45,27 @@ function setup(initial?: unknown) {
     now: () => 1234,
     tally: new ConsecutiveFailureTally(2),
   });
+  const report = reporter();
   const run = () =>
     downloader.run({
       viewer: { id: "1", username: "me" },
       folder: asFolder(new MemoryFolder()),
       signal: signal(),
-      reporter: reporter(),
+      reporter: report,
     });
-  return { data, archiver, pacer, bridge, run };
+  return { data, archiver, pacer, bridge, run, report };
 }
 
 describe("FollowingDownloader", () => {
   it("lists everyone followed, archives each straight after the last and clears the run", async () => {
-    const { run, archiver, pacer, data } = setup();
+    const { run, archiver, pacer, data, report } = setup();
     await expect(run()).resolves.toBe("Finished all 3 accounts you follow.");
+    expect(report.overall.mock.calls).toEqual([
+      ["Account 1 of 3 (0%)", 0],
+      ["Account 2 of 3 (33%)", 1 / 3],
+      ["Account 3 of 3 (66%)", 2 / 3],
+    ]);
+    expect(report.heading).toHaveBeenLastCalledWith("c");
     expect(
       archiver.archive.mock.calls.map(([request]) => request.username),
     ).toEqual(["a", "b", "c"]);

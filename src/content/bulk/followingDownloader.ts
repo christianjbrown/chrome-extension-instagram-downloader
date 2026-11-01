@@ -1,5 +1,6 @@
 import type { Viewer } from "../../shared/bridge";
 import type { RunReporter } from "../ui/progressPanel";
+import { describeAccount } from "./progressText";
 import type { AccountArchiver } from "./accountArchiver";
 import type { FailureTally } from "./failureTally";
 import type { FollowingSource } from "./followingLister";
@@ -37,9 +38,12 @@ export class FollowingDownloader {
     this.deps.tally.reset();
     const before = following.length - remaining.length;
     for (const [index, username] of remaining.entries()) {
-      reporter.heading(
-        `${username} (${String(before + index + 1)} of ${String(following.length)})`,
+      const position = before + index + 1;
+      reporter.overall(
+        describeAccount(position, following.length),
+        (position - 1) / following.length,
       );
+      reporter.heading(username);
       await this.archiveOne(request, state, username);
     }
     await this.deps.store.save(viewer.id, {
