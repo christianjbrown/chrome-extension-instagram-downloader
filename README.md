@@ -2,6 +2,8 @@
 
 Ever wanted to keep that photo, reel or story before it vanishes into the algorithm? This Chrome extension sticks a little download button on pretty much everything Instagram shows you. Photos, videos, carousels, stories, highlights, a whole account, even every account you follow. Yes, all of them. 🙃
 
+![The extension's buttons on a stand-in Instagram profile: download all posts, the profile picture or change the folder, plus a download button on a thumbnail](docs/screenshot.png)
+
 ## What you get ⬇️
 
 | Where you are                            | What shows up                                                                                                        |
@@ -61,7 +63,7 @@ Then hit the reload arrow on the Christian's Instagram Downloader card in `chrom
 
 No analytics, no tracking, no ads, no accounts, and nothing phoning home. The only things it ever fetches come from Instagram itself: the posts you asked for and the photos and videos in them. Files go straight into the folder you picked, and nothing about what you download goes anywhere else.
 
-## Hacking on it 🛠️
+## Development 🛠️
 
 It's TypeScript, bundled with esbuild, tested with Vitest.
 
