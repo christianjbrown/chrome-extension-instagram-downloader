@@ -16,12 +16,10 @@ function gate(backoffMs = [10, 20]) {
       return Promise.resolve();
     }),
   };
-  const rest = { before: vi.fn(() => Promise.resolve()) };
   return {
     sleeper,
     budget,
-    rest,
-    gate: new ApiGate(sleeper, budget as unknown as HourlyBudget, rest, {
+    gate: new ApiGate(sleeper, budget as unknown as HourlyBudget, {
       ...defaultPacing,
       backoffMs,
     }),
@@ -45,14 +43,10 @@ describe("ApiGate", () => {
     );
   });
 
-  it("asks the rest first, once per call, before touching the budget", async () => {
-    const { gate: g, rest, budget } = gate();
+  it("takes from the budget before every attempt, retries included", async () => {
+    const { gate: g, budget } = gate();
     const report = reporter();
     const order: string[] = [];
-    rest.before.mockImplementation(() => {
-      order.push("rest");
-      return Promise.resolve();
-    });
     budget.take.mockImplementation(() => {
       order.push("budget");
       return Promise.resolve();
@@ -62,8 +56,7 @@ describe("ApiGate", () => {
       .mockRejectedValueOnce(new RefusedError("429"))
       .mockResolvedValue("ok");
     await g.call(request, signal(), report);
-    expect(order).toEqual(["rest", "budget", "budget"]);
-    expect(rest.before).toHaveBeenCalledWith(expect.anything(), report);
+    expect(order).toEqual(["budget", "budget"]);
   });
 
   it("backs off after a refusal and starts counting again after a success", async () => {
