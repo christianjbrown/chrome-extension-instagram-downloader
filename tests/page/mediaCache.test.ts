@@ -9,6 +9,7 @@ describe("MediaCache", () => {
       data: {
         feed: [photo("10", "a.jpg"), null, "text", 4],
         owner: { username: "alice", pk: "1" },
+        profile: { username: "dave", pk: "4", media_count: 640 },
         byId: { username: "bob", id: 2 },
         reels_media: [
           {
@@ -25,6 +26,8 @@ describe("MediaCache", () => {
     expect(cache.mediaById("10")?.id).toBe("10_1");
     expect(cache.userId("alice")).toBe("1");
     expect(cache.userId("bob")).toBe("2");
+    expect(cache.postCount("dave")).toBe(640);
+    expect(cache.postCount("alice")).toBeUndefined();
     expect(cache.userId("carol")).toBe("77");
     expect(cache.reel("77")).toEqual({ owner: "carol", items: [story] });
     expect(cache.reel("5")).toEqual({ owner: undefined, items: [] });

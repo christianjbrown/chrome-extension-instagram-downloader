@@ -1,6 +1,7 @@
 import {
   AccountArchiver,
   describeCounts,
+  describeProgress,
 } from "../../../src/content/bulk/accountArchiver";
 import { defaultPacing } from "../../../src/content/pacing/pacing";
 import type { ItemWriter } from "../../../src/content/saving/directoryWriter";
@@ -54,6 +55,16 @@ it("describes counts, mentioning failures only when there are some", () => {
   );
 });
 
+it("counts posts against the account's total when it is known", () => {
+  const counts = { saved: 1, skipped: 2, failed: 0 };
+  expect(describeProgress(3, 640, counts)).toBe(
+    "Post 3 of 640: 1 saved, 2 already there",
+  );
+  expect(describeProgress(641, 640, counts)).toBe(
+    "Post 641: 1 saved, 2 already there",
+  );
+});
+
 describe("AccountArchiver", () => {
   it("saves every post of every page into the account's folder", async () => {
     const { archiver, writer, pacer } = setup(["b.jpg"]);
@@ -74,7 +85,9 @@ describe("AccountArchiver", () => {
       defaultPacing.fileDelayMs,
       expect.anything(),
     );
-    expect(report.detail).toHaveBeenLastCalledWith("3 saved, 1 already there");
+    expect(report.detail).toHaveBeenLastCalledWith(
+      "Post 4: 3 saved, 1 already there",
+    );
   });
 
   it("counts posts the page could not read as failed", async () => {

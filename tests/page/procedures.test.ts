@@ -67,9 +67,15 @@ describe("page procedures", () => {
   });
 
   it("passes post pages and following pages through", async () => {
-    const { procedures, queries, following } = setup();
-    await procedures.postsPage({ username: "a", cursor: "c" });
+    const { cache, procedures, queries, following } = setup();
+    await expect(
+      procedures.postsPage({ username: "a", cursor: "c" }),
+    ).resolves.not.toHaveProperty("total");
     expect(queries.postsPage).toHaveBeenCalledWith("a", "c");
+    cache.ingest({ username: "a", pk: "3", media_count: 12 });
+    await expect(
+      procedures.postsPage({ username: "a", cursor: undefined }),
+    ).resolves.toMatchObject({ total: 12 });
     await procedures.followingPage({ userId: "1", next: "n" });
     expect(following.page).toHaveBeenCalledWith("1", "n");
   });

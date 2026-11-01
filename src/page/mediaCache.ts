@@ -58,6 +58,7 @@ function remember<V>(
 export class MediaCache {
   private readonly media = new Map<string, InstagramMedia>();
   private readonly users = new Map<string, string>();
+  private readonly postCounts = new Map<string, number>();
   private readonly reels = new Map<string, Reel>();
 
   constructor(private readonly limit: number) {}
@@ -80,6 +81,14 @@ export class MediaCache {
     if (isUser(value)) {
       const id = String(value.pk ?? value.id);
       remember(this.users, this.limit, value.username as string, id);
+      // The profile page's own copy of the account carries its post count.
+      if (typeof value.media_count === "number")
+        remember(
+          this.postCounts,
+          this.limit,
+          value.username as string,
+          value.media_count,
+        );
     }
     if (isReel(value)) {
       const items = (value.items as unknown[]).filter(isObject).filter(isMedia);
@@ -94,6 +103,10 @@ export class MediaCache {
 
   userId(username: string): string | undefined {
     return this.users.get(username);
+  }
+
+  postCount(username: string): number | undefined {
+    return this.postCounts.get(username);
   }
 
   reel(reelId: string): Reel | undefined {

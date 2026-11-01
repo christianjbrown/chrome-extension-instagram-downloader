@@ -1,6 +1,6 @@
 // What the content script can ask the page for. Answers come from the cache
 // of what Instagram already sent whenever possible, and from a query if not.
-import type { Account, Reel } from "../shared/bridge";
+import type { Account, PostsPage, Reel } from "../shared/bridge";
 import type { Handlers } from "./bridgeServer";
 import type { FollowingClient } from "./followingClient";
 import type { InstagramQueries } from "./instagramQueries";
@@ -42,6 +42,18 @@ async function account(
   return { id, ...profile };
 }
 
+// The total comes free from the profile Instagram already loaded, so it is
+// only there when the account's page has been visited.
+async function postsPage(
+  { cache, queries }: Dependencies,
+  username: string,
+  cursor: string | undefined,
+): Promise<PostsPage> {
+  const page = await queries.postsPage(username, cursor);
+  const total = cache.postCount(username);
+  return total === undefined ? page : { ...page, total };
+}
+
 function reel(cache: MediaCache, reelId: string | undefined): Reel {
   return found(
     reelId === undefined ? undefined : cache.reel(reelId),
@@ -63,7 +75,8 @@ export function createProcedures(dependencies: Dependencies): Handlers {
       settle(() =>
         found(cache.mediaByAsset(asset), "That picture has not loaded yet"),
       ),
-    postsPage: ({ username, cursor }) => queries.postsPage(username, cursor),
+    postsPage: ({ username, cursor }) =>
+      postsPage(dependencies, username, cursor),
     account: ({ username }) => account(dependencies, username),
     followingPage: ({ userId: id, next }) => following.page(id, next),
     reel: ({ reelId }) => settle(() => reel(cache, reelId)),

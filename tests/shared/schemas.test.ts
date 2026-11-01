@@ -25,6 +25,11 @@ describe("parseOutput", () => {
       items: [],
       cursor: undefined,
     });
+    expect(parseOutput("postsPage", { items: [], total: 640 })).toEqual({
+      items: [],
+      cursor: undefined,
+      total: 640,
+    });
     const account = {
       id: "1",
       username: "a",
@@ -61,6 +66,7 @@ describe("parseOutput", () => {
       ["media", { pk: 1, video_versions: [{ url: cdn("a"), width: "1" }] }],
       ["postsPage", { items: [photo("1")], cursor: 4 }],
       ["postsPage", { items: "x" }],
+      ["postsPage", { items: [], total: "640" }],
       ["account", { id: "1", username: "a", totalPosts: "3" }],
       ["followingPage", { usernames: [1] }],
       ["reel", { items: 4 }],
