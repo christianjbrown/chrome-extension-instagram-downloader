@@ -23,6 +23,7 @@ import { PostActions } from "./features/postActions";
 import { ProfileToolbar } from "./features/profileToolbar";
 import { StoryToolbar } from "./features/storyToolbar";
 import { ApiGate } from "./pacing/apiGate";
+import { RestEveryCalls } from "./pacing/callRest";
 import { HourlyBudget } from "./pacing/hourlyBudget";
 import { defaultPacing } from "./pacing/pacing";
 import { TimerSleeper } from "./pacing/sleeper";
@@ -55,6 +56,7 @@ function bulk(
   const gate = new ApiGate(
     sleeper,
     new HourlyBudget(defaultPacing.apiCallsPerHour, sleeper, Date.now),
+    new RestEveryCalls(defaultPacing, sleeper),
     defaultPacing,
   );
   const namer = new SafeFileNamer();
@@ -67,7 +69,6 @@ function bulk(
     lister: new FollowingLister(bridge, pacer),
     archiver,
     store: runs,
-    pacer,
     now: Date.now,
     tally: new ConsecutiveFailureTally(3),
   });

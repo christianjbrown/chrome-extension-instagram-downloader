@@ -39,9 +39,13 @@ running one again only fetches what's new.
 ## Slow and steady 🐢
 
 Bulk downloads take their time, on purpose, because nobody wants an angry
-Instagram. Every API call waits a random 4 to 9 seconds and stays under 120 an
-hour. Accounts are 30 to 90 seconds apart. If Instagram says no, it backs off
-for 15, 30, 60 and then 120 minutes before giving up for the day.
+Instagram. Every API call waits a random 4 to 9 seconds, and after every 10 of
+them it rests for 30 to 90 seconds, wherever that falls. A page of posts is one
+call, so that's a breather roughly every 120 posts: an account with three posts
+costs one call, not a minute's rest, and an account with thousands still gets
+its pauses. There's a ceiling of 400 calls in any hour as a backstop. If
+Instagram says no, it backs off for 15, 30, 60 and then 120 minutes before
+giving up for the day.
 
 Hit Stop whenever you like: it remembers where it got to and the button turns
 into **Resume**. An account you've fully archived before is only read until it
