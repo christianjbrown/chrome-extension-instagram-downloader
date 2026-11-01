@@ -21,6 +21,8 @@ export interface PostsPage {
   readonly cursor: string | undefined;
   /** Posts left out because they did not have the expected shape. */
   readonly unreadable?: number;
+  /** How many posts the account has, when the page already knows. */
+  readonly total?: number;
 }
 
 export interface FollowingPage {

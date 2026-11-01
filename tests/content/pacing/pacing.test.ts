@@ -22,15 +22,12 @@ it("describes waits in seconds, then minutes and seconds, then whole minutes", (
   );
 });
 
-it("keeps the hourly ceiling a backstop behind the delays and rests", () => {
+it("keeps the hourly ceiling a backstop behind the delays", () => {
   const hour = 3_600_000;
-  const { apiDelayMs, restEveryCalls, restDelayMs } = defaultPacing;
-  const average = ([min, max]: readonly [number, number]) => (min + max) / 2;
+  const [min, max] = defaultPacing.apiDelayMs;
   // What a run makes in an hour when every wait lands at the given point.
-  const callsAnHour = (delay: number, rest: number) =>
-    hour / (delay + rest / restEveryCalls);
-  const typical = callsAnHour(average(apiDelayMs), average(restDelayMs));
-  const quickest = callsAnHour(apiDelayMs[0], restDelayMs[0]);
+  const typical = hour / ((min + max) / 2);
+  const quickest = hour / min;
   expect(defaultPacing.apiCallsPerHour).toBeGreaterThan(typical);
   expect(defaultPacing.apiCallsPerHour).toBeLessThan(quickest);
   expect(defaultPacing.backoffMs).toHaveLength(4);

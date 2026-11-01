@@ -1,6 +1,5 @@
 import { RefusedError } from "../../shared/refusal";
 import { BlockedError } from "../errors";
-import type { Rest } from "./callRest";
 import type { HourlyBudget } from "./hourlyBudget";
 import type { Pacing, WaitReporter } from "./pacing";
 import type { Sleeper } from "./sleeper";
@@ -13,8 +12,8 @@ export interface Gate {
   ): Promise<T>;
 }
 
-// Every bulk API call goes through here: a rest every so many calls, the
-// hourly budget, a random delay, and a backoff when Instagram refuses. Any
+// Every bulk API call goes through here: the hourly budget, a random delay,
+// and a backoff when Instagram refuses. Any
 // other failure is passed straight on, with its own message, rather than
 // waited out.
 export class ApiGate implements Gate {
@@ -23,7 +22,6 @@ export class ApiGate implements Gate {
   constructor(
     private readonly sleeper: Sleeper,
     private readonly budget: HourlyBudget,
-    private readonly rest: Rest,
     private readonly pacing: Pacing,
   ) {}
 
@@ -32,7 +30,6 @@ export class ApiGate implements Gate {
     signal: AbortSignal,
     reporter: WaitReporter,
   ): Promise<T> {
-    await this.rest.before(signal, reporter);
     for (;;) {
       await this.budget.take(signal, (ms) => {
         reporter.waiting("Hourly request limit reached", ms);

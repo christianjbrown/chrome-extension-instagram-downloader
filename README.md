@@ -18,7 +18,7 @@ Most single downloads don't cost a request at all. The page script just reads th
 
 ## Slow and steady 🐢
 
-Bulk downloads take their time, on purpose, because nobody wants an angry Instagram. Every API call waits a random 4 to 9 seconds, and after every 30 of them it rests for 1 to 2 minutes, wherever that falls. A page of posts is one call, so that's a breather roughly every 360 posts: an account with three posts costs one call, not a rest of its own, and an account with thousands still gets its pauses. There's a ceiling of 400 calls in any hour as a backstop. If Instagram says no, it backs off for 15, 30, 60 and then 120 minutes before giving up for the day.
+Bulk downloads take their time, on purpose, because nobody wants an angry Instagram. Every API call waits a random 4 to 9 seconds, so the pace stays steady rather than racing and then resting. A page of posts is one call, which works out at roughly 550 calls, or about 6,600 posts, an hour. There's a ceiling of 600 calls in any hour as a backstop. If Instagram says no, it backs off for 15, 30, 60 and then 120 minutes, counting down as it goes, before giving up for the day.
 
 Hit Stop whenever you like: it remembers where it got to and the button turns into **Resume**. An account you've fully archived before is only read until it reaches posts you already have. Want to fiddle with the numbers? They live in [`src/content/pacing/pacing.ts`](src/content/pacing/pacing.ts).
 
@@ -55,7 +55,7 @@ Then hit the reload arrow on the Christian's Instagram Downloader card in `chrom
 ## Good to know 🤓
 
 - **Single downloads land in Chrome's usual download folder.** No questions asked.
-- **Bulk downloads ask you for a folder,** once per tab (it forgets when you close the tab, on purpose). Each account goes in `<folder>/<username>/`, and anything already there is skipped, so running one again only fetches what's new.
+- **Bulk downloads ask you for a folder,** once per tab (it forgets when you close the tab, on purpose). Each account goes in `<folder>/<username>/`, and anything already there is skipped, so running one again only fetches what's new. The panel counts the posts as it goes, out of the account's total when you started from its profile page.
 - **It asks for one permission,** `storage`, which is where a stopped bulk run keeps its place so **Resume** can carry on. That's your following list and when each account was last finished, on your machine only.
 - **It only runs on `www.instagram.com`,** so Chrome will say it can read and change your data there, and that's the whole list.
 

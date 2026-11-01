@@ -23,7 +23,6 @@ import { PostActions } from "./features/postActions";
 import { ProfileToolbar } from "./features/profileToolbar";
 import { StoryToolbar } from "./features/storyToolbar";
 import { ApiGate } from "./pacing/apiGate";
-import { RestEveryCalls } from "./pacing/callRest";
 import { HourlyBudget } from "./pacing/hourlyBudget";
 import { defaultPacing } from "./pacing/pacing";
 import { TimerSleeper } from "./pacing/sleeper";
@@ -39,6 +38,7 @@ import { isMediaUrl } from "../shared/mediaUrl";
 import { ValidatedBridge } from "./validatedBridge";
 import { TimeoutScheduler, type Scheduler } from "./scheduler";
 import { ToastNotifier } from "./ui/notifier";
+import { SecondCountdown } from "./ui/countdown";
 import { ProgressPanel } from "./ui/progressPanel";
 
 export interface ContentEnvironment {
@@ -56,7 +56,6 @@ function bulk(
   const gate = new ApiGate(
     sleeper,
     new HourlyBudget(defaultPacing.apiCallsPerHour, sleeper, Date.now),
-    new RestEveryCalls(defaultPacing, sleeper),
     defaultPacing,
   );
   const namer = new SafeFileNamer();
@@ -77,7 +76,10 @@ function bulk(
   );
   const runner = new BulkRunner(
     folders,
-    new ProgressPanel(env.window.document),
+    new ProgressPanel(
+      env.window.document,
+      new SecondCountdown(new TimeoutScheduler(), Date.now),
+    ),
     notifier,
     env.window.AbortController,
   );
