@@ -16,9 +16,10 @@ export class PostDownloader {
     private readonly notifier: Notifier,
   ) {}
 
-  async download(target: PostTarget): Promise<void> {
+  /** `owner` names the files when the post itself does not say whose it is. */
+  async download(target: PostTarget, owner?: string): Promise<void> {
     try {
-      const items = downloadItems(await this.find(target));
+      const items = downloadItems(await this.find(target), owner);
       const slide = "slide" in target ? target.slide : undefined;
       const chosen =
         slide === undefined ? items : items.slice(slide, slide + 1);

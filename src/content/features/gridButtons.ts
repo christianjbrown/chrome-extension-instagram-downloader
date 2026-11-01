@@ -1,5 +1,6 @@
 import { shortcodeFromPath, shortcodeToMediaId } from "../../shared/shortcode";
 import type { PostDownloader } from "../actions/postDownloader";
+import { parseRoute } from "../dom/route";
 import { createButton } from "../ui/buttons";
 import type { Feature, PageView } from "./feature";
 
@@ -29,12 +30,18 @@ export class GridButtons implements Feature {
           label: "Download post",
           className: "igdl-button igdl-grid-button",
           onClick: () =>
-            void this.downloader.download({
-              mediaId: shortcodeToMediaId(shortcode),
-              slide: undefined,
-            }),
+            void this.downloader.download(
+              { mediaId: shortcodeToMediaId(shortcode), slide: undefined },
+              this.profileOwner(),
+            ),
         }),
       );
     }
+  }
+
+  // On a profile's own grid the posts are almost always that profile's.
+  private profileOwner(): string | undefined {
+    const route = parseRoute(this.view.pathname());
+    return route.kind === "profile" ? route.username : undefined;
   }
 }
