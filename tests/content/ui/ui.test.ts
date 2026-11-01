@@ -3,6 +3,7 @@ import {
   createTextButton,
   textButtonClass,
 } from "../../../src/content/ui/buttons";
+import { SecondCountdown } from "../../../src/content/ui/countdown";
 import { ToastNotifier } from "../../../src/content/ui/notifier";
 import { ProgressPanel } from "../../../src/content/ui/progressPanel";
 import { ManualScheduler } from "../helpers";
@@ -55,8 +56,12 @@ describe("ProgressPanel", () => {
   const text = (part: string) =>
     document.querySelector(`.igdl-panel-${part}`)?.textContent;
 
+  const stillCountdown = {
+    start: (ms: number, show: (left: number) => void) => (show(ms), vi.fn()),
+  };
+
   it("shows progress, stops, and closes when finished", () => {
-    const panel = new ProgressPanel(document);
+    const panel = new ProgressPanel(document, stillCountdown);
     panel.heading("ignored before opening");
     panel.finish("ignored before opening");
     const onStop = vi.fn();
@@ -77,5 +82,50 @@ describe("ProgressPanel", () => {
     expect(close?.textContent).toBe("Close");
     close?.click();
     expect(document.querySelector(".igdl-panel")).toBeNull();
+  });
+});
+
+describe("ProgressPanel countdown", () => {
+  beforeEach(() => {
+    document.body.replaceChildren();
+  });
+
+  const detail = () =>
+    document.querySelector(".igdl-panel-detail")?.textContent;
+
+  it("counts a wait down, and stops when other news replaces it", () => {
+    let clock = 0;
+    const scheduler = new ManualScheduler();
+    const panel = new ProgressPanel(
+      document,
+      new SecondCountdown(scheduler, () => clock),
+    );
+    panel.open("Downloading", vi.fn());
+    panel.waiting("Resting", 61_500);
+    expect(detail()).toBe("Resting. Waiting 1 minute 2 seconds.");
+    clock = 500;
+    scheduler.runAll();
+    expect(detail()).toBe("Resting. Waiting 1 minute 1 second.");
+    panel.detail("alice: 3 of 9");
+    expect(scheduler.pending.size).toBe(0);
+    expect(detail()).toBe("alice: 3 of 9");
+  });
+
+  it("replaces an earlier wait and stops at zero", () => {
+    let clock = 0;
+    const scheduler = new ManualScheduler();
+    const panel = new ProgressPanel(
+      document,
+      new SecondCountdown(scheduler, () => clock),
+    );
+    panel.open("Downloading", vi.fn());
+    panel.waiting("Resting", 5000);
+    panel.waiting("Slow down", 1000);
+    expect(scheduler.pending.size).toBe(1);
+    expect(detail()).toBe("Slow down. Waiting 1 second.");
+    clock = 1000;
+    scheduler.runAll();
+    expect(detail()).toBe("Slow down. Waiting 0 seconds.");
+    expect(scheduler.pending.size).toBe(0);
   });
 });

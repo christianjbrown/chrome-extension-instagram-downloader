@@ -1,5 +1,6 @@
 import { describeWait } from "../pacing/pacing";
 import { createTextButton } from "./buttons";
+import type { Countdown } from "./countdown";
 
 export interface RunReporter {
   heading(text: string): void;
@@ -15,10 +16,15 @@ export interface RunPanel extends RunReporter {
 // A fixed panel showing what a bulk download is doing, with a Stop button.
 export class ProgressPanel implements RunPanel {
   private element: HTMLElement | undefined;
+  private stopCountdown = (): void => undefined;
 
-  constructor(private readonly document: Document) {}
+  constructor(
+    private readonly document: Document,
+    private readonly countdown: Countdown,
+  ) {}
 
   open(title: string, onStop: () => void): void {
+    this.stopCountdown();
     this.element?.remove();
     const panel = this.document.createElement("div");
     panel.className = "igdl-panel";
@@ -50,11 +56,16 @@ export class ProgressPanel implements RunPanel {
   }
 
   detail(text: string): void {
+    this.stopCountdown();
     this.set("detail", text);
   }
 
+  // Counts down until the wait is over or other news replaces it.
   waiting(reason: string, ms: number): void {
-    this.detail(describeWait(reason, ms));
+    this.stopCountdown();
+    this.stopCountdown = this.countdown.start(ms, (remaining) => {
+      this.set("detail", describeWait(reason, remaining));
+    });
   }
 
   finish(message: string): void {

@@ -39,6 +39,7 @@ import { isMediaUrl } from "../shared/mediaUrl";
 import { ValidatedBridge } from "./validatedBridge";
 import { TimeoutScheduler, type Scheduler } from "./scheduler";
 import { ToastNotifier } from "./ui/notifier";
+import { SecondCountdown } from "./ui/countdown";
 import { ProgressPanel } from "./ui/progressPanel";
 
 export interface ContentEnvironment {
@@ -77,7 +78,10 @@ function bulk(
   );
   const runner = new BulkRunner(
     folders,
-    new ProgressPanel(env.window.document),
+    new ProgressPanel(
+      env.window.document,
+      new SecondCountdown(new TimeoutScheduler(), Date.now),
+    ),
     notifier,
     env.window.AbortController,
   );
