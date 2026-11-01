@@ -48,17 +48,22 @@ function version(value: unknown): MediaVersion {
 const versions = (value: unknown): MediaVersion[] =>
   list(value, version, "list of picture sizes");
 
-const identifier = (value: unknown): string | number =>
-  typeof value === "string" || typeof value === "number"
-    ? value
-    : reject("identifier");
+const isIdentifier = (value: unknown): value is string | number =>
+  typeof value === "string" || typeof value === "number";
 
-function user(value: unknown): NonNullable<InstagramMedia["user"]> {
-  const raw = record(value, "user");
-  const pk = optional(raw.pk, identifier);
+const identifier = (value: unknown): string | number =>
+  isIdentifier(value) ? value : reject("identifier");
+
+// The owner only names the file. Instagram's nested owner records can leave
+// the username out, so one that cannot name anybody is dropped rather than
+// failing the whole post.
+function user(value: unknown): InstagramMedia["user"] {
+  if (typeof value !== "object" || value === null) return undefined;
+  const raw = value as Json;
+  if (typeof raw.username !== "string") return undefined;
   return {
-    username: text(raw.username, "user"),
-    ...(pk === undefined ? {} : { pk }),
+    username: raw.username,
+    ...(isIdentifier(raw.pk) ? { pk: raw.pk } : {}),
   };
 }
 
