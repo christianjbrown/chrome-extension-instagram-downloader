@@ -70,6 +70,26 @@ describe("parseOutput", () => {
       expect(() => parseOutput(name, value), name).toThrow("unexpected");
   });
 
+  it("reads a field Instagram sets to null as left out", () => {
+    const fromInstagram = {
+      ...photo("1"),
+      id: null,
+      taken_at: null,
+      video_versions: null,
+      carousel_media: null,
+      user: { username: "u", pk: null },
+    };
+    const { pk, image_versions2 } = photo("1");
+    const expected = { pk, image_versions2, user: { username: "u" } };
+    expect(parseOutput("media", fromInstagram)).toEqual(expected);
+    expect(
+      parseOutput("postsPage", { items: [fromInstagram], cursor: null }),
+    ).toEqual({ items: [expected], cursor: undefined });
+    expect(parseOutput("media", { pk: 1, image_versions2: null })).toEqual({
+      pk: 1,
+    });
+  });
+
   it("leaves out an odd post and counts it, keeping the rest of the page", () => {
     expect(
       parseOutput("postsPage", { items: [photo("1"), { pk: {} }, 7] }),
