@@ -61,12 +61,19 @@ describe("parseOutput", () => {
       ["media", { pk: 1, image_versions2: {} }],
       ["media", { pk: 1, video_versions: [{ url: cdn("a"), width: "1" }] }],
       ["postsPage", { items: [photo("1")], cursor: 4 }],
+      ["postsPage", { items: "x" }],
       ["account", { id: "1", username: "a", totalPosts: "3" }],
       ["followingPage", { usernames: [1] }],
       ["reel", { items: 4 }],
     ];
     for (const [name, value] of bad)
       expect(() => parseOutput(name, value), name).toThrow("unexpected");
+  });
+
+  it("leaves out an odd post and counts it, keeping the rest of the page", () => {
+    expect(
+      parseOutput("postsPage", { items: [photo("1"), { pk: {} }, 7] }),
+    ).toEqual({ items: [photo("1")], cursor: undefined, unreadable: 2 });
   });
 
   it("rejects media addresses outside Instagram's CDN", () => {

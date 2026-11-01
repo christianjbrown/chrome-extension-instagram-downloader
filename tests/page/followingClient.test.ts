@@ -1,3 +1,4 @@
+import { RefusedError } from "../../src/shared/refusal";
 import { FollowingClient } from "../../src/page/followingClient";
 
 const modules: Record<string, unknown> = {
@@ -53,13 +54,24 @@ describe("FollowingClient", () => {
     );
   });
 
-  it.each([
-    [429, {}],
-    [200, "<html>"],
-    [200, { status: "fail", message: "wait" }],
-  ])("treats status %i with %j as refused", async (status, body) => {
+  it("marks a 429 as a refusal worth waiting out", async () => {
     await expect(
-      client(status, body).client.page("9", undefined),
-    ).rejects.toThrow("Following list refused");
+      client(429, {}).client.page("9", undefined),
+    ).rejects.toBeInstanceOf(RefusedError);
+  });
+
+  it.each([
+    [200, "<html>", "HTTP 200"],
+    [
+      400,
+      { status: "fail", message: "Please wait a few minutes" },
+      "Please wait a few minutes",
+    ],
+  ])("reports status %i with %j as %s", async (status, body, reason) => {
+    const failure = client(status, body).client.page("9", undefined);
+    await expect(failure).rejects.toThrow(
+      `Instagram would not list who you follow (${reason})`,
+    );
+    await expect(failure).rejects.not.toBeInstanceOf(RefusedError);
   });
 });

@@ -1,3 +1,4 @@
+import { RefusedError } from "../../src/shared/refusal";
 import { PageBridge } from "../../src/content/bridgeClient";
 import { TimeoutScheduler } from "../../src/content/scheduler";
 import { ManualScheduler } from "./helpers";
@@ -39,8 +40,25 @@ describe("PageBridge", () => {
     ).rejects.toThrow("nope");
   });
 
+  it("rejects with a RefusedError when the page flags a rate limit", async () => {
+    await expect(
+      bridge(answering({ ok: false, error: "wait", refused: true })).call(
+        "viewer",
+        {},
+      ),
+    ).rejects.toBeInstanceOf(RefusedError);
+  });
+
   it("rejects, rather than hanging, on a reply of the wrong shape", async () => {
-    for (const reply of [null, "text", 5, {}, { ok: false }, { ok: 1 }])
+    for (const reply of [
+      null,
+      "text",
+      5,
+      {},
+      { ok: false },
+      { ok: 1 },
+      { ok: false, error: "x", refused: "yes" },
+    ])
       await expect(bridge(answering(reply)).call("viewer", {})).rejects.toThrow(
         "unreadable",
       );

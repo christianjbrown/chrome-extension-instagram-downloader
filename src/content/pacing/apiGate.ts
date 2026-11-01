@@ -1,4 +1,5 @@
-import { BlockedError, isAbortError } from "../errors";
+import { RefusedError } from "../../shared/refusal";
+import { BlockedError } from "../errors";
 import type { HourlyBudget } from "./hourlyBudget";
 import type { Pacing } from "./pacing";
 import type { Sleeper } from "./sleeper";
@@ -16,7 +17,8 @@ export interface Gate {
 }
 
 // Every bulk API call goes through here: the hourly budget, a random delay,
-// and a backoff when Instagram refuses.
+// and a backoff when Instagram refuses. Any other failure is passed straight
+// on, with its own message, rather than waited out.
 export class ApiGate implements Gate {
   private refusals = 0;
 
@@ -41,7 +43,7 @@ export class ApiGate implements Gate {
         this.refusals = 0;
         return result;
       } catch (error) {
-        if (isAbortError(error)) throw error;
+        if (!(error instanceof RefusedError)) throw error;
         await this.backOff(signal, reporter);
       }
     }

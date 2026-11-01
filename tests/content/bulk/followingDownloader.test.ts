@@ -1,4 +1,5 @@
 import type { AccountArchiver } from "../../../src/content/bulk/accountArchiver";
+import { ConsecutiveFailureTally } from "../../../src/content/bulk/failureTally";
 import { FollowingDownloader } from "../../../src/content/bulk/followingDownloader";
 import { FollowingLister } from "../../../src/content/bulk/followingLister";
 import { RunStore } from "../../../src/content/bulk/runStore";
@@ -43,6 +44,7 @@ function setup(initial?: unknown) {
     store,
     pacer: pacer as never,
     now: () => 1234,
+    tally: new ConsecutiveFailureTally(2),
   });
   const run = () =>
     downloader.run({
@@ -88,5 +90,14 @@ describe("FollowingDownloader", () => {
     expect(archiver.archive).toHaveBeenCalledWith(
       expect.objectContaining({ username: "b", onlyNew: true }),
     );
+  });
+
+  it("carries on past an account that fails and names it at the end", async () => {
+    const { run, archiver } = setup();
+    archiver.archive.mockRejectedValueOnce(new Error("Account not found"));
+    await expect(run()).resolves.toBe(
+      "Finished all 3 accounts you follow. Could not read 1: a.",
+    );
+    expect(archiver.archive).toHaveBeenCalledTimes(3);
   });
 });

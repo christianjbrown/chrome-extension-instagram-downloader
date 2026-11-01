@@ -1,4 +1,5 @@
 import { abortError } from "../../../src/content/errors";
+import { RefusedError } from "../../../src/shared/refusal";
 import { ApiGate } from "../../../src/content/pacing/apiGate";
 import type { HourlyBudget } from "../../../src/content/pacing/hourlyBudget";
 import { defaultPacing } from "../../../src/content/pacing/pacing";
@@ -46,7 +47,7 @@ describe("ApiGate", () => {
     const report = reporter();
     const request = vi
       .fn()
-      .mockRejectedValueOnce(new Error("429"))
+      .mockRejectedValueOnce(new RefusedError("429"))
       .mockResolvedValue("ok");
     await g.call(request, signal(), report);
     expect(sleeper.sleep).toHaveBeenCalledWith(10, expect.anything());
@@ -54,14 +55,14 @@ describe("ApiGate", () => {
       "Instagram asked us to slow down",
       10,
     );
-    request.mockRejectedValueOnce(new Error("429"));
+    request.mockRejectedValueOnce(new RefusedError("429"));
     await g.call(request, signal(), report);
     expect(sleeper.sleep).toHaveBeenLastCalledWith(10, expect.anything());
   });
 
   it("gives up once every backoff is spent, then starts afresh", async () => {
     const { gate: g, sleeper } = gate([10]);
-    const refused = () => Promise.reject(new Error("429"));
+    const refused = () => Promise.reject(new RefusedError("429"));
     await expect(g.call(refused, signal(), reporter())).rejects.toMatchObject({
       name: "BlockedError",
     });
@@ -78,6 +79,18 @@ describe("ApiGate", () => {
     ).rejects.toMatchObject({
       name: "AbortError",
     });
+    expect(sleeper.sleep).not.toHaveBeenCalled();
+  });
+
+  it("passes any other failure straight on without waiting", async () => {
+    const { gate: g, sleeper } = gate();
+    await expect(
+      g.call(
+        () => Promise.reject(new Error("The page sent an unexpected address")),
+        signal(),
+        reporter(),
+      ),
+    ).rejects.toThrow("The page sent an unexpected address");
     expect(sleeper.sleep).not.toHaveBeenCalled();
   });
 });

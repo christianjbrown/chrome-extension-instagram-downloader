@@ -12,6 +12,7 @@ import { ViewerSource } from "./actions/viewerSource";
 import { type Bridge, PageBridge } from "./bridgeClient";
 import { AccountArchiver } from "./bulk/accountArchiver";
 import { BulkRunner } from "./bulk/bulkRunner";
+import { ConsecutiveFailureTally } from "./bulk/failureTally";
 import { FollowingDownloader } from "./bulk/followingDownloader";
 import { FollowingLister } from "./bulk/followingLister";
 import { RunStore, type KeyValueArea } from "./bulk/runStore";
@@ -68,6 +69,7 @@ function bulk(
     store: runs,
     pacer,
     now: Date.now,
+    tally: new ConsecutiveFailureTally(3),
   });
   const folders = new FolderPicker(new MemoryFolderStore(), (options) =>
     env.window.showDirectoryPicker(options),

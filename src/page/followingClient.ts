@@ -1,6 +1,7 @@
 // Lists the accounts a user follows, a page at a time, through the same REST
 // endpoint Instagram's own "Following" dialog uses.
 import type { FollowingPage } from "../shared/bridge";
+import { RefusedError } from "../shared/refusal";
 import { isJsonObject, type ModuleRequire } from "./relayClient";
 
 type Fetch = (url: string, init: RequestInit) => Promise<Response>;
@@ -12,6 +13,14 @@ function usernames(users: unknown): string[] {
       ? [user.username]
       : [],
   );
+}
+
+function failureReason(response: Response, body: unknown): string {
+  const said =
+    isJsonObject(body) && typeof body.message === "string"
+      ? body.message
+      : undefined;
+  return said ?? `HTTP ${String(response.status)}`;
 }
 
 export class FollowingClient {
@@ -40,12 +49,12 @@ export class FollowingClient {
       { headers: this.headers() },
     );
     const body: unknown = await response.json().catch(() => undefined);
-    if (
-      response.status === 429 ||
-      !isJsonObject(body) ||
-      body.status === "fail"
-    )
-      throw new Error(`Following list refused (${String(response.status)})`);
+    if (response.status === 429)
+      throw new RefusedError("Instagram asked us to slow down");
+    if (!isJsonObject(body) || body.status === "fail")
+      throw new Error(
+        `Instagram would not list who you follow (${failureReason(response, body)})`,
+      );
     return {
       usernames: usernames(body.users),
       next: typeof body.next_max_id === "string" ? body.next_max_id : undefined,

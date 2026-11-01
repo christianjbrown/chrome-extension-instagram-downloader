@@ -2,6 +2,7 @@ import type { Viewer } from "../../shared/bridge";
 import type { Pacer } from "../pacing/pacer";
 import type { RunReporter } from "../ui/progressPanel";
 import type { AccountArchiver } from "./accountArchiver";
+import type { FailureTally } from "./failureTally";
 import type { FollowingSource } from "./followingLister";
 import type { RunStore, RunState } from "./runStore";
 
@@ -20,6 +21,7 @@ export interface FollowingDependencies {
   readonly store: RunStore;
   readonly pacer: Pacer;
   readonly now: () => number;
+  readonly tally: FailureTally;
 }
 
 export class FollowingDownloader {
@@ -32,18 +34,13 @@ export class FollowingDownloader {
     state.following = following;
     await this.deps.store.save(viewer.id, state);
     const remaining = following.filter((name) => !state.done.includes(name));
+    this.deps.tally.reset();
+    const before = following.length - remaining.length;
     for (const [index, username] of remaining.entries()) {
       reporter.heading(
-        `${username} (${String(state.done.length + 1)} of ${String(following.length)})`,
+        `${username} (${String(before + index + 1)} of ${String(following.length)})`,
       );
-      await this.deps.archiver.archive({
-        username,
-        folder: request.folder,
-        onlyNew: state.completed[username] !== undefined,
-        signal,
-        reporter,
-      });
-      await this.markDone(viewer.id, state, username);
+      await this.archiveOne(request, state, username);
       if (index < remaining.length - 1) {
         reporter.detail("Resting before the next account");
         await this.deps.pacer.sleeper.between(
@@ -57,7 +54,28 @@ export class FollowingDownloader {
       following: null,
       done: [],
     });
-    return `Finished all ${String(following.length)} accounts you follow.`;
+    return `Finished all ${String(following.length)} accounts you follow.${this.deps.tally.summary()}`;
+  }
+
+  private async archiveOne(
+    request: FollowingRequest,
+    state: RunState,
+    username: string,
+  ): Promise<void> {
+    const { tally } = this.deps;
+    try {
+      await this.deps.archiver.archive({
+        username,
+        folder: request.folder,
+        onlyNew: state.completed[username] !== undefined,
+        signal: request.signal,
+        reporter: request.reporter,
+      });
+      tally.succeeded();
+      await this.markDone(request.viewer.id, state, username);
+    } catch (error) {
+      tally.failed(username, error);
+    }
   }
 
   private async markDone(

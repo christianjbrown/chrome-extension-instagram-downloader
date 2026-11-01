@@ -5,6 +5,7 @@ import {
   type Output,
   type ProcedureName,
 } from "../shared/bridge";
+import { RefusedError } from "../shared/refusal";
 import type { Scheduler } from "./scheduler";
 
 export interface Bridge {
@@ -49,6 +50,8 @@ export class PageBridge implements Bridge {
         if (!isBridgeResponse(response))
           reject(new Error("The page sent an unreadable answer"));
         else if (response.ok) resolve(response.value as Output<N>);
+        else if (response.refused === true)
+          reject(new RefusedError(response.error));
         else reject(new Error(response.error));
       };
       this.postMessage({ igdlProcedure: name, input }, this.env.pageOrigin, [
