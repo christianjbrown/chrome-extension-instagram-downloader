@@ -18,7 +18,7 @@ Most single downloads don't cost a request at all. The page script just reads th
 
 ## Slow and steady 🐢
 
-Bulk downloads take their time, on purpose, because nobody wants an angry Instagram. Every API call waits a random 4 to 9 seconds, and after every 10 of them it rests for 30 to 90 seconds, wherever that falls. A page of posts is one call, so that's a breather roughly every 120 posts: an account with three posts costs one call, not a minute's rest, and an account with thousands still gets its pauses. There's a ceiling of 400 calls in any hour as a backstop. If Instagram says no, it backs off for 15, 30, 60 and then 120 minutes before giving up for the day.
+Bulk downloads take their time, on purpose, because nobody wants an angry Instagram. Every API call waits a random 4 to 9 seconds, and after every 30 of them it rests for 1 to 2 minutes, wherever that falls. A page of posts is one call, so that's a breather roughly every 360 posts: an account with three posts costs one call, not a rest of its own, and an account with thousands still gets its pauses. There's a ceiling of 400 calls in any hour as a backstop. If Instagram says no, it backs off for 15, 30, 60 and then 120 minutes before giving up for the day.
 
 Hit Stop whenever you like: it remembers where it got to and the button turns into **Resume**. An account you've fully archived before is only read until it reaches posts you already have. Want to fiddle with the numbers? They live in [`src/content/pacing/pacing.ts`](src/content/pacing/pacing.ts).
 
