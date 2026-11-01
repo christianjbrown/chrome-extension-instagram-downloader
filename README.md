@@ -82,4 +82,9 @@ One command, lots of gates: Prettier, ESLint (typescript-eslint strict
 type-checked, SonarJS, complexity and size limits, import cycles, and layering
 rules that keep page, content and shared code apart), `tsc`, Knip for anything
 unused, Vitest with 100% statement, branch, function and line coverage, and the
-build. The pre-push hook and CI run exactly the same thing.
+build. CI runs exactly this, and `git config core.hooksPath .githooks` makes it run
+before every push too.
+
+## Licence 📄
+
+MIT. See [LICENSE](LICENSE).
