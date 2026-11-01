@@ -23,8 +23,8 @@ const minute = 60 * second;
 
 export const defaultPacing: Pacing = {
   apiDelayMs: [4000, 9000],
-  restEveryCalls: 10,
-  restDelayMs: [30_000, 90_000],
+  restEveryCalls: 30,
+  restDelayMs: [60_000, 120_000],
   apiCallsPerHour: 400,
   fileDelayMs: [400, 1200],
   backoffMs: [15 * minute, 30 * minute, 60 * minute, 120 * minute],
