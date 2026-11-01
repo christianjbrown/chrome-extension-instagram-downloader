@@ -44,6 +44,7 @@ export class AccountArchiver {
         reporter,
       );
       page += 1;
+      counts.failed += result.unreadable ?? 0;
       const saved = counts.saved;
       for (const media of result.items) {
         for (const item of downloadItems(media, username)) {

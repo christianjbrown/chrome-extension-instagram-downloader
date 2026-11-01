@@ -34,6 +34,7 @@ describe("BridgeServer", () => {
     handlers,
     "https://www.instagram.com",
     pageWindow,
+    { isRefusal: (error) => error instanceof Error && error.message === "x" },
   );
 
   it("answers a request on its port", async () => {
@@ -110,6 +111,19 @@ describe("BridgeServer", () => {
     listener(e);
     await vi.waitFor(() => {
       expect(port.postMessage).toHaveBeenCalled();
+    });
+  });
+
+  it("flags a rate limit so the content script knows to wait", async () => {
+    const refused = event({
+      igdlProcedure: "account",
+      input: { username: "a" },
+    });
+    await server.handle(refused.event);
+    expect(refused.port.postMessage).toHaveBeenCalledWith({
+      ok: false,
+      error: "x",
+      refused: true,
     });
   });
 });

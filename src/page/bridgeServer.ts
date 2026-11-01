@@ -7,6 +7,7 @@ import {
   type ProcedureName,
 } from "../shared/bridge";
 import { isProcedureName, isValidInput } from "./procedureInputs";
+import type { RefusalDetector } from "./refusalDetector";
 
 export type Handlers = {
   readonly [N in ProcedureName]: (input: Input<N>) => Promise<Output<N>>;
@@ -23,6 +24,7 @@ export class BridgeServer {
     private readonly handlers: Handlers,
     private readonly pageOrigin: string,
     private readonly source: MessageEventSource,
+    private readonly refusals: RefusalDetector,
   ) {}
 
   listen(target: Pick<Window, "addEventListener">): void {
@@ -50,7 +52,9 @@ export class BridgeServer {
     try {
       return { ok: true, value: await handler(input) };
     } catch (error) {
-      return { ok: false, error: message(error) };
+      return this.refusals.isRefusal(error)
+        ? { ok: false, error: message(error), refused: true }
+        : { ok: false, error: message(error) };
     }
   }
 }

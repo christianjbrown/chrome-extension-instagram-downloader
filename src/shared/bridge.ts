@@ -19,6 +19,8 @@ export interface Account {
 export interface PostsPage {
   readonly items: readonly InstagramMedia[];
   readonly cursor: string | undefined;
+  /** Posts left out because they did not have the expected shape. */
+  readonly unreadable?: number;
 }
 
 export interface FollowingPage {
@@ -59,7 +61,7 @@ export interface BridgeRequest {
 
 export type BridgeResponse =
   | { readonly ok: true; readonly value: unknown }
-  | { readonly ok: false; readonly error: string };
+  | { readonly ok: false; readonly error: string; readonly refused?: true };
 
 export function isBridgeRequest(data: unknown): data is BridgeRequest {
   return (
@@ -71,6 +73,15 @@ export function isBridgeRequest(data: unknown): data is BridgeRequest {
 
 export function isBridgeResponse(data: unknown): data is BridgeResponse {
   if (typeof data !== "object" || data === null) return false;
-  const { ok, error } = data as { ok?: unknown; error?: unknown };
-  return ok === true || (ok === false && typeof error === "string");
+  const { ok, error, refused } = data as {
+    ok?: unknown;
+    error?: unknown;
+    refused?: unknown;
+  };
+  return (
+    ok === true ||
+    (ok === false &&
+      typeof error === "string" &&
+      (refused === undefined || refused === true))
+  );
 }

@@ -77,6 +77,23 @@ describe("AccountArchiver", () => {
     expect(report.detail).toHaveBeenLastCalledWith("3 saved, 1 already there");
   });
 
+  it("counts posts the page could not read as failed", async () => {
+    const { archiver, bridge } = setup();
+    bridge.call.mockResolvedValueOnce({
+      items: [],
+      cursor: undefined,
+      unreadable: 2,
+    });
+    const counts = await archiver.archive({
+      username: "a",
+      folder: asFolder(new MemoryFolder()),
+      onlyNew: false,
+      signal: signal(),
+      reporter: reporter(),
+    });
+    expect(counts.failed).toBe(2);
+  });
+
   it("counts files that failed", async () => {
     const { archiver } = setup([], "failed");
     const counts = await archiver.archive({

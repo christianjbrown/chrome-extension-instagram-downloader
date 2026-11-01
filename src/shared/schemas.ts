@@ -89,6 +89,26 @@ function media(value: unknown): InstagramMedia {
 const mediaList = (value: unknown): InstagramMedia[] =>
   list(value, media, "list of posts");
 
+// One odd post should not cost the rest of its page, so a post that fails its
+// check is counted and left out instead of rejecting the lot.
+function readablePosts(value: unknown): {
+  items: InstagramMedia[];
+  unreadable: number;
+} {
+  const raw: unknown[] = Array.isArray(value)
+    ? (value as unknown[])
+    : reject("list of posts");
+  const items: InstagramMedia[] = [];
+  for (const entry of raw) {
+    try {
+      items.push(media(entry));
+    } catch {
+      // Counted below.
+    }
+  }
+  return { items, unreadable: raw.length - items.length };
+}
+
 const outputs: { [N in ProcedureName]: Parser<Output<N>> } = {
   viewer: (value) => {
     const raw = record(value, "viewer");
@@ -101,9 +121,11 @@ const outputs: { [N in ProcedureName]: Parser<Output<N>> } = {
   mediaByAsset: media,
   postsPage: (value) => {
     const raw = record(value, "page of posts");
+    const { items, unreadable } = readablePosts(raw.items);
     return {
-      items: mediaList(raw.items),
+      items,
       cursor: optional(raw.cursor, (v) => text(v, "cursor")),
+      ...(unreadable === 0 ? {} : { unreadable }),
     };
   },
   account: (value) => {
