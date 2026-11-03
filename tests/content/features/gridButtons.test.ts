@@ -18,25 +18,25 @@ function setup(html: string, width = 300, path = "/alice/") {
 describe("GridButtons", () => {
   it("adds one button to each grid thumbnail and downloads the whole post", () => {
     const downloader = setup(
-      '<a href="/p/De_haHANj_2/"><img></a><a href="/reel/De_haHANj_2/"><img></a>',
+      '<a href="/p/DaBcdEfGh_1/"><img></a><a href="/reel/DaBcdEfGh_1/"><img></a>',
     );
     expect(document.querySelectorAll(".igdl-grid-button")).toHaveLength(2);
     click(".igdl-grid-button");
     expect(downloader.download).toHaveBeenCalledWith(
-      { mediaId: "4017076322398781430", slide: undefined },
+      { mediaId: "3927545493027692533", slide: undefined },
       "alice",
     );
   });
 
   it("names no owner on a grid that is not a profile", () => {
     const downloader = setup(
-      '<a href="/p/De_haHANj_2/"><img></a>',
+      '<a href="/p/DaBcdEfGh_1/"><img></a>',
       300,
       "/explore/",
     );
     click(".igdl-grid-button");
     expect(downloader.download).toHaveBeenCalledWith(
-      { mediaId: "4017076322398781430", slide: undefined },
+      { mediaId: "3927545493027692533", slide: undefined },
       undefined,
     );
   });

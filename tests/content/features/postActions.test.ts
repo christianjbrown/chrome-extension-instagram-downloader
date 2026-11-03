@@ -24,7 +24,7 @@ describe("PostActions", () => {
   it("adds a download button beside a feed post's bookmark, once", () => {
     const { feature } = setup(
       "/",
-      `<article><a href="/p/De_haHANj_2/">time</a>${actionBar()}</article>`,
+      `<article><a href="/p/DaBcdEfGh_1/">time</a>${actionBar()}</article>`,
     );
     feature.scan();
     const group = document.querySelectorAll(".igdl-post-actions");
@@ -36,12 +36,12 @@ describe("PostActions", () => {
   it("downloads a feed post by the link inside it", async () => {
     const { downloader } = setup(
       "/",
-      `<article><a href="/p/De_haHANj_2/">time</a>${actionBar()}</article>`,
+      `<article><a href="/p/DaBcdEfGh_1/">time</a>${actionBar()}</article>`,
     );
     click(".igdl-download");
     await vi.waitFor(() => {
       expect(downloader.download).toHaveBeenCalledWith({
-        mediaId: "4017076322398781430",
+        mediaId: "3927545493027692533",
         slide: undefined,
       });
     });
@@ -50,17 +50,17 @@ describe("PostActions", () => {
   it("offers the showing slide and all slides on a carousel", async () => {
     const { downloader } = setup(
       "/",
-      `<article><a href="/p/De_haHANj_2/">t</a>${dots}${actionBar()}</article>`,
+      `<article><a href="/p/DaBcdEfGh_1/">t</a>${dots}${actionBar()}</article>`,
     );
     click(".igdl-download");
     click(".igdl-download-all");
     await vi.waitFor(() => {
       expect(downloader.download).toHaveBeenCalledWith({
-        mediaId: "4017076322398781430",
+        mediaId: "3927545493027692533",
         slide: 1,
       });
       expect(downloader.download).toHaveBeenCalledWith({
-        mediaId: "4017076322398781430",
+        mediaId: "3927545493027692533",
         slide: undefined,
       });
     });
@@ -68,13 +68,13 @@ describe("PostActions", () => {
 
   it("uses the address on a post's own page", async () => {
     const { downloader } = setup(
-      "/p/De_haHANj_2/",
+      "/p/DaBcdEfGh_1/",
       `<main><a href="/p/Other/">more</a>${actionBar()}</main>`,
     );
     click(".igdl-download");
     await vi.waitFor(() => {
       expect(downloader.download).toHaveBeenCalledWith({
-        mediaId: "4017076322398781430",
+        mediaId: "3927545493027692533",
         slide: undefined,
       });
     });

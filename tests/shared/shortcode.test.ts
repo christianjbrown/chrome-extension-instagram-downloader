@@ -5,12 +5,12 @@ import {
 
 describe("shortcodeToMediaId", () => {
   it("decodes a public shortcode", () => {
-    expect(shortcodeToMediaId("De_haHANj_2")).toBe("4017076322398781430");
+    expect(shortcodeToMediaId("DaBcdEfGh_1")).toBe("3927545493027692533");
   });
 
   it("ignores the suffix private posts carry", () => {
-    expect(shortcodeToMediaId(`De_haHANj_2${"x".repeat(28)}`)).toBe(
-      "4017076322398781430",
+    expect(shortcodeToMediaId(`DaBcdEfGh_1${"x".repeat(28)}`)).toBe(
+      "3927545493027692533",
     );
   });
 });
