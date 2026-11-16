@@ -10,7 +10,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  margin-right: 8px;
+  margin-inline: 4px 8px;
 }
 
 .igdl-button {

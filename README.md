@@ -6,13 +6,13 @@ Ever wanted to keep that photo, reel or story before it vanishes into the algori
 
 ## What you get ⬇️
 
-| Where you are                            | What shows up                                                                                                        |
-| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Feed posts, post and reel pages          | A download button next to the bookmark. On a carousel it grabs the slide you're on, and a second one grabs them all. |
-| Profile, explore, saved and tagged grids | A tiny button in the corner of each thumbnail that saves the whole post.                                             |
-| Someone's profile                        | **Download all posts**, **Download profile picture** and **Change download folder**.                                 |
-| Your own profile                         | **Download following**, which archives everyone you follow. Go make a cup of tea. ☕                                 |
-| The story viewer                         | **Download this story** and **Download all**, for stories and highlights.                                            |
+| Where you are                            | What shows up                                                                                                                      |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Feed posts, post and reel pages          | A download button in the row of icons under the post. On a carousel it grabs the slide you're on, and a second one grabs them all. |
+| Profile, explore, saved and tagged grids | A tiny button in the corner of each thumbnail that saves the whole post.                                                           |
+| Someone's profile                        | **Download all posts**, **Download profile picture** and **Change download folder**.                                               |
+| Your own profile                         | **Download following**, which archives everyone you follow. Go make a cup of tea. ☕                                               |
+| The story viewer                         | **Download this story** and **Download all**, for stories and highlights.                                                          |
 
 Most single downloads don't cost a request at all. The page script just reads the post and story data Instagram already sent to draw the page. Sneaky. 🕵️
 

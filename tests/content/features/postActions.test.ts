@@ -33,6 +33,18 @@ describe("PostActions", () => {
     expect(document.querySelector(".igdl-download-all")).toBeNull();
   });
 
+  it("joins the other actions when the bookmark has a grid cell to itself", () => {
+    const { feature } = setup(
+      "/",
+      `<article><a href="/p/DaBcdEfGh_1/">time</a><section><div><span>like</span><span>share</span></div><div><div role="button">${bookmark}</div></div></section></article>`,
+    );
+    feature.scan();
+    const group = document.querySelectorAll(".igdl-post-actions");
+    expect(group).toHaveLength(1);
+    expect(group[0]?.previousElementSibling?.textContent).toBe("share");
+    expect(document.querySelector("section")?.childElementCount).toBe(2);
+  });
+
   it("downloads a feed post by the link inside it", async () => {
     const { downloader } = setup(
       "/",
