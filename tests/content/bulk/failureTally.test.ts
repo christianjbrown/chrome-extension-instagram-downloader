@@ -34,12 +34,13 @@ describe("ConsecutiveFailureTally", () => {
     );
   });
 
-  it.each([abortError(), new BlockedError("Try again tomorrow.")])(
-    "lets %o end the run",
-    (error) => {
-      expect(() => {
-        new ConsecutiveFailureTally(5).failed("a", error);
-      }).toThrow(error);
-    },
-  );
+  it.each([
+    abortError(),
+    new BlockedError("Try again tomorrow."),
+    new Error("Extension context invalidated."),
+  ])("lets %o end the run", (error) => {
+    expect(() => {
+      new ConsecutiveFailureTally(5).failed("a", error);
+    }).toThrow(error);
+  });
 });
