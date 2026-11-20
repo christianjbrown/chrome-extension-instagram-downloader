@@ -84,18 +84,36 @@ describe("FollowingDownloader", () => {
     ).toEqual({ a: 1234, b: 1234, c: 1234 });
   });
 
-  it("carries on a stopped run without listing again, and only fetches new posts for finished accounts", async () => {
-    const { run, archiver, bridge } = setup({
-      following: ["a", "b"],
-      done: ["a"],
-      completed: { a: 1, b: 1 },
+  it("carries on a stopped run, and only fetches new posts for finished accounts", async () => {
+    const { run, archiver, report } = setup({
+      following: ["a", "b", "c"],
+      done: ["a", "b"],
+      completed: { a: 1, b: 1, c: 1 },
     });
     await run();
-    expect(bridge.call).not.toHaveBeenCalled();
     expect(archiver.archive).toHaveBeenCalledTimes(1);
     expect(archiver.archive).toHaveBeenCalledWith(
-      expect.objectContaining({ username: "b", onlyNew: true }),
+      expect.objectContaining({ username: "c", onlyNew: true }),
     );
+    expect(report.overall.mock.calls).toEqual([
+      ["Account 3 of 3 (66%)", 2 / 3],
+    ]);
+  });
+
+  it("lists again on resume and skips accounts unfollowed since the run began", async () => {
+    const { run, archiver, data } = setup({
+      following: ["a", "gone", "b", "left", "c"],
+      done: ["a", "gone"],
+      completed: { a: 1, gone: 1 },
+    });
+    await expect(run()).resolves.toBe("Finished all 3 accounts you follow.");
+    expect(
+      archiver.archive.mock.calls.map(([request]) => request.username),
+    ).toEqual(["b", "c"]);
+    expect(data["followingDownload:1"]).toMatchObject({
+      following: null,
+      done: [],
+    });
   });
 
   it("carries on past an account that fails and names it at the end", async () => {

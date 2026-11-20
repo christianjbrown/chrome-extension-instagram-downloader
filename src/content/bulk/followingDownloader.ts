@@ -14,7 +14,9 @@ export interface FollowingRequest {
 }
 
 // Archives every account the viewer follows, one at a time, keeping its
-// place so a stopped run carries on where it left off. The pacing lives in
+// place so a stopped run carries on where it left off. Every run, a resumed
+// one included, lists who the viewer follows afresh, so an account unfollowed
+// since the run began is dropped rather than downloaded. The pacing lives in
 // the API gate every call goes through, so a small account costs what it
 // costs and nothing more.
 export interface FollowingDependencies {
@@ -31,8 +33,9 @@ export class FollowingDownloader {
   async run(request: FollowingRequest): Promise<string> {
     const { viewer, reporter } = request;
     const state = await this.deps.store.load(viewer.id);
-    const following = state.following ?? (await this.deps.lister.list(request));
+    const following = await this.deps.lister.list(request);
     state.following = following;
+    state.done = state.done.filter((name) => following.includes(name));
     await this.deps.store.save(viewer.id, state);
     const remaining = following.filter((name) => !state.done.includes(name));
     this.deps.tally.reset();

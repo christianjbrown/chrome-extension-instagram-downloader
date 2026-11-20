@@ -20,7 +20,7 @@ Most single downloads don't cost a request at all. The page script just reads th
 
 Bulk downloads take their time, on purpose, because nobody wants an angry Instagram. Every API call waits a random 4 to 9 seconds, so the pace stays steady rather than racing and then resting. A page of posts is one call, which works out at roughly 550 calls, or about 6,600 posts, an hour. There's a ceiling of 600 calls in any hour as a backstop. If Instagram says no, it backs off for 15, 30, 60 and then 120 minutes, counting down as it goes, before giving up for the day.
 
-Hit Stop whenever you like: it remembers where it got to and the button turns into **Resume**. An account you've fully archived before is only read until it reaches posts you already have. Want to fiddle with the numbers? They live in [`src/content/pacing/pacing.ts`](src/content/pacing/pacing.ts).
+Hit Stop whenever you like: it remembers where it got to and the button turns into **Resume**. Resume checks who you follow again first, so anyone you've unfollowed in the meantime gets skipped. An account you've fully archived before is only read until it reaches posts you already have. Want to fiddle with the numbers? They live in [`src/content/pacing/pacing.ts`](src/content/pacing/pacing.ts).
 
 ## Install it 🔧
 
