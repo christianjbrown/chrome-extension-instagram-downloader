@@ -8,5 +8,16 @@ export const abortError = (): DOMException =>
 export const isAbortError = (error: unknown): boolean =>
   error instanceof DOMException && error.name === "AbortError";
 
-export const errorMessage = (error: unknown): string =>
-  error instanceof Error ? error.message : String(error);
+// What Chrome throws at a content script left running in an open tab after
+// the extension is reloaded or updated. Only reloading the page fixes it.
+const contextInvalidatedText = "Extension context invalidated";
+const contextInvalidatedMessage =
+  "The extension was reloaded or updated. Reload this page to carry on.";
+
+export const isContextInvalidated = (error: unknown): boolean =>
+  error instanceof Error && error.message.includes(contextInvalidatedText);
+
+export const errorMessage = (error: unknown): string => {
+  if (isContextInvalidated(error)) return contextInvalidatedMessage;
+  return error instanceof Error ? error.message : String(error);
+};

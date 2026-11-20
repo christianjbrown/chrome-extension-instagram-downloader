@@ -1,4 +1,9 @@
-import { BlockedError, errorMessage, isAbortError } from "../errors";
+import {
+  BlockedError,
+  errorMessage,
+  isAbortError,
+  isContextInvalidated,
+} from "../errors";
 
 export interface FailureTally {
   /** Forgets the last run, ready for a new one. */
@@ -30,7 +35,12 @@ export class ConsecutiveFailureTally implements FailureTally {
   }
 
   failed(username: string, error: unknown): void {
-    if (isAbortError(error) || error instanceof BlockedError) throw error;
+    if (
+      isAbortError(error) ||
+      error instanceof BlockedError ||
+      isContextInvalidated(error)
+    )
+      throw error;
     this.names.push(username);
     this.inARow += 1;
     if (this.inARow >= this.limit)
