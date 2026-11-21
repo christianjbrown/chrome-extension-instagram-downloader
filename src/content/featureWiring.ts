@@ -30,11 +30,8 @@ import { routes, type Routes } from "./routeWiring";
 import { SignedInProfile } from "./actions/ownProfile";
 import { StoppedFollowingRun } from "./bulk/resumableRun";
 import { AllSlidesButton, ShowingSlideButton } from "./features/postButtons";
-import {
-  CommandButton,
-  FollowingButton,
-  PROFILE_BUTTON_LOOKS,
-} from "./features/profileButtons";
+import { CommandButton, FollowingButton } from "./features/profileButtons";
+import { BUTTON_LOOKS } from "./buttonLooks";
 import { bulk, type BulkParts } from "./bulkWiring";
 import type { Wiring } from "./wiring";
 
@@ -47,21 +44,25 @@ function profileButtons(
 ): ProfileButton[] {
   return [
     new CommandButton(
-      PROFILE_BUTTON_LOOKS.downloadAll,
+      BUTTON_LOOKS.downloadAll,
       new DownloadAccountCommand(parts.runner, parts.archiver),
     ),
     new CommandButton(
-      PROFILE_BUTTON_LOOKS.picture,
+      BUTTON_LOOKS.picture,
       new ProfilePictureCommand(bridge, downloader, notifier, errors),
     ),
     new CommandButton(
-      PROFILE_BUTTON_LOOKS.folder,
+      BUTTON_LOOKS.folder,
       new ChangeFolderCommand(parts.folders, notifier),
     ),
     new FollowingButton(
       new DownloadFollowingCommand(parts.runner, parts.following, viewers),
       new SignedInProfile(viewers),
       new StoppedFollowingRun(parts.runs),
+      {
+        start: BUTTON_LOOKS.following,
+        resume: BUTTON_LOOKS.resumeFollowing,
+      },
     ),
   ];
 }
@@ -158,8 +159,8 @@ function accountFeatures(
       stories: routes.stories,
       buttons,
       storyButtons: [
-        new CurrentStoryButton(stories, assets, document),
-        new AllStoriesButton(stories),
+        new CurrentStoryButton(BUTTON_LOOKS.story, stories, assets, document),
+        new AllStoriesButton(BUTTON_LOOKS.allStories, stories),
       ],
     }),
   ];

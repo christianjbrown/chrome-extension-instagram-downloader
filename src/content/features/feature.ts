@@ -1,5 +1,4 @@
 import type { StoryRoute } from "../dom/route";
-import type { ButtonIcon } from "../ui/buttons";
 
 /** Something that adds its buttons to the page; run again whenever it changes. */
 export interface Feature {
@@ -15,9 +14,9 @@ export interface PostButton {
   shows(container: ParentNode): boolean;
 }
 
-/** What a labelled button says and which icon it shows. */
+/** What a labelled button says, and the icon content.css draws for it. */
 export interface ButtonLook {
-  readonly icon: ButtonIcon;
+  readonly icon: string;
   readonly label: string;
 }
 

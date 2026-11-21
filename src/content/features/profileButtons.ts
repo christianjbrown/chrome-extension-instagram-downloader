@@ -5,17 +5,11 @@ import type { Viewer } from "../../shared/bridge";
 import type { ResumableRun } from "../bulk/ports";
 import type { ButtonLook, ProfileButton } from "./feature";
 
-/** How the buttons every profile gets look. */
-export const PROFILE_BUTTON_LOOKS = {
-  downloadAll: { icon: "download-all", label: "Download all posts" },
-  picture: { icon: "picture", label: "Download profile picture" },
-  folder: { icon: "folder", label: "Change download folder" },
-} as const satisfies Record<string, ButtonLook>;
-
-const following = {
-  start: { icon: "following", label: "Download following" },
-  resume: { icon: "following", label: "Resume downloading following" },
-} as const satisfies Record<string, ButtonLook>;
+/** How the Download following button looks, for a new run and a stopped one. */
+export interface FollowingLooks {
+  readonly start: ButtonLook;
+  readonly resume: ButtonLook;
+}
 
 /** A button on every profile that runs one command for it. */
 export class CommandButton implements ProfileButton {
@@ -39,6 +33,7 @@ export class FollowingButton implements ProfileButton {
     private readonly command: Command,
     private readonly ownProfile: OwnProfile,
     private readonly resumable: ResumableRun,
+    private readonly looks: FollowingLooks,
   ) {}
 
   offer(username: string, show: (look: ButtonLook) => void): void {
@@ -55,8 +50,8 @@ export class FollowingButton implements ProfileButton {
   // A run stopped part way is offered to carry on.
   private async lookFor(viewer: Viewer): Promise<ButtonLook> {
     return (await this.resumable.canResume(viewer))
-      ? following.resume
-      : following.start;
+      ? this.looks.resume
+      : this.looks.start;
   }
 
   run(): Promise<void> {

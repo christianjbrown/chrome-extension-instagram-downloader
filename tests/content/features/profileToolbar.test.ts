@@ -1,9 +1,9 @@
 import { SignedInProfile } from "../../../src/content/actions/ownProfile";
 import { StoppedFollowingRun } from "../../../src/content/bulk/resumableRun";
+import { BUTTON_LOOKS } from "../../../src/content/buttonLooks";
 import {
   CommandButton,
   FollowingButton,
-  PROFILE_BUTTON_LOOKS,
 } from "../../../src/content/features/profileButtons";
 import type { ButtonLook } from "../../../src/content/features/feature";
 import { ProfileToolbar } from "../../../src/content/features/profileToolbar";
@@ -27,15 +27,19 @@ function setup(
     profiles: routes(page).profiles,
     buttons: widgets(),
     profileButtons: [
-      new CommandButton(PROFILE_BUTTON_LOOKS.downloadAll, commands.account),
-      new CommandButton(PROFILE_BUTTON_LOOKS.picture, commands.picture),
-      new CommandButton(PROFILE_BUTTON_LOOKS.folder, commands.folder),
+      new CommandButton(BUTTON_LOOKS.downloadAll, commands.account),
+      new CommandButton(BUTTON_LOOKS.picture, commands.picture),
+      new CommandButton(BUTTON_LOOKS.folder, commands.folder),
       new FollowingButton(
         commands.following,
         new SignedInProfile({ current: () => Promise.resolve(viewer) }),
         new StoppedFollowingRun({
           inProgress: () => Promise.resolve(inProgress),
         }),
+        {
+          start: BUTTON_LOOKS.following,
+          resume: BUTTON_LOOKS.resumeFollowing,
+        },
       ),
     ],
   });

@@ -27,15 +27,6 @@ export class DomButtons implements IconButtons, TextButtons {
   }
 }
 
-export const BUTTON_ICONS = [
-  "download",
-  "download-all",
-  "picture",
-  "folder",
-  "following",
-] as const;
-export type ButtonIcon = (typeof BUTTON_ICONS)[number];
-
 // A labelled button with its icon before the text; the icon is drawn in CSS.
-export const textButtonClass = (icon: ButtonIcon): string =>
+export const textButtonClass = (icon: string): string =>
   classes(CLASS.textButton, `${CLASS.iconPrefix}${icon}`);
