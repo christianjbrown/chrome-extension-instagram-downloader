@@ -4,10 +4,12 @@ import type { Account, PostsPage, Reel } from "../shared/bridge";
 import type { Handlers } from "./bridgeServer";
 import type { FollowingPages } from "./followingClient";
 import type { Queries } from "./instagramQueries";
-import type { MediaLookups } from "./mediaCache";
+import type { MediaLookup, ReelLookup, UserLookup } from "./ports";
 
 interface Dependencies {
-  readonly cache: MediaLookups;
+  readonly media: MediaLookup;
+  readonly users: UserLookup;
+  readonly reels: ReelLookup;
   readonly queries: Queries;
   readonly following: FollowingPages;
 }
@@ -28,10 +30,10 @@ function found<T>(value: T | undefined, message: string): T {
 }
 
 async function userId(
-  { cache, queries }: Dependencies,
+  { users, queries }: Dependencies,
   username: string,
 ): Promise<string> {
-  const cached = cache.userId(username);
+  const cached = users.userId(username);
   if (cached !== undefined) return cached;
   // Pinned collaborations can put someone else's post first.
   const { items } = await queries.postsPage(username, undefined);
@@ -51,24 +53,24 @@ async function account(
 // The total comes free from the profile Instagram already loaded, so it is
 // only there when the account's page has been visited.
 async function postsPage(
-  { cache, queries }: Dependencies,
+  { users, queries }: Dependencies,
   username: string,
   cursor: string | undefined,
 ): Promise<PostsPage> {
   const page = await queries.postsPage(username, cursor);
-  const total = cache.postCount(username);
+  const total = users.postCount(username);
   return total === undefined ? page : { ...page, total };
 }
 
-function reel(cache: MediaLookups, reelId: string | undefined): Reel {
+function reel(reels: ReelLookup, reelId: string | undefined): Reel {
   return found(
-    reelId === undefined ? undefined : cache.reel(reelId),
+    reelId === undefined ? undefined : reels.reel(reelId),
     text.storyNotLoaded,
   );
 }
 
 export function createProcedures(dependencies: Dependencies): Handlers {
-  const { cache, queries, following } = dependencies;
+  const { media, users, reels, queries, following } = dependencies;
   return {
     viewer: async () => {
       const id = queries.viewerId();
@@ -76,15 +78,15 @@ export function createProcedures(dependencies: Dependencies): Handlers {
       return { id, username: profile.username };
     },
     media: async ({ mediaId }) =>
-      cache.mediaById(mediaId) ?? queries.mediaById(mediaId),
+      media.mediaById(mediaId) ?? queries.mediaById(mediaId),
     mediaByAsset: ({ asset }) =>
-      settle(() => found(cache.mediaByAsset(asset), text.pictureNotLoaded)),
+      settle(() => found(media.mediaByAsset(asset), text.pictureNotLoaded)),
     postsPage: ({ username, cursor }) =>
       postsPage(dependencies, username, cursor),
     account: ({ username }) => account(dependencies, username),
     followingPage: ({ userId: id, next }) => following.page(id, next),
-    reel: ({ reelId }) => settle(() => reel(cache, reelId)),
+    reel: ({ reelId }) => settle(() => reel(reels, reelId)),
     userReel: ({ username }) =>
-      settle(() => reel(cache, cache.userId(username))),
+      settle(() => reel(reels, users.userId(username))),
   };
 }

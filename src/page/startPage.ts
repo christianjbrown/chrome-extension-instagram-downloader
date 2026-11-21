@@ -11,14 +11,26 @@ import { FollowingClient } from "./followingClient";
 import { InstagramHeaders } from "./instagramHeaders";
 import { InstagramQueries } from "./instagramQueries";
 import { MediaCache } from "./mediaCache";
+import { MediaIndex } from "./mediaIndex";
+import { ReelIndex } from "./reelIndex";
+import { UserIndex } from "./userIndex";
 import { createProcedures } from "./procedures";
 import { RelayClient, windowRequire } from "./relayClient";
 import { InstagramApiPolicy, tapFetch, tapXhr } from "./responseTap";
 
 type PageWindow = Window & typeof globalThis & { require?: unknown };
 
+// The cache of what Instagram sent, one index per kind of object.
+function memory({ cacheLimit }: PageConfig) {
+  const store = <V>() => new BoundedMap<V>(cacheLimit);
+  const media = new MediaIndex(store());
+  const users = new UserIndex(store(), store());
+  const reels = new ReelIndex(store());
+  return { cache: new MediaCache([media, users, reels]), media, users, reels };
+}
+
 export function startPage(target: PageWindow, config: PageConfig): void {
-  const cache = new MediaCache(<V>() => new BoundedMap<V>(config.cacheLimit));
+  const { cache, media, users, reels } = memory(config);
   const ingest = (value: unknown): void => {
     cache.ingest(value);
   };
@@ -33,7 +45,9 @@ export function startPage(target: PageWindow, config: PageConfig): void {
   else scan();
   const require = windowRequire(target);
   const procedures = createProcedures({
-    cache,
+    media,
+    users,
+    reels,
     queries: new InstagramQueries(
       new RelayClient(require),
       require,
