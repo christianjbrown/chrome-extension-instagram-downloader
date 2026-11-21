@@ -8,6 +8,8 @@ import type { PageConfig } from "./config";
 import { ProcedureInputs } from "./procedureInputs";
 import { InstagramRefusalDetector } from "./refusalDetector";
 import { FollowingClient } from "./followingClient";
+import { FollowingPageParser } from "./followingParser";
+import { FollowingPolicy } from "./followingPolicy";
 import { InstagramHeaders } from "./instagramHeaders";
 import { InstagramQueries } from "./instagramQueries";
 import { MediaCache } from "./mediaCache";
@@ -56,6 +58,7 @@ export function startPage(target: PageWindow, config: PageConfig): void {
       new InstagramHeaders(require),
       (url, init) => target.fetch(url, init),
       { path: config.followingPath, pageSize: config.followingPageSize },
+      { policy: new FollowingPolicy(), parser: new FollowingPageParser() },
     ),
   });
   new BridgeServer(

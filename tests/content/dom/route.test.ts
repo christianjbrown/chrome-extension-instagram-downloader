@@ -1,4 +1,6 @@
-import { parseRoute } from "../../../src/content/dom/route";
+import { PathRouteParser } from "../../../src/content/dom/route";
+
+const parser = new PathRouteParser();
 
 it.each([
   ["/", { kind: "other" }],
@@ -17,5 +19,5 @@ it.each([
   ["/stories/highlights/", { kind: "other" }],
   ["/stories/highlights/987/", { kind: "highlight", highlightId: "987" }],
 ])("reads %s", (path, route) => {
-  expect(parseRoute(path)).toEqual(route);
+  expect(parser.parse(path)).toEqual(route);
 });

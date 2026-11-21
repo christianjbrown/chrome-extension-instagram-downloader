@@ -1,0 +1,90 @@
+// Builds the parts of a bulk download.
+import { AccountArchiver } from "./bulk/accountArchiver";
+import { BulkRunner } from "./bulk/bulkRunner";
+import { PinnedAwareCatchUp } from "./bulk/catchUp";
+import { ConsecutiveFailureTally } from "./bulk/failureTally";
+import { FollowingDownloader } from "./bulk/followingDownloader";
+import { FollowingLister } from "./bulk/followingLister";
+import { GatedPostTotals } from "./bulk/postTotals";
+import type { Pacer } from "./pacing/pacer";
+import { RunStore } from "./bulk/runStore";
+import { ApiGate } from "./pacing/apiGate";
+import { HourlyBudget } from "./pacing/hourlyBudget";
+import { TimerSleeper } from "./pacing/sleeper";
+import { DirectoryWriter } from "./saving/directoryWriter";
+import { blobFetcher } from "./saving/fetchBlob";
+import { SafeFileNamer } from "./saving/fileNamer";
+import { FolderPicker } from "./saving/folderPicker";
+import { MemoryFolderStore } from "./saving/folderStore";
+import { isMediaUrl } from "../shared/mediaUrl";
+import { SecondCountdown } from "./ui/countdown";
+import { ProgressPanel } from "./ui/progressPanel";
+import { DomProgressBars } from "./ui/progressBar";
+import type {
+  Archiver,
+  FollowingRunner,
+  JobRunner,
+  RunProgress,
+} from "./bulk/ports";
+import type { FetchBlob, FileNamer, FolderSource } from "./saving/ports";
+import type { Wiring } from "./wiring";
+
+/** What the features take from the bulk downloads. */
+export interface BulkParts {
+  readonly archiver: Archiver;
+  readonly following: FollowingRunner;
+  readonly folders: FolderSource;
+  readonly runner: JobRunner;
+  readonly runs: RunProgress;
+  readonly fetchBlob: FetchBlob;
+  readonly namer: FileNamer;
+}
+
+function bulkPacer({ config, scheduler }: Wiring): Pacer {
+  const { pacing } = config;
+  const sleeper = new TimerSleeper(scheduler, Math.random);
+  const gate = new ApiGate(
+    sleeper,
+    new HourlyBudget(pacing.apiCallsPerHour, sleeper, Date.now),
+    pacing,
+  );
+  return { gate, sleeper, fileDelayMs: pacing.fileDelayMs };
+}
+
+export function bulk(wiring: Wiring): BulkParts {
+  const { env, config, bridge, notifier, scheduler } = wiring;
+  const pacer = bulkPacer(wiring);
+  const namer = new SafeFileNamer();
+  const fetchBlob = blobFetcher((url) => env.window.fetch(url), isMediaUrl);
+  const writer = new DirectoryWriter(fetchBlob, namer);
+  const archiver = new AccountArchiver({
+    bridge,
+    writer,
+    pacer,
+    totals: new GatedPostTotals(bridge, pacer.gate),
+    catchUp: new PinnedAwareCatchUp(),
+  });
+  const runs = new RunStore(env.storage);
+  const following = new FollowingDownloader({
+    lister: new FollowingLister(bridge, pacer.gate),
+    archiver,
+    store: runs,
+    now: Date.now,
+    tally: new ConsecutiveFailureTally(config.failuresInARow),
+  });
+  const folders = new FolderPicker(new MemoryFolderStore(), (options) =>
+    env.window.showDirectoryPicker(options),
+  );
+  const runner = new BulkRunner(
+    folders,
+    new ProgressPanel(
+      env.window.document,
+      new SecondCountdown(scheduler, Date.now),
+      wiring.buttons,
+      new DomProgressBars(env.window.document),
+    ),
+    notifier,
+    env.window.AbortController,
+  );
+  return { archiver, following, folders, runner, runs, fetchBlob, namer };
+}

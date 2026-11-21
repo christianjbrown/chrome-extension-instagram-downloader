@@ -1,12 +1,10 @@
 import { TAGS } from "../../shared/dom";
 import type { PostDownloads } from "../actions/ports";
-import type { PostLocator } from "../dom/ports";
-import type { Notifier } from "../ui/ports";
-import { isCarousel } from "../dom/carousel";
+import type { CarouselReader, PostLocator } from "../dom/ports";
+import type { ButtonFactory, Notifier } from "../ui/ports";
 import { ARTICLE, MAIN } from "../dom/selectors";
-import { createButton } from "../ui/buttons";
 import { bySelector, CLASS, classes } from "../ui/classNames";
-import type { Feature, PageView } from "./feature";
+import type { Feature } from "./feature";
 
 // Instagram's bookmark icon, saved or not, marks every post's action bar.
 const bookmarkIcon =
@@ -49,7 +47,7 @@ interface PostButton {
   readonly className: string;
   /** Saves every slide rather than the one showing. */
   readonly all: boolean;
-  readonly shows: (container: ParentNode) => boolean;
+  readonly shows: (container: ParentNode, carousel: CarouselReader) => boolean;
 }
 
 // The buttons beside the bookmark, in order.
@@ -64,42 +62,46 @@ const postButtons: readonly PostButton[] = [
     label: text.downloadAll,
     className: classes(CLASS.button, CLASS.downloadAll),
     all: true,
-    shows: isCarousel,
+    shows: (container, carousel) => carousel.isCarousel(container),
   },
 ];
 
+export interface PostActionsDependencies {
+  readonly document: Document;
+  readonly downloader: PostDownloads;
+  readonly notifier: Notifier;
+  readonly locator: PostLocator;
+  readonly carousel: CarouselReader;
+  readonly buttons: ButtonFactory;
+}
+
 export class PostActions implements Feature {
-  constructor(
-    private readonly view: PageView,
-    private readonly downloader: PostDownloads,
-    private readonly notifier: Notifier,
-    private readonly locator: PostLocator,
-  ) {}
+  constructor(private readonly deps: PostActionsDependencies) {}
 
   scan(): void {
-    for (const icon of this.view.document.querySelectorAll(bookmarkIcon)) {
+    for (const icon of this.deps.document.querySelectorAll(bookmarkIcon)) {
       const slot = actionSlot(icon);
       if (slot === undefined) continue;
       if (slot.parentElement?.querySelector(bySelector(CLASS.postActions)))
         continue;
-      place(this.buttons(slot), slot);
+      place(this.group(slot), slot);
     }
   }
 
   private container(element: Element): ParentNode {
     return (
-      element.closest(ARTICLE) ?? element.closest(MAIN) ?? this.view.document
+      element.closest(ARTICLE) ?? element.closest(MAIN) ?? this.deps.document
     );
   }
 
-  private buttons(slot: Element): HTMLElement {
-    const group = this.view.document.createElement(TAGS.span);
+  private group(slot: Element): HTMLElement {
+    const group = this.deps.document.createElement(TAGS.span);
     group.className = CLASS.postActions;
     const container = this.container(slot);
     for (const { label, className, all, shows } of postButtons) {
-      if (!shows(container)) continue;
+      if (!shows(container, this.deps.carousel)) continue;
       group.append(
-        createButton(this.view.document, {
+        this.deps.buttons.button({
           label,
           className,
           onClick: () => void this.download(container, all),
@@ -110,11 +112,11 @@ export class PostActions implements Feature {
   }
 
   private async download(container: ParentNode, all: boolean): Promise<void> {
-    const target = this.locator.target(container, all);
+    const target = this.deps.locator.target(container, all);
     if (target === undefined) {
-      this.notifier.error(text.unknownPost);
+      this.deps.notifier.error(text.unknownPost);
       return;
     }
-    await this.downloader.download(target);
+    await this.deps.downloader.download(target);
   }
 }

@@ -43,3 +43,25 @@ export interface RunPanel extends RunReporter {
   open(title: string, onStop: () => void): void;
   finish(message: string): void;
 }
+
+export interface ButtonSpec {
+  readonly label: string;
+  readonly className: string;
+  readonly onClick: () => void;
+}
+
+/** Makes the buttons the features and the panel put on the page. */
+export interface ButtonFactory {
+  /** An icon button, labelled for screen readers and on hover. */
+  button(spec: ButtonSpec): HTMLButtonElement;
+  /** A button that shows its label as text. */
+  textButton(spec: ButtonSpec): HTMLButtonElement;
+}
+
+/** Makes bars showing how much of something is done. */
+export interface ProgressBars {
+  /** A bar, hidden until it is shown a fraction. */
+  create(className: string): HTMLElement;
+  /** Fills the bar to the fraction done, or hides it when that is unknown. */
+  show(bar: HTMLElement, fraction: number | undefined): void;
+}

@@ -1,10 +1,13 @@
 import { ATTRIBUTES } from "../../shared/dom";
 import { shortcodeFromPath, shortcodeToMediaId } from "../../shared/shortcode";
 import type { PostTarget } from "../actions/ports";
-import type { PageView } from "../features/feature";
-import { carouselSlide } from "./carousel";
-import type { AssetFinder, PostLocator } from "./ports";
-import { parseRoute } from "./route";
+import type {
+  AssetFinder,
+  CarouselReader,
+  PostLocator,
+  RouteReader,
+} from "./ports";
+import type { PostRoute } from "./route";
 
 const postLink = 'a[href*="/p/"], a[href*="/reel/"]';
 
@@ -12,8 +15,9 @@ const postLink = 'a[href*="/p/"], a[href*="/reel/"]';
 // one, and by the picture on screen when it does not.
 export class PagePostLocator implements PostLocator {
   constructor(
-    private readonly view: PageView,
+    private readonly posts: RouteReader<PostRoute>,
     private readonly assets: AssetFinder,
+    private readonly carousel: CarouselReader,
   ) {}
 
   target(container: ParentNode, all: boolean): PostTarget | undefined {
@@ -21,7 +25,7 @@ export class PagePostLocator implements PostLocator {
     if (shortcode !== undefined)
       return {
         mediaId: shortcodeToMediaId(shortcode),
-        slide: all ? undefined : carouselSlide(container),
+        slide: all ? undefined : this.carousel.slide(container),
       };
     const asset = this.assets.largest(container);
     return asset === undefined ? undefined : { asset };
@@ -30,8 +34,8 @@ export class PagePostLocator implements PostLocator {
   // In the feed each post links to itself; on a post's own page the address
   // names it, and links further down lead to other posts.
   private shortcode(container: ParentNode): string | undefined {
-    const route = parseRoute(this.view.pathname());
-    if (route.kind === "post") return route.shortcode;
+    const post = this.posts.read();
+    if (post !== undefined) return post.shortcode;
     const href = container
       .querySelector(postLink)
       ?.getAttribute(ATTRIBUTES.href);

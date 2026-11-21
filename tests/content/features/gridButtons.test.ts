@@ -1,9 +1,16 @@
 import { GridButtons } from "../../../src/content/features/gridButtons";
-import { click, view } from "./view";
+import { GridThumbnails } from "../../../src/content/dom/gridThumbnails";
+import { buttons, click, routes, view } from "./view";
 
 function setup(html: string, width = 300, path = "/alice/") {
   const downloader = { download: vi.fn(() => Promise.resolve()) };
-  const feature = new GridButtons(view(path, html), downloader, 100);
+  const page = view(path, html);
+  const feature = new GridButtons(
+    new GridThumbnails(document, 100),
+    downloader,
+    routes(page).profiles,
+    buttons(),
+  );
   for (const link of document.querySelectorAll("a"))
     link.getBoundingClientRect = () => ({ width }) as DOMRect;
   feature.scan();

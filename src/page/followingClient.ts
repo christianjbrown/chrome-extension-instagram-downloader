@@ -1,9 +1,13 @@
 // Lists the accounts a user follows, a page at a time, through the same REST
 // endpoint Instagram's own "Following" dialog uses.
 import type { FollowingPage } from "../shared/bridge";
-import { parseFollowingPage } from "./followingResponse";
 import { FOLLOWING_QUERY } from "./instagramApi";
-import type { HeaderSource, FollowingPages } from "./ports";
+import type {
+  FollowingPages,
+  FollowingParser,
+  HeaderSource,
+  ResponsePolicy,
+} from "./ports";
 
 type Fetch = (url: string, init: RequestInit) => Promise<Response>;
 
@@ -16,6 +20,12 @@ export interface FollowingEndpoint {
   readonly pageSize: number;
 }
 
+/** How an answer is judged, then read. */
+export interface FollowingAnswers {
+  readonly policy: ResponsePolicy;
+  readonly parser: FollowingParser;
+}
+
 const invalidUser = "Invalid user id";
 const numericId = /^\d+$/;
 
@@ -24,6 +34,7 @@ export class FollowingClient implements FollowingPages {
     private readonly headers: HeaderSource,
     private readonly fetch: Fetch,
     private readonly endpoint: FollowingEndpoint,
+    private readonly answers: FollowingAnswers,
   ) {}
 
   async page(userId: string, next: string | undefined): Promise<FollowingPage> {
@@ -32,7 +43,8 @@ export class FollowingClient implements FollowingPages {
       headers: this.headers.headers(),
     });
     const body: unknown = await response.json().catch(() => undefined);
-    return parseFollowingPage(response.status, body);
+    const { policy, parser } = this.answers;
+    return parser.parse(policy.accept(response.status, body));
   }
 
   private url(userId: string, next: string | undefined): string {

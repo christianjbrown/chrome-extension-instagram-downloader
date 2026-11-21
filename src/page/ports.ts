@@ -97,3 +97,13 @@ export interface Relay {
 export interface ViewerIdSource {
   viewerId(): string;
 }
+
+/** Turns an answer down, by throwing, unless it is one worth reading. */
+export interface ResponsePolicy {
+  accept(status: number, body: unknown): JsonObject;
+}
+
+/** Reads one page of who someone follows. */
+export interface FollowingParser {
+  parse(body: JsonObject): FollowingPage;
+}

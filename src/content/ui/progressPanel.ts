@@ -1,9 +1,7 @@
 import { TAGS } from "../../shared/dom";
 import { describeWait } from "../pacing/waitText";
-import { createTextButton } from "./buttons";
 import { bySelector, CLASS } from "./classNames";
-import { createProgressBar, showProgress } from "./progressBar";
-import type { Countdown, RunPanel } from "./ports";
+import type { ButtonFactory, Countdown, ProgressBars, RunPanel } from "./ports";
 
 // Top to bottom. Bars stay hidden until something reports a fraction.
 const parts = [
@@ -34,6 +32,8 @@ export class ProgressPanel implements RunPanel {
   constructor(
     private readonly document: Document,
     private readonly countdown: Countdown,
+    private readonly buttons: ButtonFactory,
+    private readonly bars: ProgressBars,
   ) {}
 
   open(title: string, onStop: () => void): void {
@@ -45,7 +45,7 @@ export class ProgressPanel implements RunPanel {
     this.set("title", title, panel);
     this.set("note", text.note, panel);
     panel.append(
-      createTextButton(this.document, {
+      this.buttons.textButton({
         label: text.stop,
         className: CLASS.panelButton,
         onClick: onStop,
@@ -56,7 +56,7 @@ export class ProgressPanel implements RunPanel {
   }
 
   private line(part: Part): HTMLElement {
-    if (isBar(part)) return createProgressBar(this.document, partClass(part));
+    if (isBar(part)) return this.bars.create(partClass(part));
     const line = this.document.createElement(TAGS.div);
     line.className = partClass(part);
     return line;
@@ -75,7 +75,7 @@ export class ProgressPanel implements RunPanel {
 
   private bar(part: Part, fraction: number | undefined): void {
     const bar = this.find(part);
-    if (bar) showProgress(bar, fraction);
+    if (bar) this.bars.show(bar, fraction);
   }
 
   heading(text: string): void {
@@ -108,7 +108,7 @@ export class ProgressPanel implements RunPanel {
     this.detail(message);
     const panel = this.element;
     panel?.querySelector(bySelector(CLASS.panelButton))?.replaceWith(
-      createTextButton(this.document, {
+      this.buttons.textButton({
         label: text.close,
         className: CLASS.panelButton,
         onClick: () => {

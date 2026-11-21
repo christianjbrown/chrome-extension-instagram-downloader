@@ -1,9 +1,7 @@
 import { IDBFactory } from "fake-indexeddb";
 import { CONTENT_CONFIG } from "../../src/content/config";
-import {
-  startContent,
-  type ContentEnvironment,
-} from "../../src/content/startContent";
+import { startContent } from "../../src/content/startContent";
+import type { ContentEnvironment } from "../../src/content/wiring";
 
 function environment() {
   document.body.innerHTML = "<main><header></header></main>";

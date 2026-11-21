@@ -1,37 +1,30 @@
 import { ATTRIBUTES, EVENTS, TAGS } from "../../shared/dom";
 import { CLASS, classes } from "./classNames";
-
-export interface ButtonSpec {
-  readonly label: string;
-  readonly className: string;
-  readonly onClick: () => void;
-}
+import type { ButtonFactory, ButtonSpec } from "./ports";
 
 // Buttons sit inside Instagram's own links, so a click must not reach them.
-export function createButton(
-  document: Document,
-  spec: ButtonSpec,
-): HTMLButtonElement {
-  const button = document.createElement(TAGS.button);
-  button.type = "button";
-  button.className = spec.className;
-  button.title = spec.label;
-  button.setAttribute(ATTRIBUTES.ariaLabel, spec.label);
-  button.addEventListener(EVENTS.click, (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    spec.onClick();
-  });
-  return button;
-}
+export class DomButtons implements ButtonFactory {
+  constructor(private readonly document: Document) {}
 
-export function createTextButton(
-  document: Document,
-  spec: ButtonSpec,
-): HTMLButtonElement {
-  const button = createButton(document, spec);
-  button.textContent = spec.label;
-  return button;
+  button(spec: ButtonSpec): HTMLButtonElement {
+    const button = this.document.createElement(TAGS.button);
+    button.type = "button";
+    button.className = spec.className;
+    button.title = spec.label;
+    button.setAttribute(ATTRIBUTES.ariaLabel, spec.label);
+    button.addEventListener(EVENTS.click, (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      spec.onClick();
+    });
+    return button;
+  }
+
+  textButton(spec: ButtonSpec): HTMLButtonElement {
+    const button = this.button(spec);
+    button.textContent = spec.label;
+    return button;
+  }
 }
 
 export const BUTTON_ICONS = [

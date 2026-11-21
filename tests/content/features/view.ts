@@ -1,10 +1,28 @@
+import { AddressRoute } from "../../../src/content/dom/addressRoute";
+import { DotCarousel } from "../../../src/content/dom/carousel";
+import type { StoryRoute } from "../../../src/content/actions/ports";
+import type { RouteReader } from "../../../src/content/dom/ports";
+import {
+  PathRouteParser,
+  type PostRoute,
+  type ProfileRoute,
+} from "../../../src/content/dom/route";
+import {
+  PostPage,
+  ProfilePage,
+  StoryPage,
+} from "../../../src/content/dom/routeKinds";
 import { VisibleAssetFinder } from "../../../src/content/dom/visibleAsset";
-import type { PageView } from "../../../src/content/features/feature";
+import { DomButtons } from "../../../src/content/ui/buttons";
 
-export function view(
-  pathname: string,
-  html: string,
-): PageView & { setPath(path: string): void } {
+/** A page at an address the test can change. */
+export interface TestPage {
+  readonly document: Document;
+  pathname(): string;
+  setPath(path: string): void;
+}
+
+export function view(pathname: string, html: string): TestPage {
   document.body.innerHTML = html;
   let path = pathname;
   return {
@@ -26,3 +44,22 @@ export const bookmark =
 export function click(selector: string): void {
   document.querySelector<HTMLElement>(selector)?.click();
 }
+
+/** The address readers the content script builds, over a test page. */
+export function routes(page: TestPage): {
+  posts: RouteReader<PostRoute>;
+  profiles: RouteReader<ProfileRoute>;
+  stories: RouteReader<StoryRoute>;
+} {
+  const parser = new PathRouteParser();
+  const pathname = (): string => page.pathname();
+  return {
+    posts: new AddressRoute(pathname, parser, new PostPage()),
+    profiles: new AddressRoute(pathname, parser, new ProfilePage()),
+    stories: new AddressRoute(pathname, parser, new StoryPage()),
+  };
+}
+
+export const buttons = (): DomButtons => new DomButtons(document);
+
+export const carousel = (): DotCarousel => new DotCarousel();
