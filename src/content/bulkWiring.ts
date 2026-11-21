@@ -1,10 +1,13 @@
 // Builds the parts of a bulk download.
 import { AccountArchiver } from "./bulk/accountArchiver";
+import { CatchingUpPages } from "./bulk/accountPages";
+import { BarTallies } from "./bulk/accountTally";
 import { BulkRunner } from "./bulk/bulkRunner";
 import { PinnedAwareCatchUp } from "./bulk/catchUp";
 import { ConsecutiveFailureTally } from "./bulk/failureTally";
 import { FollowingDownloader } from "./bulk/followingDownloader";
 import { FollowingLister } from "./bulk/followingLister";
+import { PacedItemSaver } from "./bulk/itemSaver";
 import { GatedPostTotals } from "./bulk/postTotals";
 import { FollowedAccountsResume } from "./bulk/resumePolicy";
 import {
@@ -97,11 +100,14 @@ export function bulk(wiring: Wiring): BulkParts {
   const stops = stopPolicies();
   const archiver = new AccountArchiver({
     files: wiring.files,
-    bridge,
-    writer,
-    pacer,
-    totals: new GatedPostTotals(bridge, pacer.gate, stops.stopOrBlock),
-    catchUp: new PinnedAwareCatchUp(),
+    pages: new CatchingUpPages({
+      bridge,
+      gate: pacer.gate,
+      totals: new GatedPostTotals(bridge, pacer.gate, stops.stopOrBlock),
+      catchUp: new PinnedAwareCatchUp(),
+    }),
+    saver: new PacedItemSaver(writer, pacer.sleeper, pacer.fileDelayMs),
+    tallies: new BarTallies(),
   });
   const runs = new RunStore(env.storage);
   const following = new FollowingDownloader({

@@ -1,6 +1,9 @@
 import { SlideFiles } from "../../../src/content/mediaFiles";
 import { LargestVersionChooser } from "../../../src/content/versionChooser";
 import { AccountArchiver } from "../../../src/content/bulk/accountArchiver";
+import { CatchingUpPages } from "../../../src/content/bulk/accountPages";
+import { BarTallies } from "../../../src/content/bulk/accountTally";
+import { PacedItemSaver } from "../../../src/content/bulk/itemSaver";
 import { PinnedAwareCatchUp } from "../../../src/content/bulk/catchUp";
 import { CONTENT_CONFIG } from "../../../src/content/config";
 import type { ItemWriter } from "../../../src/content/saving/ports";
@@ -51,11 +54,14 @@ function setup(
     totals,
     archiver: new AccountArchiver({
       files: new SlideFiles(new LargestVersionChooser()),
-      bridge,
-      writer,
-      pacer: pacer as never,
-      totals,
-      catchUp: new PinnedAwareCatchUp(),
+      pages: new CatchingUpPages({
+        bridge,
+        gate: pacer.gate as never,
+        totals,
+        catchUp: new PinnedAwareCatchUp(),
+      }),
+      saver: new PacedItemSaver(writer, pacer.sleeper, pacer.fileDelayMs),
+      tallies: new BarTallies(),
     }),
   };
 }
