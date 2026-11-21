@@ -1,17 +1,21 @@
-import { TAGS } from "../../shared/dom";
-import { bySelector, CLASS } from "./classNames";
-import { isBar, PANEL_PARTS, partClass, type PanelPart } from "./panelParts";
-import type { PanelView, ProgressBars, TextButtons } from "./ports";
+import { type PageBody, TAGS } from "../../shared/dom";
+import { bySelector } from "./classNames";
+import type { PanelPart, PanelView, TextButtons } from "./ports";
 
-// Builds the fixed panel on the page and writes into it. Before a panel is up
-// there is nothing to write into, so lines and bars are left alone.
+// The panel itself, and its one button, which is found again to swap Stop
+// for Close.
+export const PANEL_CLASS = "igdl-panel";
+export const PANEL_BUTTON_CLASS = "igdl-panel-button";
+
+// Builds the fixed panel on the page from its parts, top to bottom, with its
+// one button below them.
 export class DomPanelView implements PanelView {
   private element: HTMLElement | undefined;
 
   constructor(
-    private readonly document: Document,
+    private readonly document: PageBody,
     private readonly buttons: TextButtons,
-    private readonly bars: ProgressBars,
+    private readonly parts: readonly PanelPart[],
   ) {}
 
   show(stopLabel: string, onStop: () => void): void {
@@ -21,15 +25,6 @@ export class DomPanelView implements PanelView {
     this.element = panel;
   }
 
-  line(part: PanelPart, text: string): void {
-    this.write(this.find(part), text);
-  }
-
-  bar(part: PanelPart, fraction: number | undefined): void {
-    const bar = this.find(part);
-    if (bar) this.bars.show(bar, fraction);
-  }
-
   offerClose(closeLabel: string): void {
     const panel = this.element;
     if (panel !== undefined) this.closeButton(panel, closeLabel);
@@ -37,41 +32,24 @@ export class DomPanelView implements PanelView {
 
   private build(stopLabel: string, onStop: () => void): HTMLElement {
     const panel = this.document.createElement(TAGS.div);
-    panel.className = CLASS.panel;
-    for (const part of PANEL_PARTS) panel.append(this.part(part));
+    panel.className = PANEL_CLASS;
+    for (const part of this.parts) panel.append(part.create());
     panel.append(
       this.buttons.textButton({
         label: stopLabel,
-        className: CLASS.panelButton,
+        className: PANEL_BUTTON_CLASS,
         onClick: onStop,
       }),
     );
     return panel;
   }
 
-  private part(part: PanelPart): HTMLElement {
-    if (isBar(part)) return this.bars.create(partClass(part));
-    const line = this.document.createElement(TAGS.div);
-    line.className = partClass(part);
-    return line;
-  }
-
-  private find(part: PanelPart): HTMLElement | null | undefined {
-    return this.element?.querySelector<HTMLElement>(
-      bySelector(partClass(part)),
-    );
-  }
-
-  private write(line: HTMLElement | null | undefined, text: string): void {
-    if (line) line.textContent = text;
-  }
-
   // The Stop button becomes Close once the run is over.
   private closeButton(panel: HTMLElement, closeLabel: string): void {
-    panel.querySelector(bySelector(CLASS.panelButton))?.replaceWith(
+    panel.querySelector(bySelector(PANEL_BUTTON_CLASS))?.replaceWith(
       this.buttons.textButton({
         label: closeLabel,
-        className: CLASS.panelButton,
+        className: PANEL_BUTTON_CLASS,
         onClick: () => {
           panel.remove();
         },

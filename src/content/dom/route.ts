@@ -1,44 +1,13 @@
-// What kind of Instagram page a path is.
-import type { PathMatcher, RouteParser } from "./ports";
-
-// The kinds of page a route can be, by the name each route carries.
-export const ROUTE_KINDS = {
-  post: "post",
-  profile: "profile",
-  story: "story",
-  highlight: "highlight",
-  other: "other",
-} as const;
-
-type Kinds = typeof ROUTE_KINDS;
+// Every kind of Instagram page a path can be. Each kind is declared in its
+// own module under routes, so a new kind is one more line here.
+import type { HighlightRoute } from "./routes/highlight";
+import type { OtherRoute } from "./routes/other";
+import type { PostRoute } from "./routes/post";
+import type { ProfileRoute } from "./routes/profile";
+import type { UserStoryRoute } from "./routes/userStory";
 
 export type Route =
-  | { readonly kind: Kinds["post"]; readonly shortcode: string }
-  | { readonly kind: Kinds["profile"]; readonly username: string }
-  | {
-      readonly kind: Kinds["story"];
-      readonly username: string;
-      readonly mediaId: string | undefined;
-    }
-  | { readonly kind: Kinds["highlight"]; readonly highlightId: string }
-  | { readonly kind: Kinds["other"] };
+  PostRoute | ProfileRoute | UserStoryRoute | HighlightRoute | OtherRoute;
 
-export type PostRoute = Extract<Route, { kind: Kinds["post"] }>;
-export type ProfileRoute = Extract<Route, { kind: Kinds["profile"] }>;
-
-export const OTHER_ROUTE: Route = { kind: ROUTE_KINDS.other };
-
-// Splits a path into its segments and asks each matcher in turn, in the
-// order given, and the first that recognises the path wins.
-export class PathRouteParser implements RouteParser {
-  constructor(private readonly matchers: readonly PathMatcher[]) {}
-
-  parse(pathname: string): Route {
-    const segments = pathname.split("/").filter((segment) => segment !== "");
-    const matched = this.matchers.reduce<Route | undefined>(
-      (route, matcher) => route ?? matcher.match(segments),
-      undefined,
-    );
-    return matched ?? OTHER_ROUTE;
-  }
-}
+/** The pages the story viewer shows. */
+export type StoryRoute = UserStoryRoute | HighlightRoute;

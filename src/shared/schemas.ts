@@ -1,7 +1,7 @@
 // The checks every procedure's answer is built from. Any script on the page
 // can answer a request, so every reply is treated as untrusted input and
 // rejected when it does not have the expected shape.
-import { isRecord, type JsonObject } from "./json";
+import { isList, isRecord, type JsonObject } from "./json";
 
 type Parser<T> = (value: unknown) => T;
 
@@ -30,4 +30,4 @@ export const optional = <T>(value: unknown, parse: Parser<T>): T | undefined =>
   isAbsent(value) ? undefined : parse(value);
 
 export const list = <T>(value: unknown, parse: Parser<T>, what: string): T[] =>
-  Array.isArray(value) ? (value as unknown[]).map(parse) : reject(what);
+  isList(value) ? value.map(parse) : reject(what);

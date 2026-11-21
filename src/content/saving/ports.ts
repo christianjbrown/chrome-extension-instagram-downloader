@@ -10,8 +10,6 @@ export const OUTCOME = {
 
 export type WriteOutcome = (typeof OUTCOME)[keyof typeof OUTCOME];
 
-export const WRITE_OUTCOMES: readonly WriteOutcome[] = Object.values(OUTCOME);
-
 export interface ItemWriter {
   exists(
     folder: FileSystemDirectoryHandle,
@@ -40,4 +38,16 @@ export interface FolderSource {
 export interface FolderStore {
   get(): Promise<FileSystemDirectoryHandle | undefined>;
   set(folder: FileSystemDirectoryHandle): Promise<void>;
+}
+
+/** What the folder chooser is opened with. */
+export interface PickerOptions {
+  readonly id: string;
+  readonly mode: "readwrite";
+  readonly startIn: "downloads";
+}
+
+/** Opens a folder chooser and hands back the folder picked. */
+export interface DirectoryChooser {
+  show(options: PickerOptions): Promise<FileSystemDirectoryHandle>;
 }

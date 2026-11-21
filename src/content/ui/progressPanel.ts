@@ -1,44 +1,63 @@
-import type { PanelView, PanelWording, RunPanel, WaitLine } from "./ports";
+import type {
+  PanelBar,
+  PanelLine,
+  PanelView,
+  PanelLabels,
+  RunPanel,
+  WaitLine,
+} from "./ports";
+
+/** The lines and bars a run's progress is written into. */
+export interface PanelLines {
+  readonly title: PanelLine;
+  readonly overall: PanelLine;
+  readonly overallBar: PanelBar;
+  readonly heading: PanelLine;
+  readonly detail: PanelLine;
+  readonly accountBar: PanelBar;
+  readonly note: PanelLine;
+}
 
 // What a bulk download reports, shown on the panel. Building the panel, its
 // words and the countdown of a wait are each their own part.
 export class ProgressPanel implements RunPanel {
   constructor(
     private readonly view: PanelView,
+    private readonly lines: PanelLines,
     private readonly waits: WaitLine,
-    private readonly wording: PanelWording,
+    private readonly wording: PanelLabels,
   ) {}
 
   open(title: string, onStop: () => void): void {
     this.waits.stop();
     this.view.show(this.wording.stop, onStop);
-    this.view.line("title", title);
-    this.view.line("note", this.wording.note);
+    this.lines.title.write(title);
+    this.lines.note.write(this.wording.note);
   }
 
   heading(text: string): void {
-    this.view.line("heading", text);
+    this.lines.heading.write(text);
   }
 
   detail(text: string): void {
     this.waits.stop();
-    this.view.line("detail", text);
+    this.lines.detail.write(text);
   }
 
   // Counts down until the wait is over or other news replaces it.
   waiting(reason: string, ms: number): void {
     this.waits.start(reason, ms, (text) => {
-      this.view.line("detail", text);
+      this.lines.detail.write(text);
     });
   }
 
   overall(text: string, fraction: number): void {
-    this.view.line("overall", text);
-    this.view.bar("overall-bar", fraction);
+    this.lines.overall.write(text);
+    this.lines.overallBar.fill(fraction);
   }
 
   accountBar(fraction: number | undefined): void {
-    this.view.bar("account-bar", fraction);
+    this.lines.accountBar.fill(fraction);
   }
 
   finish(message: string): void {

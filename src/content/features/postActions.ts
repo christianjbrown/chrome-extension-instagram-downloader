@@ -1,10 +1,12 @@
-import { TAGS } from "../../shared/dom";
-import type { PostDownloads } from "../actions/ports";
-import type { PostLocator } from "../dom/ports";
-import type { IconButtons, Notifier } from "../ui/ports";
+import { type ElementMaker, TAGS } from "../../shared/dom";
+import type { IconButtons } from "../ui/ports";
 import { ARTICLE, MAIN } from "../dom/selectors";
-import { bySelector, CLASS } from "../ui/classNames";
-import type { Feature, PostButton } from "./feature";
+import { bySelector } from "../ui/classNames";
+import type { ContainerDownload, Feature, PostButton } from "./feature";
+
+// Marks the group of buttons beside a bookmark, for content.css and for
+// finding it again.
+export const POST_ACTIONS_CLASS = "igdl-post-actions";
 
 // Instagram's bookmark icon, saved or not, marks every post's action bar.
 const bookmarkIcon =
@@ -15,10 +17,6 @@ const loneChild = 1;
 
 // The element that wraps an action bar's buttons.
 const actionButton = '[role="button"], button';
-
-const text = {
-  unknownPost: "Could not tell which post this is.",
-} as const;
 
 // The outermost element around the bookmark that holds nothing else, which is
 // the slot in the action bar our buttons go beside.
@@ -42,7 +40,7 @@ function outermostAlone(element: Element): Element {
 
 // A slot already holding our buttons beside it is left alone.
 const hasActions = (slot: Element): boolean =>
-  Boolean(slot.parentElement?.querySelector(bySelector(CLASS.postActions)));
+  Boolean(slot.parentElement?.querySelector(bySelector(POST_ACTIONS_CLASS)));
 
 const isGroup = (element: Element | null): element is Element =>
   element !== null && element.childElementCount > loneChild;
@@ -58,10 +56,9 @@ function place(group: Element, slot: Element): void {
 }
 
 export interface PostActionsDependencies {
-  readonly document: Document;
-  readonly downloader: PostDownloads;
-  readonly notifier: Notifier;
-  readonly locator: PostLocator;
+  readonly document: ElementMaker & ParentNode;
+  /** What each button does when pressed. */
+  readonly action: ContainerDownload;
   /** The buttons beside the bookmark, in order. */
   readonly postButtons: readonly PostButton[];
   readonly buttons: IconButtons;
@@ -94,7 +91,7 @@ export class PostActions implements Feature {
 
   private group(slot: Element): HTMLElement {
     const group = this.deps.document.createElement(TAGS.span);
-    group.className = CLASS.postActions;
+    group.className = POST_ACTIONS_CLASS;
     const container = this.container(slot);
     const shown = this.deps.postButtons.filter((button) =>
       button.shows(container),
@@ -110,16 +107,7 @@ export class PostActions implements Feature {
     return this.deps.buttons.button({
       label,
       className,
-      onClick: () => void this.download(container, all),
+      onClick: () => void this.deps.action.download(container, all),
     });
-  }
-
-  private async download(container: ParentNode, all: boolean): Promise<void> {
-    const target = this.deps.locator.target(container, all);
-    if (target === undefined) {
-      this.deps.notifier.error(text.unknownPost);
-      return;
-    }
-    await this.deps.downloader.download(target);
   }
 }

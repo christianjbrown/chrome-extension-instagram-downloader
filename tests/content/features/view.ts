@@ -1,22 +1,8 @@
-import {
-  PostPath,
-  ProfilePath,
-  StoryPath,
-} from "../../../src/content/dom/pathMatchers";
-import { AddressRoute } from "../../../src/content/dom/addressRoute";
 import { DotCarousel } from "../../../src/content/dom/carousel";
-import type { StoryRoute } from "../../../src/content/actions/ports";
-import type { RouteReader } from "../../../src/content/dom/ports";
 import {
-  PathRouteParser,
-  type PostRoute,
-  type ProfileRoute,
-} from "../../../src/content/dom/route";
-import {
-  PostPage,
-  ProfilePage,
-  StoryPage,
-} from "../../../src/content/dom/routeKinds";
+  routes as routeReaders,
+  type Routes,
+} from "../../../src/content/routeWiring";
 import { VisibleAssetFinder } from "../../../src/content/dom/visibleAsset";
 import { DomButtons } from "../../../src/content/ui/buttons";
 
@@ -51,23 +37,8 @@ export function click(selector: string): void {
 }
 
 /** The address readers the content script builds, over a test page. */
-export function routes(page: TestPage): {
-  posts: RouteReader<PostRoute>;
-  profiles: RouteReader<ProfileRoute>;
-  stories: RouteReader<StoryRoute>;
-} {
-  const parser = new PathRouteParser([
-    new StoryPath(),
-    new PostPath(),
-    new ProfilePath(),
-  ]);
-  const pathname = (): string => page.pathname();
-  return {
-    posts: new AddressRoute(pathname, parser, new PostPage()),
-    profiles: new AddressRoute(pathname, parser, new ProfilePage()),
-    stories: new AddressRoute(pathname, parser, new StoryPage()),
-  };
-}
+export const routes = (page: TestPage): Routes =>
+  routeReaders(() => page.pathname());
 
 export const buttons = (): DomButtons => new DomButtons(document);
 

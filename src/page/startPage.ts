@@ -5,12 +5,14 @@ import { BridgeServer } from "./bridgeServer";
 import { whenParsed } from "./documentReady";
 import { scanEmbeddedJson } from "./embeddedJson";
 import type { PageConfig } from "./config";
-import { InstagramRefusalDetector } from "./refusalDetector";
+import { refusalDetector } from "./refusalWiring";
 import { FollowingClient } from "./followingClient";
 import { FollowingPageParser } from "./followingParser";
 import { FollowingPolicy } from "./followingPolicy";
 import { InstagramHeaders } from "./instagramHeaders";
-import { InstagramQueries } from "./instagramQueries";
+import { PostByIdQuery } from "./queries/postById";
+import { PostsPageQuery } from "./queries/postsPage";
+import { ProfileByIdQuery } from "./queries/profile";
 import { MediaCache } from "./mediaCache";
 import { MediaIndex } from "./mediaIndex";
 import { ReelIndex } from "./reelIndex";
@@ -44,16 +46,16 @@ export function startPage(target: PageWindow, config: PageConfig): void {
     scanEmbeddedJson(target.document, ingest);
   });
   const require = windowRequire(target);
+  const relay = new RelayClient(require);
   const procedures = procedureTable(
     {
       media,
       users,
       reels,
       viewer: new PolarisViewerId(require),
-      queries: new InstagramQueries(
-        new RelayClient(require),
-        config.postsPageSize,
-      ),
+      mediaQuery: new PostByIdQuery(relay),
+      postsQuery: new PostsPageQuery(relay, config.postsPageSize),
+      profileQuery: new ProfileByIdQuery(relay),
       following: new FollowingClient(
         new InstagramHeaders(require),
         (url, init) => target.fetch(url, init),
@@ -66,6 +68,6 @@ export function startPage(target: PageWindow, config: PageConfig): void {
   new BridgeServer(
     procedures,
     { origin: pageOrigin, source: target },
-    new InstagramRefusalDetector(),
+    refusalDetector(),
   ).listen(target);
 }

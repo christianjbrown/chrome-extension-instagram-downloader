@@ -1,3 +1,5 @@
+import { TextButtonClasses } from "../../../src/content/ui/buttons";
+import { BUTTON_LOOKS } from "../../../src/content/buttonLooks";
 import { StoryToolbar } from "../../../src/content/features/storyToolbar";
 import {
   AllStoriesButton,
@@ -17,9 +19,15 @@ function setup(path: string) {
     document,
     stories: routes(page).stories,
     buttons: buttons(),
+    iconClasses: new TextButtonClasses(),
     storyButtons: [
-      new CurrentStoryButton(downloader, assets(), document),
-      new AllStoriesButton(downloader),
+      new CurrentStoryButton(
+        BUTTON_LOOKS.story,
+        downloader,
+        assets(),
+        document,
+      ),
+      new AllStoriesButton(BUTTON_LOOKS.allStories, downloader),
     ],
   });
   feature.scan();

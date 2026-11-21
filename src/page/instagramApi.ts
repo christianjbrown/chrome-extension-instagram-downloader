@@ -11,6 +11,16 @@ export const MODULES = {
   profilePageQuery: "PolarisProfilePageContentQuery",
 } as const;
 
+/** The functions the page script calls on Instagram's own modules. */
+export const MEMBERS = {
+  appId: "getIGAppID",
+  claim: "getWWWClaim",
+  viewerId: "getViewerId",
+  network: "getNetwork",
+  execute: "execute",
+  subscribe: "subscribe",
+} as const;
+
 /** The member of the post query module that looks a post up by id. */
 export const POST_BY_ID_MEMBER = "POST_QUERY_MEDIA_ID";
 

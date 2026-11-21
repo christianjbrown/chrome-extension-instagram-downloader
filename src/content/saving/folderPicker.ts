@@ -1,20 +1,38 @@
-import type { FolderStore, FolderSource } from "./ports";
-
-type Permission = "granted" | "denied" | "prompt";
-
-interface PermissionHandle {
-  queryPermission(options: { mode: "readwrite" }): Promise<Permission>;
-  requestPermission(options: { mode: "readwrite" }): Promise<Permission>;
-}
-
-export type ShowDirectoryPicker = (options: {
-  id: string;
-  mode: "readwrite";
-  startIn: "downloads";
-}) => Promise<FileSystemDirectoryHandle>;
+import { isJsonObject, type JsonObject } from "../../shared/json";
+import type { DirectoryChooser, FolderStore, FolderSource } from "./ports";
 
 const readwrite = { mode: "readwrite" } as const;
-const granted: Permission = "granted";
+
+type Mode = typeof readwrite;
+
+// Chrome's own permission calls on a folder, which TypeScript's DOM types do
+// not describe yet. Only "granted" is acted on, so any other answer is left
+// unchecked.
+interface PermissionHandle {
+  queryPermission(options: Mode): Promise<unknown>;
+  requestPermission(options: Mode): Promise<unknown>;
+}
+
+const granted = "granted";
+
+const text = {
+  noPermissions: "The folder cannot be asked for access",
+} as const;
+
+const isCall = (value: unknown): boolean => typeof value === "function";
+
+const hasPermissionCalls = ({
+  queryPermission,
+  requestPermission,
+}: JsonObject): boolean => isCall(queryPermission) && isCall(requestPermission);
+
+const isPermissionHandle = (value: unknown): value is PermissionHandle =>
+  isJsonObject(value) && hasPermissionCalls(value);
+
+function permissionHandle(folder: FileSystemDirectoryHandle): PermissionHandle {
+  if (!isPermissionHandle(folder)) throw new Error(text.noPermissions);
+  return folder;
+}
 // Where the picker opens the first time, before Chrome remembers a folder.
 const startIn = "downloads";
 
@@ -26,7 +44,7 @@ const pickerId = "instagram-downloader";
 export class FolderPicker implements FolderSource {
   constructor(
     private readonly store: FolderStore,
-    private readonly showPicker: ShowDirectoryPicker,
+    private readonly chooser: DirectoryChooser,
   ) {}
 
   async pick(chooseAgain?: boolean): Promise<FileSystemDirectoryHandle> {
@@ -55,7 +73,7 @@ export class FolderPicker implements FolderSource {
   }
 
   private async choose(): Promise<FileSystemDirectoryHandle> {
-    const chosen = await this.showPicker({
+    const chosen = await this.chooser.show({
       id: pickerId,
       ...readwrite,
       startIn,
@@ -64,8 +82,11 @@ export class FolderPicker implements FolderSource {
     return chosen;
   }
 
-  private async permitted(folder: FileSystemDirectoryHandle): Promise<boolean> {
-    const handle = folder as unknown as PermissionHandle;
+  private permitted(folder: FileSystemDirectoryHandle): Promise<boolean> {
+    return this.ask(permissionHandle(folder));
+  }
+
+  private async ask(handle: PermissionHandle): Promise<boolean> {
     if ((await handle.queryPermission(readwrite)) === granted) return true;
     return (await handle.requestPermission(readwrite)) === granted;
   }

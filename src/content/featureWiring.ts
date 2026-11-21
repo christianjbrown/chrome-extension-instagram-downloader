@@ -15,6 +15,7 @@ import { ViewerSource } from "./actions/viewerSource";
 import type { Feature, ProfileButton } from "./features/feature";
 import { GridButtons } from "./features/gridButtons";
 import { PostActions } from "./features/postActions";
+import { PostTargetDownload } from "./features/postTargetDownload";
 import { ProfileToolbar } from "./features/profileToolbar";
 import { StoryToolbar } from "./features/storyToolbar";
 import { AllStoriesButton, CurrentStoryButton } from "./features/storyButtons";
@@ -23,23 +24,18 @@ import { VisibleAssetFinder } from "./dom/visibleAsset";
 import { FileDownloader } from "./saving/fileDownloader";
 import type { CurrentViewer } from "./actions/ports";
 import type { ItemDownloader } from "./saving/ports";
-import { AddressRoute } from "./dom/addressRoute";
 import { DotCarousel } from "./dom/carousel";
 import { GridThumbnails } from "./dom/gridThumbnails";
-import { PostPath, ProfilePath, StoryPath } from "./dom/pathMatchers";
-import { PathRouteParser } from "./dom/route";
-import { PostPage, ProfilePage, StoryPage } from "./dom/routeKinds";
+import { routes, type Routes } from "./routeWiring";
+import { TextButtonClasses } from "./ui/buttons";
 
 import { SignedInProfile } from "./actions/ownProfile";
 import { StoppedFollowingRun } from "./bulk/resumableRun";
 import { AllSlidesButton, ShowingSlideButton } from "./features/postButtons";
-import {
-  CommandButton,
-  FollowingButton,
-  PROFILE_BUTTON_LOOKS,
-} from "./features/profileButtons";
+import { CommandButton, FollowingButton } from "./features/profileButtons";
+import { BUTTON_LOOKS } from "./buttonLooks";
 import { bulk, type BulkParts } from "./bulkWiring";
-import type { ContentEnvironment, Wiring } from "./wiring";
+import type { Wiring } from "./wiring";
 
 // The buttons under a profile's header, in the order they appear.
 function profileButtons(
@@ -50,43 +46,28 @@ function profileButtons(
 ): ProfileButton[] {
   return [
     new CommandButton(
-      PROFILE_BUTTON_LOOKS.downloadAll,
-      new DownloadAccountCommand(parts.runner, parts.archiver),
+      BUTTON_LOOKS.downloadAll,
+      new DownloadAccountCommand(parts.runner, parts.archiver, parts.wording),
     ),
     new CommandButton(
-      PROFILE_BUTTON_LOOKS.picture,
+      BUTTON_LOOKS.picture,
       new ProfilePictureCommand(bridge, downloader, notifier, errors),
     ),
     new CommandButton(
-      PROFILE_BUTTON_LOOKS.folder,
+      BUTTON_LOOKS.folder,
       new ChangeFolderCommand(parts.folders, notifier),
     ),
     new FollowingButton(
       new DownloadFollowingCommand(parts.runner, parts.following, viewers),
       new SignedInProfile(viewers),
       new StoppedFollowingRun(parts.runs),
+      {
+        start: BUTTON_LOOKS.following,
+        resume: BUTTON_LOOKS.resumeFollowing,
+      },
     ),
   ];
 }
-
-// The readers of the address, one per kind of page a feature looks for.
-function routes(env: ContentEnvironment) {
-  const pathname = (): string => env.window.location.pathname;
-  // Tried in this order, so a story or post address is never read as a
-  // profile.
-  const parser = new PathRouteParser([
-    new StoryPath(),
-    new PostPath(),
-    new ProfilePath(),
-  ]);
-  return {
-    posts: new AddressRoute(pathname, parser, new PostPage()),
-    profiles: new AddressRoute(pathname, parser, new ProfilePage()),
-    stories: new AddressRoute(pathname, parser, new StoryPage()),
-  };
-}
-
-type Routes = ReturnType<typeof routes>;
 
 // What the features share: the downloads, and how they read the page.
 function shared(wiring: Wiring) {
@@ -134,14 +115,20 @@ function postFeatures(
   return [
     new PostActions({
       document,
-      downloader: posts,
-      notifier,
-      locator: new PagePostLocator(routes.posts, assets, carousel),
+      action: new PostTargetDownload(
+        new PagePostLocator(routes.posts, assets, carousel),
+        posts,
+        notifier,
+      ),
       postButtons: [new ShowingSlideButton(), new AllSlidesButton(carousel)],
       buttons,
     }),
     new GridButtons(
-      new GridThumbnails(document, config.gridMinimumWidth),
+      new GridThumbnails(
+        document,
+        config.gridMinimumWidth,
+        env.window.HTMLAnchorElement,
+      ),
       posts,
       routes.profiles,
       buttons,
@@ -155,6 +142,7 @@ function accountFeatures(
   routes: Routes,
 ): Feature[] {
   const { env, bridge, notifier, buttons } = wiring;
+  const iconClasses = new TextButtonClasses();
   const { document } = env.window;
   const stories = new StoryDownloader({
     finder,
@@ -169,15 +157,17 @@ function accountFeatures(
       document,
       profiles: routes.profiles,
       buttons,
+      iconClasses,
       profileButtons: profileButtons(wiring, parts, viewers, downloader),
     }),
     new StoryToolbar({
       document,
       stories: routes.stories,
       buttons,
+      iconClasses,
       storyButtons: [
-        new CurrentStoryButton(stories, assets, document),
-        new AllStoriesButton(stories),
+        new CurrentStoryButton(BUTTON_LOOKS.story, stories, assets, document),
+        new AllStoriesButton(BUTTON_LOOKS.allStories, stories),
       ],
     }),
   ];
@@ -185,7 +175,7 @@ function accountFeatures(
 
 export function features(wiring: Wiring): Feature[] {
   const parts = shared(wiring);
-  const pages = routes(wiring.env);
+  const pages = routes(() => wiring.env.window.location.pathname);
   return [
     ...postFeatures(wiring, parts, pages),
     ...accountFeatures(wiring, parts, pages),

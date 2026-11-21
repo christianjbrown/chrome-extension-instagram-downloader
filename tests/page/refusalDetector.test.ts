@@ -1,8 +1,8 @@
-import { InstagramRefusalDetector } from "../../src/page/refusalDetector";
+import { refusalDetector } from "../../src/page/refusalWiring";
 import { RefusedError } from "../../src/shared/refusal";
 
-describe("InstagramRefusalDetector", () => {
-  const detector = new InstagramRefusalDetector();
+describe("refusalDetector", () => {
+  const detector = refusalDetector();
 
   it.each([
     new RefusedError("slow down"),

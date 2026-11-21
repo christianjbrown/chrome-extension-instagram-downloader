@@ -1,4 +1,4 @@
-import type { Countdown, PanelWording, WaitLine } from "./ports";
+import type { Countdown, WaitLine, WaitWording } from "./ports";
 
 // Counts a wait down a second at a time, worded for the panel. Only one wait
 // shows at once, so a new one stops the last.
@@ -7,7 +7,7 @@ export class CountdownLine implements WaitLine {
 
   constructor(
     private readonly countdown: Countdown,
-    private readonly wording: PanelWording,
+    private readonly wording: WaitWording,
   ) {}
 
   start(reason: string, ms: number, write: (text: string) => void): void {

@@ -1,6 +1,6 @@
 // Where a Download following run is up to, and which accounts have been
 // archived in full at least once.
-import { isRecord, type JsonObject } from "../../shared/json";
+import { isList, isRecord, type JsonObject } from "../../shared/json";
 
 export interface RunState {
   following: string[] | null;
@@ -8,9 +8,10 @@ export interface RunState {
   completed: Record<string, number>;
 }
 
+const isName = (name: unknown): name is string => typeof name === "string";
+
 const isNames = (value: unknown): value is string[] =>
-  Array.isArray(value) &&
-  (value as unknown[]).every((name) => typeof name === "string");
+  isList(value) && value.every(isName);
 
 // No run in progress, or the accounts the run is going through.
 const isFollowing = (value: unknown): boolean =>

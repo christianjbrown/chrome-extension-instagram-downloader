@@ -14,7 +14,7 @@ function picker(stored: FileSystemDirectoryHandle | undefined) {
     set: vi.fn(() => Promise.resolve()),
   };
   const show = vi.fn(() => Promise.resolve(chosen));
-  return { chosen, store, show, picker: new FolderPicker(store, show) };
+  return { chosen, store, show, picker: new FolderPicker(store, { show }) };
 }
 
 describe("FolderPicker", () => {
@@ -46,4 +46,11 @@ describe("FolderPicker", () => {
       expect(store.set).toHaveBeenCalledWith(chosen);
     }
   });
+});
+
+it("fails when a stored folder cannot be asked for access", async () => {
+  const stored = {} as FileSystemDirectoryHandle;
+  await expect(picker(stored).picker.pick()).rejects.toThrow(
+    "The folder cannot be asked for access",
+  );
 });

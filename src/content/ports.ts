@@ -3,6 +3,12 @@
 import type { Input, Output, ProcedureName } from "../shared/bridge";
 import type { DownloadItem, InstagramMedia } from "../shared/media";
 
+/** Carries a request to the page script and brings back its unchecked answer. */
+export interface PageTransport {
+  call(name: ProcedureName, input: unknown): Promise<unknown>;
+}
+
+/** Asks the page script for something, and answers only once it is checked. */
 export interface Bridge {
   call<N extends ProcedureName>(name: N, input: Input<N>): Promise<Output<N>>;
 }
@@ -27,6 +33,19 @@ export interface ErrorDescriber {
 export interface ErrorWording {
   matches(error: unknown): boolean;
   text(error: unknown): string;
+}
+
+/** Something done once as the content script starts. */
+export interface StartupStep {
+  run(): void;
+}
+
+/** Runs the features over the page now and whenever it changes. */
+export interface PageWatcher {
+  start(
+    root: Node,
+    createObserver: (callback: () => void) => MutationObserver,
+  ): void;
 }
 
 /** Picks the address a media is saved from. */

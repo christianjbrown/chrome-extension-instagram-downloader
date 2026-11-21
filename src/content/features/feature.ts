@@ -1,5 +1,4 @@
-import type { StoryRoute } from "../actions/ports";
-import type { ButtonIcon } from "../ui/buttons";
+import type { StoryRoute } from "../dom/route";
 
 /** Something that adds its buttons to the page; run again whenever it changes. */
 export interface Feature {
@@ -15,9 +14,14 @@ export interface PostButton {
   shows(container: ParentNode): boolean;
 }
 
-/** What a labelled button says and which icon it shows. */
+/** Saves the post, or every slide of it, shown in a container on the page. */
+export interface ContainerDownload {
+  download(container: ParentNode, all: boolean): Promise<void>;
+}
+
+/** What a labelled button says, and the icon content.css draws for it. */
 export interface ButtonLook {
-  readonly icon: ButtonIcon;
+  readonly icon: string;
   readonly label: string;
 }
 

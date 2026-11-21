@@ -2,6 +2,7 @@
 import type {
   Archiver,
   BulkJob,
+  CountsWording,
   JobRunner,
   FollowingRunner,
 } from "../bulk/ports";
@@ -9,7 +10,6 @@ import type { Bridge, ErrorDescriber } from "../ports";
 import type { FolderSource, ItemDownloader } from "../saving/ports";
 import type { Notifier } from "../ui/ports";
 import type { CurrentViewer, Command, UsernameCommand } from "./ports";
-import { describeCounts } from "../bulk/progressText";
 import type { Account } from "../../shared/bridge";
 import { UNKNOWN_TAKEN_AT } from "../../shared/media";
 
@@ -30,6 +30,7 @@ export class DownloadAccountCommand implements UsernameCommand {
   constructor(
     private readonly runner: JobRunner,
     private readonly archiver: Archiver,
+    private readonly wording: CountsWording,
   ) {}
 
   run(username: string): Promise<void> {
@@ -44,7 +45,7 @@ export class DownloadAccountCommand implements UsernameCommand {
           signal,
           reporter,
         });
-        return `${text.finished}: ${describeCounts(counts)}.`;
+        return `${text.finished}: ${this.wording.counts(counts)}.`;
       },
     };
     return this.runner.run(job);

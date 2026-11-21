@@ -1,5 +1,3 @@
-import { ALL_DONE } from "../ui/percent";
-import type { RunReporter } from "../ui/ports";
 import type {
   Archiver,
   FailureTally,
@@ -7,13 +5,9 @@ import type {
   RunStateStore,
   FollowingRequest,
   ResumePolicy,
+  FollowingProgress,
   FollowingRunner,
 } from "./ports";
-import {
-  describeAccount,
-  describeAccountsFinished,
-  describeFollowingFinished,
-} from "./progressText";
 import type { RunState } from "./runState";
 
 // Archives every account the viewer follows, one at a time, keeping its
@@ -29,6 +23,7 @@ export interface FollowingDependencies {
   readonly resume: ResumePolicy;
   readonly now: () => number;
   readonly tally: FailureTally;
+  readonly progress: FollowingProgress;
 }
 
 export class FollowingDownloader implements FollowingRunner {
@@ -44,9 +39,12 @@ export class FollowingDownloader implements FollowingRunner {
     const left = resume.remaining(state, following);
     this.deps.tally.reset();
     const last = await this.archiveAll(request, state, left, following.length);
-    this.reportFinished(request.reporter, following.length);
+    this.deps.progress.finished(request.reporter, following.length);
     await this.deps.store.save(viewer.id, resume.finished(last));
-    return `${describeFollowingFinished(following.length)}${this.deps.tally.summary()}`;
+    return this.deps.progress.summary(
+      following.length,
+      this.deps.tally.summary(),
+    );
   }
 
   // Goes through the accounts left, giving back the state after the last.
@@ -59,25 +57,15 @@ export class FollowingDownloader implements FollowingRunner {
     const before = total - left.length;
     let current = state;
     for (const [index, username] of left.entries()) {
-      this.report(request.reporter, before + index, total, username);
+      this.deps.progress.account(
+        request.reporter,
+        before + index,
+        total,
+        username,
+      );
       current = await this.archiveOne(request, current, username);
     }
     return current;
-  }
-
-  // Where the run is, counting accounts already done before this one.
-  private report(
-    reporter: RunReporter,
-    done: number,
-    total: number,
-    username: string,
-  ): void {
-    reporter.overall(describeAccount(done + 1, total), done / total);
-    reporter.heading(username);
-  }
-
-  private reportFinished(reporter: RunReporter, total: number): void {
-    if (total > 0) reporter.overall(describeAccountsFinished(total), ALL_DONE);
   }
 
   // A failed account keeps the state it had, so the run carries on past it.

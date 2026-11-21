@@ -1,10 +1,13 @@
 import { shortcodeToMediaId } from "../../shared/shortcode";
 import type { PostDownloads } from "../actions/ports";
 import type { RouteReader, Thumbnail, ThumbnailSource } from "../dom/ports";
-import type { ProfileRoute } from "../dom/route";
-import { CLASS, classes } from "../ui/classNames";
+import type { ProfileRoute } from "../dom/routes/profile";
+import { BUTTON_CLASS, classes } from "../ui/classNames";
 import type { IconButtons } from "../ui/ports";
 import type { Feature } from "./feature";
+
+// Places the button over a grid thumbnail.
+export const GRID_BUTTON_CLASS = "igdl-grid-button";
 
 const label = "Download post";
 
@@ -28,7 +31,7 @@ export class GridButtons implements Feature {
   private button({ shortcode }: Thumbnail): HTMLButtonElement {
     return this.buttons.button({
       label,
-      className: classes(CLASS.button, CLASS.gridButton),
+      className: classes(BUTTON_CLASS, GRID_BUTTON_CLASS),
       onClick: () =>
         void this.downloader.download(
           { mediaId: shortcodeToMediaId(shortcode), slide: undefined },

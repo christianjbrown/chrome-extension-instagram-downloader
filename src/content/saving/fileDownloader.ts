@@ -1,4 +1,4 @@
-import { TAGS } from "../../shared/dom";
+import { type ElementMaker, TAGS } from "../../shared/dom";
 import type { DownloadItem } from "../../shared/media";
 import type { FetchBlob, FileNamer, ItemDownloader } from "./ports";
 
@@ -10,7 +10,7 @@ interface ObjectUrls {
 // Saves one file through Chrome's normal download, into its download folder.
 export class FileDownloader implements ItemDownloader {
   constructor(
-    private readonly document: Document,
+    private readonly document: ElementMaker,
     private readonly fetchBlob: FetchBlob,
     private readonly urls: ObjectUrls,
     private readonly namer: FileNamer,

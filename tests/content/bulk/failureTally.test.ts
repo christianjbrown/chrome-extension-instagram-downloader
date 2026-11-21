@@ -1,3 +1,4 @@
+import { EnglishRunWording } from "../../../src/content/bulk/progressText";
 import { ConsecutiveFailureTally } from "../../../src/content/bulk/failureTally";
 import {
   AnyStopPolicy,
@@ -14,13 +15,23 @@ const stops = new AnyStopPolicy([
 
 describe("ConsecutiveFailureTally", () => {
   it("says nothing when every account was read", () => {
-    expect(new ConsecutiveFailureTally(2, stops, errorText()).summary()).toBe(
-      "",
-    );
+    expect(
+      new ConsecutiveFailureTally(
+        2,
+        stops,
+        errorText(),
+        new EnglishRunWording(),
+      ).summary(),
+    ).toBe("");
   });
 
   it("names the accounts that failed", () => {
-    const tally = new ConsecutiveFailureTally(2, stops, errorText());
+    const tally = new ConsecutiveFailureTally(
+      2,
+      stops,
+      errorText(),
+      new EnglishRunWording(),
+    );
     tally.failed("a", new Error("x"));
     tally.succeeded();
     tally.failed("b", "plain");
@@ -28,7 +39,12 @@ describe("ConsecutiveFailureTally", () => {
   });
 
   it("starts afresh after a reset", () => {
-    const tally = new ConsecutiveFailureTally(2, stops, errorText());
+    const tally = new ConsecutiveFailureTally(
+      2,
+      stops,
+      errorText(),
+      new EnglishRunWording(),
+    );
     tally.failed("a", new Error("x"));
     tally.reset();
     tally.failed("b", new Error("x"));
@@ -36,7 +52,12 @@ describe("ConsecutiveFailureTally", () => {
   });
 
   it("gives up with the real reason once enough fail in a row", () => {
-    const tally = new ConsecutiveFailureTally(2, stops, errorText());
+    const tally = new ConsecutiveFailureTally(
+      2,
+      stops,
+      errorText(),
+      new EnglishRunWording(),
+    );
     tally.failed("a", new Error("x"));
     expect(() => {
       tally.failed("b", new Error("Account not found"));
@@ -53,7 +74,12 @@ describe("ConsecutiveFailureTally", () => {
     new Error("Extension context invalidated."),
   ])("lets %o end the run", (error) => {
     expect(() => {
-      new ConsecutiveFailureTally(5, stops, errorText()).failed("a", error);
+      new ConsecutiveFailureTally(
+        5,
+        stops,
+        errorText(),
+        new EnglishRunWording(),
+      ).failed("a", error);
     }).toThrow(error);
   });
 });

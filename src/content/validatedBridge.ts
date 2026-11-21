@@ -6,11 +6,11 @@ import type {
   ProcedureName,
   ProcedureOutputs,
 } from "../shared/bridge";
-import type { Bridge } from "./ports";
+import type { Bridge, PageTransport } from "./ports";
 
 export class ValidatedBridge implements Bridge {
   constructor(
-    private readonly inner: Bridge,
+    private readonly inner: PageTransport,
     private readonly outputs: ProcedureOutputs,
   ) {}
 

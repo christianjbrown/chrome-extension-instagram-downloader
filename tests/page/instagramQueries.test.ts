@@ -1,4 +1,6 @@
-import { InstagramQueries } from "../../src/page/instagramQueries";
+import { PostByIdQuery } from "../../src/page/queries/postById";
+import { PostsPageQuery } from "../../src/page/queries/postsPage";
+import { ProfileByIdQuery } from "../../src/page/queries/profile";
 import type { Relay } from "../../src/page/ports";
 import { photo } from "../fixtures";
 
@@ -11,11 +13,21 @@ function queries(data: unknown) {
   };
   return {
     relay,
-    queries: new InstagramQueries(relay as unknown as Relay, 12),
+    queries: {
+      mediaById: (id: string) =>
+        new PostByIdQuery(relay as unknown as Relay).mediaById(id),
+      postsPage: (username: string, cursor: string | undefined) =>
+        new PostsPageQuery(relay as unknown as Relay, 12).postsPage(
+          username,
+          cursor,
+        ),
+      profile: (id: string) =>
+        new ProfileByIdQuery(relay as unknown as Relay).profile(id),
+    },
   };
 }
 
-describe("InstagramQueries", () => {
+describe("the Relay queries", () => {
   it("loads a post by id", async () => {
     const media = photo("5");
     const { relay, queries: q } = queries({

@@ -119,8 +119,6 @@ export interface ProfileQuery {
   profile(userId: string): Promise<ProfileUser>;
 }
 
-export interface Queries extends MediaQuery, PostsQuery, ProfileQuery {}
-
 /** Whether one field of a request has the only shape it may have. */
 export interface FieldCheck {
   accepts(value: unknown): boolean;
@@ -138,6 +136,11 @@ export interface PageProcedure<N extends ProcedureName> {
 export type ProcedureTable = {
   readonly [N in ProcedureName]: PageProcedure<N>;
 };
+
+/** Answers the content script's requests as they arrive. */
+export interface RequestListener {
+  listen(target: Pick<Window, "addEventListener">): void;
+}
 
 export interface RefusalDetector {
   isRefusal(error: unknown): boolean;

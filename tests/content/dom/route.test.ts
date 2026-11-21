@@ -3,7 +3,7 @@ import {
   ProfilePath,
   StoryPath,
 } from "../../../src/content/dom/pathMatchers";
-import { PathRouteParser } from "../../../src/content/dom/route";
+import { PathRouteParser } from "../../../src/content/dom/routeParser";
 
 const parser = new PathRouteParser([
   new StoryPath(),

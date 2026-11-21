@@ -2,12 +2,10 @@
 import {
   isBridgeResponse,
   type BridgeResponse,
-  type Input,
-  type Output,
   type ProcedureName,
 } from "../shared/bridge";
 import { RefusedError } from "../shared/refusal";
-import type { Scheduler, Bridge } from "./ports";
+import type { PageTransport, Scheduler } from "./ports";
 
 const text = {
   noAnswer: "The page did not answer",
@@ -43,7 +41,8 @@ function answer(
   else reject(failureOf(response));
 }
 
-// Anything but a well formed answer is turned down.
+// Anything but a well formed answer is turned down. What a well formed answer
+// carries is checked by the validated bridge, before anything uses it.
 function settle(
   data: unknown,
   resolve: (value: unknown) => void,
@@ -53,13 +52,13 @@ function settle(
   else reject(new Error(text.unreadable));
 }
 
-export class PageBridge implements Bridge {
+export class PageBridge implements PageTransport {
   constructor(
     private readonly postMessage: PostMessage,
     private readonly env: BridgeEnvironment,
   ) {}
 
-  call<N extends ProcedureName>(name: N, input: Input<N>): Promise<Output<N>> {
+  call(name: ProcedureName, input: unknown): Promise<unknown> {
     return new Promise((resolve, reject) => {
       const channel = this.env.newChannel();
       const cancel = this.env.scheduler.after(this.env.timeoutMs, () => {
@@ -69,13 +68,7 @@ export class PageBridge implements Bridge {
       channel.port1.onmessage = (event: MessageEvent<unknown>) => {
         cancel();
         channel.port1.close();
-        settle(
-          event.data,
-          (value) => {
-            resolve(value as Output<N>);
-          },
-          reject,
-        );
+        settle(event.data, resolve, reject);
       };
       this.postMessage({ igdlProcedure: name, input }, this.env.pageOrigin, [
         channel.port2,

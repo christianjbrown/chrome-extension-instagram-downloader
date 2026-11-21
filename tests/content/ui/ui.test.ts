@@ -1,22 +1,18 @@
-import { DomButtons, textButtonClass } from "../../../src/content/ui/buttons";
+import { DomButtons, TextButtonClasses } from "../../../src/content/ui/buttons";
 import { SecondCountdown } from "../../../src/content/ui/countdown";
 import { ToastNotifier } from "../../../src/content/ui/notifier";
 import type { Countdown } from "../../../src/content/ui/ports";
-import { DomProgressBars } from "../../../src/content/ui/progressBar";
 import { CountdownLine } from "../../../src/content/ui/countdownLine";
-import { DomPanelView } from "../../../src/content/ui/domPanelView";
 import { EnglishPanelWording } from "../../../src/content/ui/panelWording";
-import { ProgressPanel } from "../../../src/content/ui/progressPanel";
+import { progressPanel } from "../../../src/content/panelWiring";
+import type { RunPanel } from "../../../src/content/ui/ports";
 import { ManualScheduler } from "../helpers";
 
-const newPanel = (countdown: Countdown): ProgressPanel => {
+const newPanel = (countdown: Countdown): RunPanel => {
   const wording = new EnglishPanelWording();
-  return new ProgressPanel(
-    new DomPanelView(
-      document,
-      new DomButtons(document),
-      new DomProgressBars(document),
-    ),
+  return progressPanel(
+    document,
+    new DomButtons(document),
     new CountdownLine(countdown, wording),
     wording,
   );
@@ -46,10 +42,12 @@ describe("buttons", () => {
   });
 });
 
-describe("textButtonClass", () => {
+describe("TextButtonClasses", () => {
   it("names the shared look and one icon", () => {
-    expect(textButtonClass("folder")).toBe("igdl-text-button igdl-icon-folder");
-    expect(textButtonClass("download-all")).toBe(
+    expect(new TextButtonClasses().labelled("folder")).toBe(
+      "igdl-text-button igdl-icon-folder",
+    );
+    expect(new TextButtonClasses().labelled("download-all")).toBe(
       "igdl-text-button igdl-icon-download-all",
     );
   });
@@ -151,6 +149,7 @@ describe("ProgressPanel bars", () => {
       start: () => vi.fn(),
     });
     panel.overall("ignored before opening", 0.5);
+    panel.accountBar(0.5);
     panel.open("Downloading", vi.fn());
     expect(bar("overall").hidden).toBe(true);
     expect(bar("account").hidden).toBe(true);

@@ -6,6 +6,14 @@ export type JsonObject = Record<string, unknown>;
 export const isJsonObject = (value: unknown): value is JsonObject =>
   typeof value === "object" && value !== null;
 
+/** A list, each of whose entries is still unchecked. */
+export const isList = (value: unknown): value is readonly unknown[] =>
+  Array.isArray(value);
+
+/** The value's entries when it is a list, and none when it is anything else. */
+export const entriesOf = (value: unknown): readonly unknown[] =>
+  isList(value) ? value : [];
+
 /** An object with named fields, which an array is not. */
 export const isRecord = (value: unknown): value is JsonObject =>
   isJsonObject(value) && !Array.isArray(value);

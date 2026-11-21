@@ -29,7 +29,16 @@ function setup() {
     page: vi.fn(() => Promise.resolve({ usernames: ["a"], next: undefined })),
   };
   const procedures = procedureTable(
-    { viewer, media, users, reels, queries, following },
+    {
+      viewer,
+      media,
+      users,
+      reels,
+      mediaQuery: queries,
+      postsQuery: queries,
+      profileQuery: queries,
+      following,
+    },
     PAGE_CONFIG.inputLimits,
   );
   return { cache, queries, following, procedures };

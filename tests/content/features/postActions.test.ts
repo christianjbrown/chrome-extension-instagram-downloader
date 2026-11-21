@@ -1,3 +1,4 @@
+import { PostTargetDownload } from "../../../src/content/features/postTargetDownload";
 import { PagePostLocator } from "../../../src/content/dom/postLocator";
 import { PostActions } from "../../../src/content/features/postActions";
 import {
@@ -21,9 +22,11 @@ function setup(path: string, html: string) {
   const page = view(path, html);
   const feature = new PostActions({
     document,
-    downloader,
-    notifier: notes,
-    locator: new PagePostLocator(routes(page).posts, assets(), carousel()),
+    action: new PostTargetDownload(
+      new PagePostLocator(routes(page).posts, assets(), carousel()),
+      downloader,
+      notes,
+    ),
     postButtons: [new ShowingSlideButton(), new AllSlidesButton(carousel())],
     buttons: buttons(),
   });

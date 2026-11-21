@@ -1,8 +1,8 @@
 import { describeWait } from "../pacing/waitText";
-import type { PanelWording } from "./ports";
+import type { PanelLabels, WaitWording } from "./ports";
 
 // The panel's own words, in English.
-export class EnglishPanelWording implements PanelWording {
+export class EnglishPanelWording implements PanelLabels, WaitWording {
   readonly note = "Keep this tab open while it runs.";
   readonly stop = "Stop";
   readonly close = "Close";

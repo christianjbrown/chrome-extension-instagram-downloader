@@ -2,12 +2,8 @@ import type { DownloadItem } from "../../shared/media";
 import type { ErrorDescriber, MediaFiles } from "../ports";
 import type { ItemDownloader } from "../saving/ports";
 import type { Notifier } from "../ui/ports";
-import type {
-  MediaFinder,
-  StoryDownloads,
-  StoryKind,
-  StoryRoute,
-} from "./ports";
+import type { MediaFinder, StoryDownloads, StoryKind } from "./ports";
+import type { StoryRoute } from "../dom/route";
 
 const text = {
   unknownStory: "could not tell which story is showing",

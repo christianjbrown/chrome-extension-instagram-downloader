@@ -1,6 +1,5 @@
 // What the content script shows on the page, as its callers see it.
 import type { WaitReporter } from "../pacing/pacing";
-import type { PanelPart } from "./panelParts";
 
 export interface Countdown {
   /** Calls show with the time left now and as each second passes, down to zero. The returned function stops it. */
@@ -26,7 +25,7 @@ export interface AccountProgress {
   accountBar(fraction: number | undefined): void;
 }
 
-interface OverallProgress {
+export interface OverallProgress {
   /** Where a run over many accounts has got to, as words and a fraction done. */
   overall(text: string, fraction: number): void;
 }
@@ -56,36 +55,49 @@ export interface IconButtons {
   button(spec: ButtonSpec): HTMLButtonElement;
 }
 
+/** The classes a labelled button takes to show its icon. */
+export interface IconClasses {
+  labelled(icon: string): string;
+}
+
 /** Makes the buttons that show their label as text. */
 export interface TextButtons {
   textButton(spec: ButtonSpec): HTMLButtonElement;
 }
 
-/** Makes bars showing how much of something is done. */
-export interface ProgressBars {
-  /** A bar, hidden until it is shown a fraction. */
-  create(className: string): HTMLElement;
-  /** Fills the bar to the fraction done, or hides it when that is unknown. */
-  show(bar: HTMLElement, fraction: number | undefined): void;
+/** One line or bar of the progress panel, which makes its own element. */
+export interface PanelPart {
+  create(): HTMLElement;
 }
 
-/** The progress panel on the page: its lines, its bars and its one button. */
+/** A line of the panel, written when a panel is up. */
+export interface PanelLine {
+  write(text: string): void;
+}
+
+/** A bar of the panel, filled when a panel is up. */
+export interface PanelBar {
+  /** Fills the bar to the fraction done, or hides it when that is unknown. */
+  fill(fraction: number | undefined): void;
+}
+
+/** The progress panel on the page: its parts and its one button. */
 export interface PanelView {
   /** Puts up a new panel in place of any other, its button stopping the run. */
   show(stopLabel: string, onStop: () => void): void;
-  /** Writes a line, when a panel is up. */
-  line(part: PanelPart, text: string): void;
-  /** Fills a bar, or hides it when the fraction is unknown. */
-  bar(part: PanelPart, fraction: number | undefined): void;
   /** Turns the button into one that takes the panel away. */
   offerClose(closeLabel: string): void;
 }
 
-/** The words the progress panel uses for itself. */
-export interface PanelWording {
+/** The words on the progress panel itself and its one button. */
+export interface PanelLabels {
   readonly note: string;
   readonly stop: string;
   readonly close: string;
+}
+
+/** How the progress panel words a wait as it counts down. */
+export interface WaitWording {
   wait(reason: string, remainingMs: number): string;
 }
 

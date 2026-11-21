@@ -1,19 +1,26 @@
-import { TAGS } from "../../shared/dom";
+import { TAGS, type ElementMaker } from "../../shared/dom";
 import type { RouteReader } from "../dom/ports";
-import type { ProfileRoute } from "../dom/route";
+import type { ProfileRoute } from "../dom/routes/profile";
 import { PROFILE_HEADER } from "../dom/selectors";
-import { textButtonClass } from "../ui/buttons";
-import { bySelector, CLASS } from "../ui/classNames";
-import type { TextButtons } from "../ui/ports";
+import { bySelector } from "../ui/classNames";
+import type { IconClasses, TextButtons } from "../ui/ports";
 import type { ButtonLook, Feature, ProfileButton } from "./feature";
 
-const isFor = (toolbar: HTMLElement | null, username: string): boolean =>
-  toolbar?.dataset.username === username;
+// Marks the row of buttons under a profile header, for content.css and for
+// finding it again.
+export const PROFILE_TOOLBAR_CLASS = "igdl-profile-toolbar";
+
+// The toolbar names the profile it was made for.
+const usernameAttribute = "data-username";
+
+const isFor = (toolbar: Element | null, username: string): boolean =>
+  toolbar?.getAttribute(usernameAttribute) === username;
 
 export interface ProfileToolbarDependencies {
-  readonly document: Document;
+  readonly document: ElementMaker & Pick<ParentNode, "querySelector">;
   readonly profiles: RouteReader<ProfileRoute>;
   readonly buttons: TextButtons;
+  readonly iconClasses: IconClasses;
   /** The buttons, in the order they appear. */
   readonly profileButtons: readonly ProfileButton[];
 }
@@ -36,15 +43,13 @@ export class ProfileToolbar implements Feature {
 
   // A toolbar left from another profile is swapped for this one's.
   private refresh(header: Element, username: string): void {
-    const existing = header.querySelector<HTMLElement>(
-      bySelector(CLASS.profileToolbar),
-    );
+    const existing = header.querySelector(bySelector(PROFILE_TOOLBAR_CLASS));
     if (!isFor(existing, username)) this.replace(header, existing, username);
   }
 
   private replace(
     header: Element,
-    existing: HTMLElement | null,
+    existing: Element | null,
     username: string,
   ): void {
     existing?.remove();
@@ -53,8 +58,8 @@ export class ProfileToolbar implements Feature {
 
   private toolbar(username: string): HTMLElement {
     const toolbar = this.deps.document.createElement(TAGS.div);
-    toolbar.className = CLASS.profileToolbar;
-    toolbar.dataset.username = username;
+    toolbar.className = PROFILE_TOOLBAR_CLASS;
+    toolbar.setAttribute(usernameAttribute, username);
     const placed: (HTMLElement | undefined)[] = [];
     this.deps.profileButtons.forEach((button, index) => {
       button.offer(username, (look) => {
@@ -70,7 +75,7 @@ export class ProfileToolbar implements Feature {
   private element(look: ButtonLook, run: () => Promise<void>): HTMLElement {
     return this.deps.buttons.textButton({
       label: look.label,
-      className: textButtonClass(look.icon),
+      className: this.deps.iconClasses.labelled(look.icon),
       onClick: () => void run(),
     });
   }

@@ -6,11 +6,36 @@ import type {
   AccountProgress,
   DetailReporter,
   HeadingReporter,
+  OverallProgress,
   RunReporter,
 } from "../ui/ports";
 import type { WriteOutcome } from "../saving/ports";
 import type { Counts } from "./counts";
 import type { RunState } from "./runState";
+
+/** How an account's files are worded once it is done. */
+export interface CountsWording {
+  counts(counts: Counts): string;
+}
+
+/** How the posts and files of the account being saved are worded. */
+export interface ProgressWording {
+  progress(post: number, total: number | undefined, counts: Counts): string;
+}
+
+/** How the accounts a run could not read are worded. */
+export interface FailureWording {
+  failureStop(inARow: number, username: string, reason: string): string;
+  /** Nothing when every account was read. */
+  unreadable(usernames: readonly string[]): string;
+}
+
+/** How a run over the accounts the viewer follows is worded. */
+export interface FollowingWording {
+  account(position: number, total: number): string;
+  accountsFinished(total: number): string;
+  followingFinished(total: number): string;
+}
 
 export interface ArchiveRequest {
   readonly username: string;
@@ -45,6 +70,29 @@ export interface ItemSaver {
     item: DownloadItem,
     signal: AbortSignal,
   ): Promise<WriteOutcome>;
+}
+
+/** Where an account has got to: the post, its total when known, and its files. */
+export interface AccountPosition {
+  readonly post: number;
+  readonly total: number | undefined;
+  readonly counts: Counts;
+}
+
+/** Counts one account's posts and files. */
+export interface AccountCounter {
+  total(total: number | undefined): void;
+  /** Posts the page could not read, counted as failed. */
+  unreadable(count: number | undefined): void;
+  nextPost(): void;
+  file(outcome: WriteOutcome): void;
+  saved(): number;
+  tally(): Counts;
+  position(): AccountPosition;
+  /** How far through the account, or undefined while its total is unknown. */
+  fraction(): number | undefined;
+  /** What a finished account's bar shows, or undefined to leave it be. */
+  finishedFraction(): number | undefined;
 }
 
 /** One account's counts, and how far through it the panel shows. */
@@ -109,6 +157,20 @@ export interface FollowingRequest {
   readonly folder: FileSystemDirectoryHandle;
   readonly signal: AbortSignal;
   readonly reporter: RunReporter;
+}
+
+/** Shows where a following run has got to, and words how it ended. */
+export interface FollowingProgress {
+  /** The account starting now, counting those already done before it. */
+  account(
+    reporter: OverallProgress & HeadingReporter,
+    done: number,
+    total: number,
+    username: string,
+  ): void;
+  finished(reporter: OverallProgress, total: number): void;
+  /** The sentence that ends the run, followed by the accounts it could not read. */
+  summary(total: number, unreadable: string): string;
 }
 
 export interface FollowingRunner {

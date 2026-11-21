@@ -27,5 +27,14 @@ export const TAGS = {
   span: "span",
 } as const;
 
+/** The part of the document that makes elements. */
+export type ElementMaker = Pick<Document, "createElement">;
+
+/** The part of the document that makes elements and adds them to the page. */
+export type PageBody = Pick<Document, "createElement" | "body">;
+
+/** The part of the page that finds elements in it. */
+export type ElementFinder = Pick<ParentNode, "querySelectorAll">;
+
 /** The document's readyState while its HTML is still arriving. */
 export const LOADING_STATE: DocumentReadyState = "loading";

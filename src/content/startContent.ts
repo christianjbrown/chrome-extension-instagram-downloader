@@ -2,6 +2,7 @@
 // downloads built by their own wiring modules. Only these modules construct
 // classes; everything else receives what it needs.
 import { PageBridge } from "./bridgeClient";
+import { ContentStartup } from "./contentStartup";
 import { PageScanner } from "./features/pageScanner";
 import type { ContentConfig } from "./config";
 import { LegacyFolderDatabase } from "./saving/legacyFolderDatabase";
@@ -53,7 +54,6 @@ export function startContent(
   config: ContentConfig,
 ): void {
   const { document } = env.window;
-  new LegacyFolderDatabase(env.window.indexedDB).remove();
   const scheduler = new TimeoutScheduler(env.window);
   const notifier = new ToastNotifier(
     document,
@@ -79,7 +79,10 @@ export function startContent(
       new OwnMessage(),
     ),
   };
-  new PageScanner(features(wiring), scheduler, config.scanDelayMs).start(
+  new ContentStartup(
+    [new LegacyFolderDatabase(env.window.indexedDB)],
+    new PageScanner(features(wiring), scheduler, config.scanDelayMs),
+  ).start(
     document.body,
     (callback) => new env.window.MutationObserver(callback),
   );
