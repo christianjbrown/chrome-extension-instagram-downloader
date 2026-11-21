@@ -146,6 +146,10 @@ export interface ResumePolicy {
   begin(state: RunState, following: string[]): RunState;
   /** The accounts the run still has to archive, in order. */
   remaining(state: RunState, following: string[]): string[];
+  /** Whether the account was archived in full by an earlier run. */
+  archivedBefore(state: RunState, username: string): boolean;
+  /** The account has just been archived in full, at this time. */
+  accountDone(state: RunState, username: string, at: number): RunState;
   /** The run is over, but which accounts were archived in full is kept. */
   finished(state: RunState): RunState;
 }
