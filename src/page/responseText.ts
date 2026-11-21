@@ -11,7 +11,8 @@ export function parseResponse(text: string): unknown[] {
     .split("\n")
     .flatMap((line) => {
       try {
-        return [JSON.parse(line) as unknown];
+        const parsed: unknown = JSON.parse(line);
+        return [parsed];
       } catch {
         return [];
       }

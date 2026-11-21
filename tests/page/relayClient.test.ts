@@ -64,3 +64,18 @@ describe("RelayClient", () => {
     ).rejects.toBe(failure);
   });
 });
+
+describe("RelayClient checks Instagram's network layer", () => {
+  it("fails when the environment has no network", async () => {
+    await expect(
+      new RelayClient(() => ({})).run({ params: 1 }, {}),
+    ).rejects.toThrow("getNetwork is not available");
+  });
+
+  it("ignores a response that is not an object", async () => {
+    const env = environment([5 as never, { data: { a: 1 } }]);
+    await expect(
+      new RelayClient(() => env).run({ params: 1 }, {}),
+    ).resolves.toEqual({ a: 1 });
+  });
+});

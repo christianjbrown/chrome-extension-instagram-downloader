@@ -3,6 +3,7 @@
 import {
   hasUsername,
   isJsonObject,
+  isList,
   textOrUndefined,
   type JsonObject,
 } from "../shared/json";
@@ -31,9 +32,9 @@ function field(value: unknown, key: string): unknown {
   return value[key];
 }
 
-function asArray(value: unknown): unknown[] {
-  if (!Array.isArray(value)) throw new Error(text.unexpected);
-  return value as unknown[];
+function asArray(value: unknown): readonly unknown[] {
+  if (!isList(value)) throw new Error(text.unexpected);
+  return value;
 }
 
 const postsVariables = (

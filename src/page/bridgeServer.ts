@@ -86,8 +86,10 @@ export class BridgeServer {
 
   // Own properties only: "constructor" and "toString" are not procedures.
   private procedure(name: string): AnyProcedure | undefined {
-    return Object.hasOwn(this.procedures, name)
-      ? this.procedures[name as ProcedureName]
-      : undefined;
+    return this.isKnown(name) ? this.procedures[name] : undefined;
+  }
+
+  private isKnown(name: string): name is ProcedureName {
+    return Object.hasOwn(this.procedures, name);
   }
 }

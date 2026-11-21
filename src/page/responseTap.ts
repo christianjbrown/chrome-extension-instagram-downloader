@@ -1,5 +1,6 @@
 // Reads the JSON Instagram's own requests bring back, without changing them.
 import { EVENTS } from "../shared/dom";
+import { methodOf } from "./members";
 import type { UrlPolicy } from "./ports";
 import { parseResponse } from "./responseText";
 
@@ -18,6 +19,9 @@ const openUrlArgument = 1;
 interface TappedRequest extends XMLHttpRequest {
   igdlUrl?: string;
 }
+
+// The request methods wrapped to watch each request.
+const xhrMethods = { open: "open", send: "send" } as const;
 
 // A request sent before open named an address has none to watch.
 const noUrl = "";
@@ -41,9 +45,8 @@ export function tapXhr(
   sink: Sink,
   policy: UrlPolicy,
 ): void {
-  type Method = (...args: unknown[]) => void;
-  const originalOpen = Reflect.get(prototype, "open") as Method;
-  const originalSend = Reflect.get(prototype, "send") as Method;
+  const originalOpen = methodOf(prototype, xhrMethods.open);
+  const originalSend = methodOf(prototype, xhrMethods.send);
   prototype.open = function (this: TappedRequest, ...args: unknown[]) {
     this.igdlUrl = String(args[openUrlArgument]);
     Reflect.apply(originalOpen, this, args);

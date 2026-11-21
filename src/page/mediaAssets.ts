@@ -1,12 +1,17 @@
 // Which pictures a post or slide Instagram sent holds. Nothing in it has been
 // checked, so a list that is missing, null or not a list holds nothing.
-import { isJsonObject, isRecord, type JsonObject } from "../shared/json";
+import {
+  entriesOf,
+  isJsonObject,
+  isRecord,
+  type JsonObject,
+} from "../shared/json";
 import { assetName } from "../shared/media";
 import { isMediaRecord } from "./mediaShapes";
 import type { PageMedia } from "./ports";
 
 const records = (value: unknown): JsonObject[] =>
-  Array.isArray(value) ? (value as unknown[]).filter(isRecord) : [];
+  entriesOf(value).filter(isRecord);
 
 const isText = (value: unknown): value is string => typeof value === "string";
 

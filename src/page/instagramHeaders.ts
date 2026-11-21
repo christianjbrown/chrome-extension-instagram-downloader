@@ -1,17 +1,20 @@
 // The headers that make a REST call look like Instagram's own, read from
 // Instagram's own modules at call time.
-import { HEADERS, MODULES } from "./instagramApi";
+import { HEADERS, MEMBERS, MODULES } from "./instagramApi";
+import { callMember, textAnswer } from "./members";
 import type { ModuleRequire, HeaderSource } from "./ports";
 
 export class InstagramHeaders implements HeaderSource {
   constructor(private readonly require: ModuleRequire) {}
 
   headers(): Record<string, string> {
-    const config = this.require(MODULES.config) as { getIGAppID(): string };
-    const claim = this.require(MODULES.claim) as { getWWWClaim(): string };
     return {
-      [HEADERS.appId]: config.getIGAppID(),
-      [HEADERS.claim]: claim.getWWWClaim(),
+      [HEADERS.appId]: this.text(MODULES.config, MEMBERS.appId),
+      [HEADERS.claim]: this.text(MODULES.claim, MEMBERS.claim),
     };
+  }
+
+  private text(module: string, member: string): string {
+    return textAnswer(callMember(this.require(module), member), member);
   }
 }
