@@ -23,6 +23,12 @@ export interface ErrorDescriber {
   describe(error: unknown): string;
 }
 
+/** The words for one kind of error, for the errors it recognises. */
+export interface ErrorWording {
+  matches(error: unknown): boolean;
+  text(error: unknown): string;
+}
+
 /** Picks the address a media is saved from. */
 export interface VersionChooser {
   url(media: InstagramMedia): string | undefined;

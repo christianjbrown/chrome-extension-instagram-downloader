@@ -5,6 +5,7 @@ import { errorText, notifier } from "../helpers";
 function setup(
   pick: () => Promise<FileSystemDirectoryHandle> = () =>
     Promise.resolve({} as FileSystemDirectoryHandle),
+  errors = errorText(),
 ) {
   const panel = {
     open: vi.fn(),
@@ -24,7 +25,7 @@ function setup(
       panel,
       notifier: notes,
       controllerClass: AbortController,
-      errors: errorText(),
+      errors,
     }),
   };
 }
@@ -37,8 +38,9 @@ describe("BulkRunner", () => {
     expect(panel.finish).toHaveBeenCalledWith("All done");
   });
 
-  it("stops the job from the panel's Stop button", async () => {
-    const { runner, panel } = setup();
+  it("stops the job from the panel's Stop button and words the stop", async () => {
+    const errors = { describe: vi.fn(() => "Stopped here") };
+    const { runner, panel } = setup(undefined, errors);
     await runner.run({
       title: "Job",
       run: (_folder, signal) => {
@@ -48,9 +50,10 @@ describe("BulkRunner", () => {
           : Promise.resolve("not stopped");
       },
     });
-    expect(panel.finish).toHaveBeenCalledWith(
-      "Stopped. Start it again to carry on where it left off.",
+    expect(errors.describe).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "AbortError" }),
     );
+    expect(panel.finish).toHaveBeenCalledWith("Stopped here");
   });
 
   it("shows why a job failed", async () => {

@@ -11,7 +11,11 @@ import { TimeoutScheduler } from "./scheduler";
 import { ToastNotifier } from "./ui/notifier";
 import type { Bridge, Scheduler } from "./ports";
 import { DomButtons } from "./ui/buttons";
-import { UserErrorText } from "./errorText";
+import {
+  OwnMessage,
+  ReloadedExtensionWording,
+  WordedErrors,
+} from "./errorText";
 import { SlideFiles } from "./mediaFiles";
 import { LargestVersionChooser } from "./versionChooser";
 
@@ -63,7 +67,10 @@ export function startContent(
     notifier,
     buttons,
     files,
-    errors: new UserErrorText(),
+    errors: new WordedErrors(
+      [new ReloadedExtensionWording()],
+      new OwnMessage(),
+    ),
   };
   new PageScanner(features(wiring), scheduler, config.scanDelayMs).start(
     document.body,
