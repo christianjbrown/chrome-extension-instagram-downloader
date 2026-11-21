@@ -92,7 +92,8 @@ export class BridgeServer implements RequestListener {
       : { ok: false, error: errorMessage(error) };
   }
 
-  // Own properties only: "constructor" and "toString" are not procedures.
+  // The name is only a procedure's when the table it was given has it, as an
+  // own property: "constructor" and "toString" are not procedures.
   private procedure(name: string): AnyProcedure | undefined {
     return this.isKnown(name) ? this.procedures[name] : undefined;
   }
