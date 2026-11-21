@@ -29,10 +29,8 @@ import { WindowDirectoryPicker } from "./saving/windowPicker";
 import { StoppedRunWording, WordedErrors } from "./errorText";
 import { SecondCountdown } from "./ui/countdown";
 import { CountdownLine } from "./ui/countdownLine";
-import { DomPanelView } from "./ui/domPanelView";
 import { EnglishPanelWording } from "./ui/panelWording";
-import { ProgressPanel } from "./ui/progressPanel";
-import { DomProgressBars } from "./ui/progressBar";
+import { progressPanel } from "./panelWiring";
 import type {
   Archiver,
   FollowingRunner,
@@ -83,8 +81,9 @@ function jobRunner(
   const wording = new EnglishPanelWording();
   return new BulkRunner({
     folders,
-    panel: new ProgressPanel(
-      new DomPanelView(document, buttons, new DomProgressBars(document)),
+    panel: progressPanel(
+      document,
+      buttons,
       new CountdownLine(new SecondCountdown(scheduler, Date.now), wording),
       wording,
     ),

@@ -22,3 +22,7 @@ export const classes = (...names: readonly string[]): string => names.join(" ");
 
 /** A selector matching an element by one class. */
 export const bySelector = (name: string): string => `.${name}`;
+
+/** The class of one line or bar of the progress panel. */
+export const panelPartClass = (part: string): string =>
+  `${CLASS.panelPartPrefix}${part}`;

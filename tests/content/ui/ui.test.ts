@@ -2,21 +2,17 @@ import { DomButtons, textButtonClass } from "../../../src/content/ui/buttons";
 import { SecondCountdown } from "../../../src/content/ui/countdown";
 import { ToastNotifier } from "../../../src/content/ui/notifier";
 import type { Countdown } from "../../../src/content/ui/ports";
-import { DomProgressBars } from "../../../src/content/ui/progressBar";
 import { CountdownLine } from "../../../src/content/ui/countdownLine";
-import { DomPanelView } from "../../../src/content/ui/domPanelView";
 import { EnglishPanelWording } from "../../../src/content/ui/panelWording";
-import { ProgressPanel } from "../../../src/content/ui/progressPanel";
+import { progressPanel } from "../../../src/content/panelWiring";
+import type { RunPanel } from "../../../src/content/ui/ports";
 import { ManualScheduler } from "../helpers";
 
-const newPanel = (countdown: Countdown): ProgressPanel => {
+const newPanel = (countdown: Countdown): RunPanel => {
   const wording = new EnglishPanelWording();
-  return new ProgressPanel(
-    new DomPanelView(
-      document,
-      new DomButtons(document),
-      new DomProgressBars(document),
-    ),
+  return progressPanel(
+    document,
+    new DomButtons(document),
     new CountdownLine(countdown, wording),
     wording,
   );
@@ -151,6 +147,7 @@ describe("ProgressPanel bars", () => {
       start: () => vi.fn(),
     });
     panel.overall("ignored before opening", 0.5);
+    panel.accountBar(0.5);
     panel.open("Downloading", vi.fn());
     expect(bar("overall").hidden).toBe(true);
     expect(bar("account").hidden).toBe(true);
