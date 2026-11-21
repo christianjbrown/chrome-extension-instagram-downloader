@@ -38,3 +38,8 @@ export interface UserLookup {
 export interface ReelLookup {
   reel(reelId: string): Reel | undefined;
 }
+
+/** Which of the page's requests are worth reading. */
+export interface UrlPolicy {
+  isWatched(url: string): boolean;
+}

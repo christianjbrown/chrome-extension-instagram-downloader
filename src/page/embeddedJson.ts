@@ -1,4 +1,4 @@
-import { parseResponse } from "./responseTap";
+import { parseResponse } from "./responseText";
 
 const embeddedJson = 'script[type="application/json"]';
 

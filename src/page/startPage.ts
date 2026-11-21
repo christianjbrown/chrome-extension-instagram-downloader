@@ -17,7 +17,8 @@ import { UserIndex } from "./userIndex";
 import { PolarisViewerId } from "./viewerIdentity";
 import { createProcedures } from "./procedures";
 import { RelayClient, windowRequire } from "./relayClient";
-import { InstagramApiPolicy, tapFetch, tapXhr } from "./responseTap";
+import { tapFetch, tapXhr } from "./responseTap";
+import { InstagramApiPolicy } from "./urlPolicy";
 
 type PageWindow = Window & typeof globalThis & { require?: unknown };
 
