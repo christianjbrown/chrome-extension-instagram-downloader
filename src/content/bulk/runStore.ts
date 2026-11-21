@@ -1,11 +1,5 @@
-// Where a Download following run is up to, and which accounts have been
-// archived in full at least once. Kept per signed-in account.
-
-export interface RunState {
-  following: string[] | null;
-  done: string[];
-  completed: Record<string, number>;
-}
+// Keeps each signed-in account's Download following run in extension storage.
+import { emptyRunState, type RunState } from "./runState";
 
 export interface KeyValueArea {
   get(key: string): Promise<Record<string, unknown>>;
@@ -24,7 +18,7 @@ export class RunStore {
   async load(viewerId: string): Promise<RunState> {
     const key = this.key(viewerId);
     const stored = (await this.area.get(key))[key] as RunState | undefined;
-    return stored ?? { following: null, done: [], completed: {} };
+    return stored ?? emptyRunState();
   }
 
   save(viewerId: string, state: RunState): Promise<void> {

@@ -26,6 +26,8 @@ const reservedFirstSegments = new Set([
   ...postPrefixes,
 ]);
 
+type RouteMatcher = (segments: readonly string[]) => Route | undefined;
+
 function storyRoute([owner, media]: readonly string[]): Route {
   if (owner === undefined) return other;
   if (owner !== highlightsSegment)
@@ -35,27 +37,36 @@ function storyRoute([owner, media]: readonly string[]): Route {
     : { kind: "highlight", highlightId: media };
 }
 
+// /stories/name/id/, or /stories/highlights/id/ for a highlight.
+const story: RouteMatcher = ([first, ...rest]) =>
+  first === storiesSegment ? storyRoute(rest) : undefined;
+
 // /p/code/, or /name/p/code/ for a post opened from a profile.
-function postRoute(
-  first: string,
-  segments: readonly string[],
-): Route | undefined {
+const post: RouteMatcher = (segments) => {
+  const [first] = segments;
+  if (first === undefined) return undefined;
   const start = postPrefixes.has(first) ? 0 : 1;
   const prefix = segments[start];
   const shortcode = segments[start + 1];
   return prefix !== undefined && postPrefixes.has(prefix) && shortcode
     ? { kind: "post", shortcode }
     : undefined;
-}
+};
+
+// /name/, as long as the name is not one of Instagram's own pages.
+const profile: RouteMatcher = ([first, ...rest]) =>
+  first !== undefined && rest.length === 0 && !reservedFirstSegments.has(first)
+    ? { kind: "profile", username: first }
+    : undefined;
+
+// Tried in order, and the first that recognises the path wins.
+const matchers: readonly RouteMatcher[] = [story, post, profile];
 
 export function parseRoute(pathname: string): Route {
   const segments = pathname.split("/").filter((segment) => segment !== "");
-  const [first, ...rest] = segments;
-  if (first === undefined) return other;
-  if (first === storiesSegment) return storyRoute(rest);
-  const post = postRoute(first, segments);
-  if (post !== undefined) return post;
-  return rest.length === 0 && !reservedFirstSegments.has(first)
-    ? { kind: "profile", username: first }
-    : other;
+  for (const match of matchers) {
+    const route = match(segments);
+    if (route !== undefined) return route;
+  }
+  return other;
 }

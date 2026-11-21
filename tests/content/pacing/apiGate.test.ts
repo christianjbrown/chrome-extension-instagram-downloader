@@ -3,9 +3,9 @@ import { RefusedError } from "../../../src/shared/refusal";
 import { ApiGate } from "../../../src/content/pacing/apiGate";
 import type { HourlyBudget } from "../../../src/content/pacing/hourlyBudget";
 import { CONTENT_CONFIG } from "../../../src/content/config";
+import { reporter, signal } from "../helpers";
 
 const defaultPacing = CONTENT_CONFIG.pacing;
-import { reporter, signal } from "../helpers";
 
 function gate(backoffMs = [10, 20]) {
   const sleeper = {

@@ -31,6 +31,32 @@ export interface ProfileCommands {
   readonly folder: ChangeFolderCommand;
 }
 
+interface ToolbarButton {
+  readonly icon: ButtonIcon;
+  readonly label: string;
+  readonly run: (commands: ProfileCommands, username: string) => Promise<void>;
+}
+
+// The buttons every profile gets, in order. Download following is added
+// after them, on your own profile only.
+const toolbarButtons: readonly ToolbarButton[] = [
+  {
+    icon: "download-all",
+    label: text.downloadAll,
+    run: (commands, username) => commands.account.run(username),
+  },
+  {
+    icon: "picture",
+    label: text.picture,
+    run: (commands, username) => commands.picture.run(username),
+  },
+  {
+    icon: "folder",
+    label: text.folder,
+    run: (commands) => commands.folder.run(),
+  },
+];
+
 // The row of links under a profile's header. Download following only shows
 // on your own profile.
 export class ProfileToolbar implements Feature {
@@ -57,12 +83,8 @@ export class ProfileToolbar implements Feature {
     const toolbar = this.view.document.createElement("div");
     toolbar.className = CLASS.profileToolbar;
     toolbar.dataset.username = username;
-    const { account, picture, folder } = this.commands;
-    this.add(toolbar, "download-all", text.downloadAll, () =>
-      account.run(username),
-    );
-    this.add(toolbar, "picture", text.picture, () => picture.run(username));
-    this.add(toolbar, "folder", text.folder, () => folder.run());
+    for (const { icon, label, run } of toolbarButtons)
+      this.add(toolbar, icon, label, () => run(this.commands, username));
     void this.addFollowing(toolbar, username);
     return toolbar;
   }

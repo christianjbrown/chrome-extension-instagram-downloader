@@ -1,32 +1,17 @@
 // Wires up the page script. Runs at document_start in Instagram's own world.
 import { pageOrigin } from "../shared/origin";
 import { BridgeServer } from "./bridgeServer";
+import { scanEmbeddedJson } from "./embeddedJson";
 import type { PageConfig } from "./config";
 import { ProcedureInputs } from "./procedureInputs";
 import { InstagramRefusalDetector } from "./refusalDetector";
 import { FollowingClient } from "./followingClient";
+import { InstagramHeaders } from "./instagramHeaders";
 import { InstagramQueries } from "./instagramQueries";
 import { MediaCache } from "./mediaCache";
 import { createProcedures } from "./procedures";
 import { RelayClient, windowRequire } from "./relayClient";
-import {
-  InstagramApiPolicy,
-  parseResponse,
-  tapFetch,
-  tapXhr,
-} from "./responseTap";
-
-const embeddedJson = 'script[type="application/json"]';
-
-// Instagram embeds the data for the first screen in the HTML itself.
-export function scanEmbeddedJson(
-  document: Document,
-  sink: (value: unknown) => void,
-): void {
-  for (const script of document.querySelectorAll(embeddedJson)) {
-    for (const value of parseResponse(script.textContent)) sink(value);
-  }
-}
+import { InstagramApiPolicy, tapFetch, tapXhr } from "./responseTap";
 
 type PageWindow = Window & typeof globalThis & { require?: unknown };
 
@@ -53,7 +38,7 @@ export function startPage(target: PageWindow, config: PageConfig): void {
       config.postsPageSize,
     ),
     following: new FollowingClient(
-      require,
+      new InstagramHeaders(require),
       (url, init) => target.fetch(url, init),
       { path: config.followingPath, pageSize: config.followingPageSize },
     ),

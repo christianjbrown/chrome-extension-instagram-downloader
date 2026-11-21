@@ -1,4 +1,5 @@
-import { errorMessage, isAbortError } from "../errors";
+import { errorMessage } from "../errorText";
+import { isAbortError } from "../errors";
 import type { FolderSource } from "../saving/folderPicker";
 import type { Notifier } from "../ui/notifier";
 import type { RunPanel, RunReporter } from "../ui/progressPanel";

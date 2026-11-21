@@ -37,6 +37,10 @@ export function describeProgress(
   return `Post ${String(post)}${of}: ${describeCounts(counts)}`;
 }
 
+export function describeFollowingFinished(total: number): string {
+  return `Finished all ${String(total)} accounts you follow.`;
+}
+
 const accountLine = (position: number, total: number, done: number): string =>
   `Account ${String(position)} of ${String(total)} (${percentText(percent(done, total))})`;
 

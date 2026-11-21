@@ -1,6 +1,6 @@
 import { downloadItems, type InstagramMedia } from "../../shared/media";
 import type { Bridge } from "../bridgeClient";
-import { errorMessage } from "../errors";
+import { errorMessage } from "../errorText";
 import type { ItemDownloader } from "../saving/fileDownloader";
 import type { Notifier } from "../ui/notifier";
 

@@ -1,6 +1,7 @@
 import { RefusedError } from "../../src/shared/refusal";
 import { PAGE_CONFIG } from "../../src/page/config";
 import { FollowingClient } from "../../src/page/followingClient";
+import { InstagramHeaders } from "../../src/page/instagramHeaders";
 
 const modules: Record<string, unknown> = {
   PolarisConfig: { getIGAppID: () => "app" },
@@ -17,10 +18,14 @@ function client(status: number, body: unknown) {
   );
   return {
     fetch,
-    client: new FollowingClient((name) => modules[name], fetch, {
-      path: PAGE_CONFIG.followingPath,
-      pageSize: PAGE_CONFIG.followingPageSize,
-    }),
+    client: new FollowingClient(
+      new InstagramHeaders((name) => modules[name]),
+      fetch,
+      {
+        path: PAGE_CONFIG.followingPath,
+        pageSize: PAGE_CONFIG.followingPageSize,
+      },
+    ),
   };
 }
 

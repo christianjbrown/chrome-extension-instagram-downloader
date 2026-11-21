@@ -4,7 +4,7 @@ import type { BulkJob, BulkRunner } from "../bulk/bulkRunner";
 import type { FollowingDownloader } from "../bulk/followingDownloader";
 import { describeCounts } from "../bulk/progressText";
 import type { Bridge } from "../bridgeClient";
-import { errorMessage } from "../errors";
+import { errorMessage } from "../errorText";
 import type { FolderSource } from "../saving/folderPicker";
 import type { ItemDownloader } from "../saving/fileDownloader";
 import type { Notifier } from "../ui/notifier";

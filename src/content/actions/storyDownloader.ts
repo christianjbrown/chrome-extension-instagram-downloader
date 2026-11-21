@@ -2,7 +2,7 @@ import type { Reel } from "../../shared/bridge";
 import { downloadItems, type InstagramMedia } from "../../shared/media";
 import type { Bridge } from "../bridgeClient";
 import type { Route } from "../dom/route";
-import { errorMessage } from "../errors";
+import { errorMessage } from "../errorText";
 import type { ItemDownloader } from "../saving/fileDownloader";
 import type { Notifier } from "../ui/notifier";
 

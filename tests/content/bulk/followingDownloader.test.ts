@@ -5,8 +5,6 @@ import { FollowingDownloader } from "../../../src/content/bulk/followingDownload
 import { FollowingLister } from "../../../src/content/bulk/followingLister";
 import { RunStore } from "../../../src/content/bulk/runStore";
 import { CONTENT_CONFIG } from "../../../src/content/config";
-
-const defaultPacing = CONTENT_CONFIG.pacing;
 import {
   MemoryFolder,
   asFolder,
@@ -14,6 +12,8 @@ import {
   reporter,
   signal,
 } from "../helpers";
+
+const defaultPacing = CONTENT_CONFIG.pacing;
 
 const twoPages = ({ next }: { next: string | undefined }): FollowingPage =>
   next === undefined

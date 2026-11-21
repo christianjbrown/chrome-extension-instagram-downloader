@@ -1,9 +1,5 @@
-import {
-  BlockedError,
-  errorMessage,
-  isAbortError,
-  isContextInvalidated,
-} from "../errors";
+import { errorMessage } from "../errorText";
+import { BlockedError, isAbortError, isContextInvalidated } from "../errors";
 
 export interface FailureTally {
   /** Forgets the last run, ready for a new one. */

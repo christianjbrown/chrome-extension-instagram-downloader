@@ -47,6 +47,30 @@ function place(group: Element, slot: Element): void {
   else slot.before(group);
 }
 
+interface PostButton {
+  readonly label: string;
+  readonly className: string;
+  /** Saves every slide rather than the one showing. */
+  readonly all: boolean;
+  readonly shows: (container: ParentNode) => boolean;
+}
+
+// The buttons beside the bookmark, in order.
+const postButtons: readonly PostButton[] = [
+  {
+    label: text.download,
+    className: classes(CLASS.button, CLASS.download),
+    all: false,
+    shows: () => true,
+  },
+  {
+    label: text.downloadAll,
+    className: classes(CLASS.button, CLASS.downloadAll),
+    all: true,
+    shows: isCarousel,
+  },
+];
+
 export class PostActions implements Feature {
   constructor(
     private readonly view: PageView,
@@ -75,7 +99,8 @@ export class PostActions implements Feature {
     const group = this.view.document.createElement("span");
     group.className = CLASS.postActions;
     const container = this.container(slot);
-    const add = (label: string, className: string, all: boolean): void => {
+    for (const { label, className, all, shows } of postButtons) {
+      if (!shows(container)) continue;
       group.append(
         createButton(this.view.document, {
           label,
@@ -83,10 +108,7 @@ export class PostActions implements Feature {
           onClick: () => void this.download(container, all),
         }),
       );
-    };
-    add(text.download, classes(CLASS.button, CLASS.download), false);
-    if (isCarousel(container))
-      add(text.downloadAll, classes(CLASS.button, CLASS.downloadAll), true);
+    }
     return group;
   }
 

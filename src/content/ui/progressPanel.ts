@@ -1,7 +1,7 @@
-import { describeWait } from "../pacing/pacing";
+import { describeWait } from "../pacing/waitText";
 import { createTextButton } from "./buttons";
 import { bySelector, CLASS } from "./classNames";
-import { FULL_PERCENT, NO_PERCENT, percentText } from "./percent";
+import { createProgressBar, showProgress } from "./progressBar";
 import type { Countdown } from "./countdown";
 
 export interface RunReporter {
@@ -70,14 +70,9 @@ export class ProgressPanel implements RunPanel {
   }
 
   private line(part: Part): HTMLElement {
+    if (isBar(part)) return createProgressBar(this.document, partClass(part));
     const line = this.document.createElement("div");
     line.className = partClass(part);
-    if (!isBar(part)) return line;
-    line.hidden = true;
-    line.setAttribute("role", "progressbar");
-    line.setAttribute("aria-valuemin", String(NO_PERCENT));
-    line.setAttribute("aria-valuemax", String(FULL_PERCENT));
-    line.append(this.document.createElement("div"));
     return line;
   }
 
@@ -94,12 +89,7 @@ export class ProgressPanel implements RunPanel {
 
   private bar(part: Part, fraction: number | undefined): void {
     const bar = this.find(part);
-    if (!bar) return;
-    bar.hidden = fraction === undefined;
-    const value = Math.round((fraction ?? 0) * FULL_PERCENT);
-    bar.setAttribute("aria-valuenow", String(value));
-    const fill = bar.firstElementChild as HTMLElement;
-    fill.style.width = percentText(value);
+    if (bar) showProgress(bar, fraction);
   }
 
   heading(text: string): void {

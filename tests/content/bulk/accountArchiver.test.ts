@@ -1,7 +1,6 @@
 import { AccountArchiver } from "../../../src/content/bulk/accountArchiver";
+import { PinnedAwareCatchUp } from "../../../src/content/bulk/catchUp";
 import { CONTENT_CONFIG } from "../../../src/content/config";
-
-const defaultPacing = CONTENT_CONFIG.pacing;
 import type { ItemWriter } from "../../../src/content/saving/directoryWriter";
 import { photo } from "../../fixtures";
 import {
@@ -11,6 +10,8 @@ import {
   reporter,
   signal,
 } from "../helpers";
+
+const defaultPacing = CONTENT_CONFIG.pacing;
 
 const pages = [
   { items: [photo("1", "a.jpg"), photo("2", "b.jpg")], cursor: "c1" },
@@ -46,7 +47,13 @@ function setup(
     writer,
     pacer,
     totals,
-    archiver: new AccountArchiver(bridge, writer, pacer as never, totals),
+    archiver: new AccountArchiver({
+      bridge,
+      writer,
+      pacer: pacer as never,
+      totals,
+      catchUp: new PinnedAwareCatchUp(),
+    }),
   };
 }
 

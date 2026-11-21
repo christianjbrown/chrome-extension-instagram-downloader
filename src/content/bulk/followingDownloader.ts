@@ -1,10 +1,16 @@
 import type { Viewer } from "../../shared/bridge";
+import { ALL_DONE } from "../ui/percent";
 import type { RunReporter } from "../ui/progressPanel";
-import { describeAccount, describeAccountsFinished } from "./progressText";
+import {
+  describeAccount,
+  describeAccountsFinished,
+  describeFollowingFinished,
+} from "./progressText";
 import type { AccountArchiver } from "./accountArchiver";
 import type { FailureTally } from "./failureTally";
 import type { FollowingSource } from "./followingLister";
-import type { RunStore, RunState } from "./runStore";
+import { begin, finished, remaining, type RunState } from "./runState";
+import type { RunStore } from "./runStore";
 
 export interface FollowingRequest {
   readonly viewer: Viewer;
@@ -31,32 +37,36 @@ export class FollowingDownloader {
   constructor(private readonly deps: FollowingDependencies) {}
 
   async run(request: FollowingRequest): Promise<string> {
-    const { viewer, reporter } = request;
-    const state = await this.deps.store.load(viewer.id);
+    const { viewer } = request;
+    const stored = await this.deps.store.load(viewer.id);
     const following = await this.deps.lister.list(request);
-    state.following = following;
-    state.done = state.done.filter((name) => following.includes(name));
+    const state = begin(stored, following);
     await this.deps.store.save(viewer.id, state);
-    const remaining = following.filter((name) => !state.done.includes(name));
+    const left = remaining(state, following);
     this.deps.tally.reset();
-    const before = following.length - remaining.length;
-    for (const [index, username] of remaining.entries()) {
-      const position = before + index + 1;
-      reporter.overall(
-        describeAccount(position, following.length),
-        (position - 1) / following.length,
-      );
-      reporter.heading(username);
+    const before = following.length - left.length;
+    for (const [index, username] of left.entries()) {
+      this.report(request.reporter, before + index, following.length, username);
       await this.archiveOne(request, state, username);
     }
     if (following.length > 0)
-      reporter.overall(describeAccountsFinished(following.length), 1);
-    await this.deps.store.save(viewer.id, {
-      ...state,
-      following: null,
-      done: [],
-    });
-    return `Finished all ${String(following.length)} accounts you follow.${this.deps.tally.summary()}`;
+      request.reporter.overall(
+        describeAccountsFinished(following.length),
+        ALL_DONE,
+      );
+    await this.deps.store.save(viewer.id, finished(state));
+    return `${describeFollowingFinished(following.length)}${this.deps.tally.summary()}`;
+  }
+
+  // Where the run is, counting accounts already done before this one.
+  private report(
+    reporter: RunReporter,
+    done: number,
+    total: number,
+    username: string,
+  ): void {
+    reporter.overall(describeAccount(done + 1, total), done / total);
+    reporter.heading(username);
   }
 
   private async archiveOne(

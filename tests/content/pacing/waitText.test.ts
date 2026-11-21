@@ -1,4 +1,4 @@
-import { describeWait } from "../../../src/content/pacing/pacing";
+import { describeWait } from "../../../src/content/pacing/waitText";
 
 it("describes waits in seconds, then minutes and seconds, then whole minutes", () => {
   expect(describeWait("Resting", 1000)).toBe("Resting. Waiting 1 second.");

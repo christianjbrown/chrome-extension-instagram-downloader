@@ -12,6 +12,7 @@ import { ViewerSource } from "./actions/viewerSource";
 import { type Bridge, PageBridge } from "./bridgeClient";
 import { AccountArchiver } from "./bulk/accountArchiver";
 import { BulkRunner } from "./bulk/bulkRunner";
+import { PinnedAwareCatchUp } from "./bulk/catchUp";
 import { ConsecutiveFailureTally } from "./bulk/failureTally";
 import { FollowingDownloader } from "./bulk/followingDownloader";
 import { FollowingLister } from "./bulk/followingLister";
@@ -73,12 +74,13 @@ function bulk(
   const namer = new SafeFileNamer();
   const fetchBlob = blobFetcher((url) => env.window.fetch(url), isMediaUrl);
   const writer = new DirectoryWriter(fetchBlob, namer);
-  const archiver = new AccountArchiver(
+  const archiver = new AccountArchiver({
     bridge,
     writer,
     pacer,
-    new GatedPostTotals(bridge, pacer.gate),
-  );
+    totals: new GatedPostTotals(bridge, pacer.gate),
+    catchUp: new PinnedAwareCatchUp(),
+  });
   const runs = new RunStore(env.storage);
   const following = new FollowingDownloader({
     lister: new FollowingLister(bridge, pacer),

@@ -1,5 +1,6 @@
 import { PAGE_CONFIG } from "../../src/page/config";
-import { scanEmbeddedJson, startPage } from "../../src/page/startPage";
+import { scanEmbeddedJson } from "../../src/page/embeddedJson";
+import { startPage } from "../../src/page/startPage";
 import { photo } from "../fixtures";
 
 class FakeXhr {
