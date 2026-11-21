@@ -1,4 +1,4 @@
-import { ATTRIBUTES, TAGS } from "../../shared/dom";
+import { ATTRIBUTES, type PageBody, TAGS } from "../../shared/dom";
 import type { Scheduler } from "../ports";
 import type { Notifier } from "./ports";
 
@@ -10,7 +10,7 @@ const alertRole = "alert";
 // Short-lived messages in the corner of the page.
 export class ToastNotifier implements Notifier {
   constructor(
-    private readonly document: Document,
+    private readonly document: PageBody,
     private readonly scheduler: Scheduler,
     private readonly lifetimeMs: number,
   ) {}

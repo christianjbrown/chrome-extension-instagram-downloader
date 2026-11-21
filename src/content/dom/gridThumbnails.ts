@@ -1,3 +1,4 @@
+import type { ElementFinder } from "../../shared/dom";
 import type { ClassOf } from "../../shared/members";
 import { shortcodeFromPath } from "../../shared/shortcode";
 import type { Thumbnail, ThumbnailSource } from "./ports";
@@ -13,7 +14,7 @@ const thumbnail = 'a[href*="/p/"]:has(img), a[href*="/reel/"]:has(img)';
 // too small to hold one.
 export class GridThumbnails implements ThumbnailSource {
   constructor(
-    private readonly document: Document,
+    private readonly document: ElementFinder,
     private readonly minimumWidth: number,
     // Links are checked against the window's own anchor class.
     private readonly anchors: ClassOf<HTMLAnchorElement>,

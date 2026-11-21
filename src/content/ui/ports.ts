@@ -84,11 +84,15 @@ export interface PanelView {
   offerClose(closeLabel: string): void;
 }
 
-/** The words the progress panel uses for itself. */
-export interface PanelWording {
+/** The words on the progress panel itself and its one button. */
+export interface PanelLabels {
   readonly note: string;
   readonly stop: string;
   readonly close: string;
+}
+
+/** How the progress panel words a wait as it counts down. */
+export interface WaitWording {
   wait(reason: string, remainingMs: number): string;
 }
 

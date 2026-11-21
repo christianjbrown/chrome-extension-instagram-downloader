@@ -1,4 +1,4 @@
-import { TAGS } from "../../shared/dom";
+import { type ElementMaker, TAGS } from "../../shared/dom";
 import type { PostDownloads } from "../actions/ports";
 import type { PostLocator } from "../dom/ports";
 import type { IconButtons, Notifier } from "../ui/ports";
@@ -62,7 +62,7 @@ function place(group: Element, slot: Element): void {
 }
 
 export interface PostActionsDependencies {
-  readonly document: Document;
+  readonly document: ElementMaker & ParentNode;
   readonly downloader: PostDownloads;
   readonly notifier: Notifier;
   readonly locator: PostLocator;

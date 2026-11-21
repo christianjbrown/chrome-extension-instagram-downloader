@@ -1,16 +1,17 @@
 // Builds the progress panel from its lines and bars, listed top to bottom,
 // each with the class content.css styles it by.
+import type { PageBody } from "../shared/dom";
 import { DomPanelView } from "./ui/domPanelView";
 import { DomPanelBar } from "./ui/panelBar";
 import { DomPanelLine } from "./ui/panelLine";
 import { ProgressPanel, type PanelLines } from "./ui/progressPanel";
-import type { PanelWording, RunPanel, TextButtons, WaitLine } from "./ui/ports";
+import type { PanelLabels, RunPanel, TextButtons, WaitLine } from "./ui/ports";
 
 export function progressPanel(
-  document: Document,
+  document: PageBody,
   buttons: TextButtons,
   waits: WaitLine,
-  wording: PanelWording,
+  wording: PanelLabels,
 ): RunPanel {
   const line = (className: string) => new DomPanelLine(document, className);
   // Bars stay hidden until something reports a fraction.

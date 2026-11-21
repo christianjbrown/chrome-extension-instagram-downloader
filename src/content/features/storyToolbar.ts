@@ -1,4 +1,4 @@
-import { TAGS } from "../../shared/dom";
+import { TAGS, type PageBody } from "../../shared/dom";
 import type { StoryRoute } from "../dom/route";
 import type { RouteReader } from "../dom/ports";
 import { bySelector } from "../ui/classNames";
@@ -11,7 +11,7 @@ import type { Feature, StoryButton } from "./feature";
 export const STORY_TOOLBAR_CLASS = "igdl-story-toolbar";
 
 export interface StoryToolbarDependencies {
-  readonly document: Document;
+  readonly document: PageBody & Pick<ParentNode, "querySelector">;
   readonly stories: RouteReader<StoryRoute>;
   readonly buttons: TextButtons;
   /** The buttons, in the order they appear. */

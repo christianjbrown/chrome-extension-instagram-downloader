@@ -1,4 +1,4 @@
-import { TAGS } from "../../shared/dom";
+import { type PageBody, TAGS } from "../../shared/dom";
 import { bySelector } from "./classNames";
 import type { PanelPart, PanelView, TextButtons } from "./ports";
 
@@ -13,7 +13,7 @@ export class DomPanelView implements PanelView {
   private element: HTMLElement | undefined;
 
   constructor(
-    private readonly document: Document,
+    private readonly document: PageBody,
     private readonly buttons: TextButtons,
     private readonly parts: readonly PanelPart[],
   ) {}

@@ -2,7 +2,7 @@ import type {
   PanelBar,
   PanelLine,
   PanelView,
-  PanelWording,
+  PanelLabels,
   RunPanel,
   WaitLine,
 } from "./ports";
@@ -25,7 +25,7 @@ export class ProgressPanel implements RunPanel {
     private readonly view: PanelView,
     private readonly lines: PanelLines,
     private readonly waits: WaitLine,
-    private readonly wording: PanelWording,
+    private readonly wording: PanelLabels,
   ) {}
 
   open(title: string, onStop: () => void): void {

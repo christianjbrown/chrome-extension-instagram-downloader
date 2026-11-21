@@ -1,4 +1,4 @@
-import { ATTRIBUTES, EVENTS, TAGS } from "../../shared/dom";
+import { ATTRIBUTES, EVENTS, type ElementMaker, TAGS } from "../../shared/dom";
 import { classes } from "./classNames";
 import type { ButtonSpec, IconButtons, TextButtons } from "./ports";
 
@@ -10,7 +10,7 @@ export const ICON_CLASS_PREFIX = "igdl-icon-";
 
 // Buttons sit inside Instagram's own links, so a click must not reach them.
 export class DomButtons implements IconButtons, TextButtons {
-  constructor(private readonly document: Document) {}
+  constructor(private readonly document: ElementMaker) {}
 
   button(spec: ButtonSpec): HTMLButtonElement {
     const button = this.document.createElement(TAGS.button);

@@ -1,4 +1,4 @@
-import { TAGS } from "../../shared/dom";
+import { TAGS, type ElementMaker } from "../../shared/dom";
 import type { RouteReader } from "../dom/ports";
 import type { ProfileRoute } from "../dom/routes/profile";
 import { PROFILE_HEADER } from "../dom/selectors";
@@ -18,7 +18,7 @@ const isFor = (toolbar: Element | null, username: string): boolean =>
   toolbar?.getAttribute(usernameAttribute) === username;
 
 export interface ProfileToolbarDependencies {
-  readonly document: Document;
+  readonly document: ElementMaker & Pick<ParentNode, "querySelector">;
   readonly profiles: RouteReader<ProfileRoute>;
   readonly buttons: TextButtons;
   /** The buttons, in the order they appear. */

@@ -1,6 +1,6 @@
 // A bar on the progress panel showing how much of something is done, hidden
 // until that is known. Before a panel is up there is no bar to fill.
-import { ATTRIBUTES, TAGS } from "../../shared/dom";
+import { ATTRIBUTES, type ElementMaker, TAGS } from "../../shared/dom";
 import { FULL_PERCENT, NO_PERCENT, percentText } from "./percent";
 import type { PanelBar, PanelPart } from "./ports";
 
@@ -15,7 +15,7 @@ export class DomPanelBar implements PanelPart, PanelBar {
   private elements: BarElements | undefined;
 
   constructor(
-    private readonly document: Document,
+    private readonly document: ElementMaker,
     private readonly className: string,
   ) {}
 

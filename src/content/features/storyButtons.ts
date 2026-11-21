@@ -11,11 +11,12 @@ export class CurrentStoryButton implements StoryButton {
     readonly look: ButtonLook,
     private readonly downloader: StoryDownloads,
     private readonly assets: AssetFinder,
-    private readonly document: Document,
+    // Where the picture showing is looked for.
+    private readonly page: ParentNode,
   ) {}
 
   run(route: StoryRoute): Promise<void> {
-    return this.downloader.current(route, this.assets.largest(this.document));
+    return this.downloader.current(route, this.assets.largest(this.page));
   }
 }
 
