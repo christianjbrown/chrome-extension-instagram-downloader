@@ -23,10 +23,13 @@ export class PostsPageOutput implements ProcedureOutput<
 
   parse(value: unknown): PostsPage {
     const raw = record(value, "page of posts");
-    const { items, unreadable } = this.posts.readablePosts(raw.items);
+    const readable = this.posts.readablePosts(raw.items);
+    // The page leaves out posts with no id at all, and says how many.
+    const leftOut = optional(raw.unreadable, (v) => count(v, "post count"));
+    const unreadable = readable.unreadable + (leftOut ?? 0);
     const total = optional(raw.total, (v) => count(v, "post count"));
     return {
-      items,
+      items: readable.items,
       cursor: optional(raw.cursor, (v) => text(v, "cursor")),
       ...(unreadable === 0 ? {} : { unreadable }),
       ...(total === undefined ? {} : { total }),

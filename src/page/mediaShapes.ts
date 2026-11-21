@@ -1,6 +1,6 @@
 // Tells the kinds of object Instagram sends apart by their shape, since
 // nothing in them says what they are.
-import { isJsonObject, type JsonObject } from "../shared/json";
+import { isJsonObject, isRecord, type JsonObject } from "../shared/json";
 import type { InstagramMedia } from "../shared/media";
 
 const isId = (value: unknown): boolean =>
@@ -13,9 +13,22 @@ const pictureKeys: readonly (keyof InstagramMedia)[] = [
   "carousel_media",
 ];
 
-export function isMedia(value: JsonObject): boolean {
-  return isId(value.pk) && pictureKeys.some((key) => value[key] !== undefined);
-}
+/**
+ * An object with the id every post, story and slide carries. The content
+ * script checks the rest of its shape before it uses any of it.
+ */
+export const isMediaRecord = (
+  value: unknown,
+): value is InstagramMedia & JsonObject => isRecord(value) && isId(value.pk);
+
+const hasPicture = (value: JsonObject): boolean =>
+  pictureKeys.some((key) => value[key] !== undefined);
+
+/** A post or slide, told apart from the other objects Instagram sends. */
+export const isMedia = (
+  value: JsonObject,
+): value is InstagramMedia & JsonObject =>
+  isMediaRecord(value) && hasPicture(value);
 
 export function isUser(value: JsonObject): boolean {
   return (

@@ -8,9 +8,7 @@ export class MediaIndex implements Rememberer, MediaLookup {
   constructor(private readonly media: IterableStore<InstagramMedia>) {}
 
   remember(value: JsonObject): void {
-    if (!isMedia(value)) return;
-    const media = value as unknown as InstagramMedia;
-    this.media.set(String(media.pk), media);
+    if (isMedia(value)) this.media.set(String(value.pk), value);
   }
 
   mediaById(pk: string): InstagramMedia | undefined {

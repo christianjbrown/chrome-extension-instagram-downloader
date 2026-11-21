@@ -37,6 +37,11 @@ describe("InstagramQueries", () => {
     ).rejects.toThrow("Post not found");
     await expect(
       queries({
+        xdt_api__v1__media__media_id_web_info: { items: [{ id: "x" }] },
+      }).queries.mediaById("1"),
+    ).rejects.toThrow("Post not found");
+    await expect(
+      queries({
         xdt_api__v1__media__media_id_web_info: { items: "x" },
       }).queries.mediaById("1"),
     ).rejects.toThrow("Unexpected response");
@@ -79,6 +84,21 @@ describe("InstagramQueries", () => {
     await expect(
       odd.queries.postsPage("alice", undefined),
     ).resolves.toMatchObject({ cursor: undefined });
+  });
+
+  it("leaves out posts with no id and counts them", async () => {
+    const node = photo("1");
+    const { queries: q } = queries({
+      xdt_api__v1__feed__user_timeline_graphql_connection: {
+        edges: [{ node }, { node: { id: "x" } }, { node: 7 }],
+        page_info: { has_next_page: false },
+      },
+    });
+    await expect(q.postsPage("alice", undefined)).resolves.toEqual({
+      items: [node],
+      cursor: undefined,
+      unreadable: 2,
+    });
   });
 
   it("reads an account's profile", async () => {

@@ -12,7 +12,7 @@ export class ReelIndex implements Rememberer, ReelLookup {
     const items = (value.items as unknown[])
       .filter(isJsonObject)
       .filter(isMedia);
-    const reel = { owner: ownerOf(value), items } as unknown as Reel;
+    const reel: Reel = { owner: ownerOf(value), items };
     this.reels.set(String(value.id), reel);
   }
 
