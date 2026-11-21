@@ -1,5 +1,5 @@
 import { errorMessage } from "../errorText";
-import { BlockedError, isAbortError, isContextInvalidated } from "../errors";
+import { BlockedError, endsTheRun, isContextInvalidated } from "../errors";
 import { describeFailureStop, describeUnreadable } from "./progressText";
 
 export interface FailureTally {
@@ -32,12 +32,9 @@ export class ConsecutiveFailureTally implements FailureTally {
   }
 
   failed(username: string, error: unknown): void {
-    if (
-      isAbortError(error) ||
-      error instanceof BlockedError ||
-      isContextInvalidated(error)
-    )
-      throw error;
+    // Only reloading the page fixes a reloaded extension, so it ends the run
+    // too rather than failing every account after it.
+    if (endsTheRun(error) || isContextInvalidated(error)) throw error;
     this.names.push(username);
     this.inARow += 1;
     if (this.inARow >= this.limit)

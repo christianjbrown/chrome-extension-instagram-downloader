@@ -1,6 +1,6 @@
 import type { PostsPage } from "../../shared/bridge";
 import type { Bridge } from "../bridgeClient";
-import { BlockedError, isAbortError } from "../errors";
+import { endsTheRun } from "../errors";
 import type { Gate } from "../pacing/apiGate";
 import type { WaitReporter } from "../pacing/pacing";
 
@@ -40,7 +40,7 @@ export class GatedPostTotals implements PostTotals {
       );
       return account.totalPosts > 0 ? account.totalPosts : undefined;
     } catch (error) {
-      if (isAbortError(error) || error instanceof BlockedError) throw error;
+      if (endsTheRun(error)) throw error;
       return undefined;
     }
   }

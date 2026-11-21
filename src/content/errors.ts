@@ -20,3 +20,8 @@ const contextInvalidatedText = "Extension context invalidated";
 
 export const isContextInvalidated = (error: unknown): boolean =>
   error instanceof Error && error.message.includes(contextInvalidatedText);
+
+// A stop or a block ends the whole run, so no part of it may shrug one off
+// and carry on.
+export const endsTheRun = (error: unknown): boolean =>
+  isAbortError(error) || error instanceof BlockedError;
