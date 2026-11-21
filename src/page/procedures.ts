@@ -2,10 +2,14 @@
 // of what Instagram already sent whenever possible, and from a query if not.
 import type { Account, PostsPage, Reel } from "../shared/bridge";
 import type { Handlers } from "./bridgeServer";
-import type { FollowingPages } from "./followingClient";
-import type { Queries } from "./instagramQueries";
-import type { ViewerIdSource } from "./viewerIdentity";
-import type { MediaLookup, ReelLookup, UserLookup } from "./ports";
+import type {
+  FollowingPages,
+  Queries,
+  ViewerIdSource,
+  MediaLookup,
+  ReelLookup,
+  UserLookup,
+} from "./ports";
 
 interface Dependencies {
   readonly media: MediaLookup;

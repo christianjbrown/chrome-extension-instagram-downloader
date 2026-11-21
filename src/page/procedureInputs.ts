@@ -2,6 +2,7 @@
 // the same request, so each procedure only accepts the shapes it really gets.
 import type { Input, ProcedureName } from "../shared/bridge";
 import { isRecord } from "../shared/json";
+import type { InputValidator } from "./ports";
 
 // The longest value each request field may hold. Any script on the page can
 // send a request, so anything longer is turned away.
@@ -12,11 +13,6 @@ export interface InputLimits {
   readonly reelId: number;
   readonly asset: number;
   readonly userId: number;
-}
-
-export interface InputValidator {
-  isProcedureName(name: string): name is ProcedureName;
-  isValidInput(name: ProcedureName, input: unknown): boolean;
 }
 
 type Guard<T> = (input: unknown) => input is T;

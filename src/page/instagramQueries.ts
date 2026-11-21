@@ -3,14 +3,8 @@
 import type { PostsPage } from "../shared/bridge";
 import type { InstagramMedia } from "../shared/media";
 import { isJsonObject, type JsonObject } from "../shared/json";
-import type { Relay } from "./relayClient";
+import type { Relay, ProfileUser, Queries } from "./ports";
 import { MODULES, POST_BY_ID_MEMBER, RESPONSE_KEYS } from "./instagramApi";
-
-export interface ProfileUser {
-  readonly username: string;
-  readonly profilePicUrl: string | undefined;
-  readonly totalPosts: number;
-}
 
 const text = {
   unexpected: "Unexpected response",
@@ -53,12 +47,6 @@ function profilePicture(user: JsonObject): string | undefined {
   const hd = user.hd_profile_pic_url_info;
   const url = isJsonObject(hd) ? hd.url : user.profile_pic_url;
   return typeof url === "string" ? url : undefined;
-}
-
-export interface Queries {
-  mediaById(mediaId: string): Promise<InstagramMedia>;
-  postsPage(username: string, cursor: string | undefined): Promise<PostsPage>;
-  profile(userId: string): Promise<ProfileUser>;
 }
 
 export class InstagramQueries implements Queries {

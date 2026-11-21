@@ -1,7 +1,7 @@
 import { TAGS } from "../../shared/dom";
-import type { StoryDownloads, StoryRoute } from "../actions/storyDownloader";
+import type { StoryDownloads, StoryRoute } from "../actions/ports";
+import type { AssetFinder } from "../dom/ports";
 import { parseRoute } from "../dom/route";
-import type { AssetFinder } from "../dom/visibleAsset";
 import { bySelector, CLASS } from "../ui/classNames";
 import {
   createTextButton,

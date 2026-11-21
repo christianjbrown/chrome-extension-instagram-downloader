@@ -1,10 +1,7 @@
 // Tells a rate limit apart from every other way a request can fail, so the
 // content script only backs off when Instagram really asked it to.
 import { RefusedError, TOO_MANY_REQUESTS } from "../shared/refusal";
-
-export interface RefusalDetector {
-  isRefusal(error: unknown): boolean;
-}
+import type { RefusalDetector } from "./ports";
 
 const refusalText = new RegExp(
   `\\b${String(TOO_MANY_REQUESTS)}\\b|please wait|rate.?limit|too many requests|try again later|feedback_required`,

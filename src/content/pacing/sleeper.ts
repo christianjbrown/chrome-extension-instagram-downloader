@@ -1,11 +1,7 @@
 import { EVENTS } from "../../shared/dom";
 import { abortError } from "../errors";
-import type { Scheduler } from "../scheduler";
-
-export interface Sleeper {
-  sleep(ms: number, signal: AbortSignal): Promise<void>;
-  between(range: readonly [number, number], signal: AbortSignal): Promise<void>;
-}
+import type { Scheduler } from "../ports";
+import type { Sleeper } from "./ports";
 
 // Waits that end early, with an AbortError, when the run is stopped.
 export class TimerSleeper implements Sleeper {

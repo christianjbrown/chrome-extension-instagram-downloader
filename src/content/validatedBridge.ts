@@ -2,7 +2,7 @@
 // script sees it.
 import type { Input, Output, ProcedureName } from "../shared/bridge";
 import { parseOutput } from "../shared/schemas";
-import type { Bridge } from "./bridgeClient";
+import type { Bridge } from "./ports";
 
 export class ValidatedBridge implements Bridge {
   constructor(private readonly inner: Bridge) {}

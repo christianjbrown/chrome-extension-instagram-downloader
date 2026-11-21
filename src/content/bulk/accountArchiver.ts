@@ -1,12 +1,15 @@
 import { downloadItems } from "../../shared/media";
 import type { PostsPage } from "../../shared/bridge";
-import type { Bridge } from "../bridgeClient";
+import type { Bridge } from "../ports";
+import type { ItemWriter } from "../saving/ports";
+import type {
+  CatchUpPolicy,
+  PostTotals,
+  ArchiveRequest,
+  Archiver,
+} from "./ports";
 import type { Pacer } from "../pacing/pacer";
-import type { ItemWriter } from "../saving/directoryWriter";
 import { ALL_DONE } from "../ui/percent";
-import type { RunReporter } from "../ui/progressPanel";
-import type { CatchUpPolicy } from "./catchUp";
-import type { PostTotals } from "./postTotals";
 import { describeProgress, noCounts, type Counts } from "./progressText";
 
 interface Tally {
@@ -15,25 +18,12 @@ interface Tally {
   total: number | undefined;
 }
 
-export interface ArchiveRequest {
-  readonly username: string;
-  readonly folder: FileSystemDirectoryHandle;
-  /** The account was archived in full before, so stop at posts already saved. */
-  readonly onlyNew: boolean;
-  readonly signal: AbortSignal;
-  readonly reporter: RunReporter;
-}
-
 export interface ArchiverDependencies {
   readonly bridge: Bridge;
   readonly writer: ItemWriter;
   readonly pacer: Pacer;
   readonly totals: PostTotals;
   readonly catchUp: CatchUpPolicy;
-}
-
-export interface Archiver {
-  archive(request: ArchiveRequest): Promise<Counts>;
 }
 
 // Writes every post of one account into folder/<username>/, skipping files

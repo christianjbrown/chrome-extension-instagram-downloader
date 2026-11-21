@@ -1,23 +1,19 @@
-import type { Viewer } from "../../shared/bridge";
 import { ALL_DONE } from "../ui/percent";
-import type { RunReporter } from "../ui/progressPanel";
+import type { RunReporter } from "../ui/ports";
+import type {
+  Archiver,
+  FailureTally,
+  FollowingSource,
+  RunStateStore,
+  FollowingRequest,
+  FollowingRunner,
+} from "./ports";
 import {
   describeAccount,
   describeAccountsFinished,
   describeFollowingFinished,
 } from "./progressText";
-import type { Archiver } from "./accountArchiver";
-import type { FailureTally } from "./failureTally";
-import type { FollowingSource } from "./followingLister";
 import { begin, finished, remaining, type RunState } from "./runState";
-import type { RunStateStore } from "./runStore";
-
-export interface FollowingRequest {
-  readonly viewer: Viewer;
-  readonly folder: FileSystemDirectoryHandle;
-  readonly signal: AbortSignal;
-  readonly reporter: RunReporter;
-}
 
 // Archives every account the viewer follows, one at a time, keeping its
 // place so a stopped run carries on where it left off. Every run, a resumed
@@ -31,10 +27,6 @@ export interface FollowingDependencies {
   readonly store: RunStateStore;
   readonly now: () => number;
   readonly tally: FailureTally;
-}
-
-export interface FollowingRunner {
-  run(request: FollowingRequest): Promise<string>;
 }
 
 export class FollowingDownloader implements FollowingRunner {

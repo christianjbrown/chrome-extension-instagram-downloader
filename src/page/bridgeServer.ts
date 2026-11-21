@@ -7,8 +7,7 @@ import {
   type ProcedureName,
 } from "../shared/bridge";
 import { EVENTS } from "../shared/dom";
-import type { InputValidator } from "./procedureInputs";
-import type { RefusalDetector } from "./refusalDetector";
+import type { InputValidator, RefusalDetector } from "./ports";
 
 export type Handlers = {
   readonly [N in ProcedureName]: (input: Input<N>) => Promise<Output<N>>;

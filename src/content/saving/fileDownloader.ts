@@ -1,11 +1,6 @@
 import { TAGS } from "../../shared/dom";
 import type { DownloadItem } from "../../shared/media";
-import type { FetchBlob } from "./fetchBlob";
-import type { FileNamer } from "./fileNamer";
-
-export interface ItemDownloader {
-  download(item: DownloadItem): Promise<void>;
-}
+import type { FetchBlob, FileNamer, ItemDownloader } from "./ports";
 
 interface ObjectUrls {
   createObjectURL(blob: Blob): string;

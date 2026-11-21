@@ -2,11 +2,7 @@
 // written anywhere: the page's origin is Instagram's, so anything the content
 // script persisted in IndexedDB could be read or replaced by Instagram's own
 // scripts.
-
-export interface FolderStore {
-  get(): Promise<FileSystemDirectoryHandle | undefined>;
-  set(folder: FileSystemDirectoryHandle): Promise<void>;
-}
+import type { FolderStore } from "./ports";
 
 export class MemoryFolderStore implements FolderStore {
   private folder: FileSystemDirectoryHandle | undefined;

@@ -1,15 +1,17 @@
 // What the buttons on a profile do.
-import type { Archiver } from "../bulk/accountArchiver";
-import type { BulkJob, JobRunner } from "../bulk/bulkRunner";
-import type { FollowingRunner } from "../bulk/followingDownloader";
+import type {
+  Archiver,
+  BulkJob,
+  JobRunner,
+  FollowingRunner,
+} from "../bulk/ports";
+import type { Bridge } from "../ports";
+import type { FolderSource, ItemDownloader } from "../saving/ports";
+import type { Notifier } from "../ui/ports";
+import type { CurrentViewer, Command, UsernameCommand } from "./ports";
 import { describeCounts } from "../bulk/progressText";
-import type { Bridge } from "../bridgeClient";
 import { errorMessage } from "../errorText";
-import type { FolderSource } from "../saving/folderPicker";
-import type { ItemDownloader } from "../saving/fileDownloader";
-import type { Notifier } from "../ui/notifier";
 import { UNKNOWN_TAKEN_AT } from "../../shared/media";
-import type { CurrentViewer } from "./viewerSource";
 
 const text = {
   downloading: "Downloading",
@@ -23,16 +25,6 @@ const text = {
 
 // Ends a profile picture's id, so its file cannot clash with a post's.
 const profilePictureSuffix = "_profile";
-
-/** A button's action that needs nothing more. */
-export interface Command {
-  run(): Promise<void>;
-}
-
-/** A button's action on the profile it sits on. */
-export interface UsernameCommand {
-  run(username: string): Promise<void>;
-}
 
 export class DownloadAccountCommand implements UsernameCommand {
   constructor(

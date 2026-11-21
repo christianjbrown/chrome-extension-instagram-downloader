@@ -1,7 +1,6 @@
 // Entry point for the content script, which runs in the extension's own world.
 import { CONTENT_CONFIG } from "./config";
-import type { ContentEnvironment } from "./startContent";
-import { startContent } from "./startContent";
+import { type ContentEnvironment, startContent } from "./startContent";
 
 startContent(
   {

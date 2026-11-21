@@ -1,9 +1,6 @@
 import type { Viewer } from "../../shared/bridge";
-import type { Bridge } from "../bridgeClient";
-
-export interface CurrentViewer {
-  current(): Promise<Viewer | undefined>;
-}
+import type { Bridge } from "../ports";
+import type { CurrentViewer } from "./ports";
 
 // The signed-in account, looked up once. Callers poll on a timer, so a failed
 // lookup is not retried until a while has passed.

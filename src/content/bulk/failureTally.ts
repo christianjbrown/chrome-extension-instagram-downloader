@@ -1,17 +1,7 @@
 import { errorMessage } from "../errorText";
 import { BlockedError, endsTheRun, isContextInvalidated } from "../errors";
 import { describeFailureStop, describeUnreadable } from "./progressText";
-
-export interface FailureTally {
-  /** Forgets the last run, ready for a new one. */
-  reset(): void;
-  /** The account finished, so a run of failures is broken. */
-  succeeded(): void;
-  /** Notes a failed account, or rethrows when the run should stop instead. */
-  failed(username: string, error: unknown): void;
-  /** The accounts that could not be read, or nothing when every one could. */
-  summary(): string;
-}
+import type { FailureTally } from "./ports";
 
 // Keeps a run of the following list going past one account that will not
 // load, a private or renamed one say, but gives up when several in a row

@@ -1,8 +1,7 @@
 import { RefusedError } from "../../shared/refusal";
 import { BlockedError } from "../errors";
-import type { Budget } from "./hourlyBudget";
+import type { Budget, Sleeper, Gate } from "./ports";
 import type { Pacing, WaitReporter } from "./pacing";
-import type { Sleeper } from "./sleeper";
 
 const text = {
   hourlyLimit: "Hourly request limit reached",
@@ -10,14 +9,6 @@ const text = {
   blocked:
     "Instagram kept refusing requests, so the run stopped. Try again tomorrow.",
 } as const;
-
-export interface Gate {
-  call<T>(
-    request: () => Promise<T>,
-    signal: AbortSignal,
-    reporter: WaitReporter,
-  ): Promise<T>;
-}
 
 // Every bulk API call goes through here: the hourly budget, a random delay,
 // and a backoff when Instagram refuses. Any

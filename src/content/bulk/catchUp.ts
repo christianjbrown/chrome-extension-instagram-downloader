@@ -1,12 +1,6 @@
 // When an account was archived in full before, a rerun only needs the posts
 // since, so it stops once it reaches the ones already saved.
-
-export interface CatchUpPolicy {
-  /** Whether to look up the account's total before writing this page. */
-  wantsTotal(page: number, onlyNew: boolean): boolean;
-  /** Whether the run has reached posts saved before, after writing this page. */
-  caughtUp(page: number, onlyNew: boolean, newFiles: number): boolean;
-}
+import type { CatchUpPolicy } from "./ports";
 
 const firstPage = 1;
 

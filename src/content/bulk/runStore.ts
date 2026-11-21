@@ -1,19 +1,10 @@
 // Keeps each signed-in account's Download following run in extension storage.
 import { emptyRunState, isRunState, type RunState } from "./runState";
+import type { RunStateStore, RunProgress } from "./ports";
 
 export interface KeyValueArea {
   get(key: string): Promise<Record<string, unknown>>;
   set(items: Record<string, unknown>): Promise<void>;
-}
-
-export interface RunStateStore {
-  load(viewerId: string): Promise<RunState>;
-  save(viewerId: string, state: RunState): Promise<void>;
-}
-
-export interface RunProgress {
-  /** Whether a run for this account was stopped part way. */
-  inProgress(viewerId: string): Promise<boolean>;
 }
 
 const keyPrefix = "followingDownload:";

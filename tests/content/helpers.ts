@@ -1,7 +1,6 @@
 import type { Mock } from "vitest";
-import type { Scheduler } from "../../src/content/scheduler";
-import type { Bridge } from "../../src/content/bridgeClient";
-import type { RunReporter } from "../../src/content/ui/progressPanel";
+import type { Scheduler, Bridge } from "../../src/content/ports";
+import type { RunReporter } from "../../src/content/ui/ports";
 import type { Input, Output, ProcedureName } from "../../src/shared/bridge";
 
 type Answers = {

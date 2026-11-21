@@ -3,7 +3,7 @@
 import type { FollowingPage } from "../shared/bridge";
 import { parseFollowingPage } from "./followingResponse";
 import { FOLLOWING_QUERY } from "./instagramApi";
-import type { HeaderSource } from "./instagramHeaders";
+import type { HeaderSource, FollowingPages } from "./ports";
 
 type Fetch = (url: string, init: RequestInit) => Promise<Response>;
 
@@ -18,10 +18,6 @@ export interface FollowingEndpoint {
 
 const invalidUser = "Invalid user id";
 const numericId = /^\d+$/;
-
-export interface FollowingPages {
-  page(userId: string, next: string | undefined): Promise<FollowingPage>;
-}
 
 export class FollowingClient implements FollowingPages {
   constructor(

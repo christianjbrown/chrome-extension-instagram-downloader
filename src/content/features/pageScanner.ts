@@ -1,4 +1,4 @@
-import type { Scheduler } from "../scheduler";
+import type { Scheduler } from "../ports";
 import type { Feature } from "./feature";
 
 // Runs every feature once, then again shortly after the page changes.

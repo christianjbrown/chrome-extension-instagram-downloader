@@ -1,5 +1,5 @@
 import { InstagramQueries } from "../../src/page/instagramQueries";
-import type { Relay } from "../../src/page/relayClient";
+import type { Relay } from "../../src/page/ports";
 import { photo } from "../fixtures";
 
 function queries(data: unknown) {

@@ -1,4 +1,4 @@
-import type { FolderStore } from "./folderStore";
+import type { FolderStore, FolderSource } from "./ports";
 
 type Permission = "granted" | "denied" | "prompt";
 
@@ -12,10 +12,6 @@ export type ShowDirectoryPicker = (options: {
   mode: "readwrite";
   startIn: "downloads";
 }) => Promise<FileSystemDirectoryHandle>;
-
-export interface FolderSource {
-  pick(chooseAgain?: boolean): Promise<FileSystemDirectoryHandle>;
-}
 
 const readwrite = { mode: "readwrite" } as const;
 const granted: Permission = "granted";

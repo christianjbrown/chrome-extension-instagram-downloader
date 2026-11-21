@@ -1,10 +1,6 @@
 // Who is signed in, read from Instagram's own config module.
 import { MODULES } from "./instagramApi";
-import type { ModuleRequire } from "./relayClient";
-
-export interface ViewerIdSource {
-  viewerId(): string;
-}
+import type { ModuleRequire, ViewerIdSource } from "./ports";
 
 export class PolarisViewerId implements ViewerIdSource {
   constructor(private readonly require: ModuleRequire) {}

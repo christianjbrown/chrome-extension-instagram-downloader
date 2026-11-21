@@ -3,22 +3,7 @@ import { describeWait } from "../pacing/waitText";
 import { createTextButton } from "./buttons";
 import { bySelector, CLASS } from "./classNames";
 import { createProgressBar, showProgress } from "./progressBar";
-import type { Countdown } from "./countdown";
-
-export interface RunReporter {
-  heading(text: string): void;
-  detail(text: string): void;
-  waiting(reason: string, ms: number): void;
-  /** Where a run over many accounts has got to, as words and a fraction done. */
-  overall(text: string, fraction: number): void;
-  /** How far through the current account, or undefined to hide the bar. */
-  accountBar(fraction: number | undefined): void;
-}
-
-export interface RunPanel extends RunReporter {
-  open(title: string, onStop: () => void): void;
-  finish(message: string): void;
-}
+import type { Countdown, RunPanel } from "./ports";
 
 // Top to bottom. Bars stay hidden until something reports a fraction.
 const parts = [

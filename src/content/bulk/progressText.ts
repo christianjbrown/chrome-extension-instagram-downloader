@@ -1,5 +1,5 @@
 // The words the progress panel shows while a bulk download runs.
-import { WRITE_OUTCOMES, type WriteOutcome } from "../saving/directoryWriter";
+import { WRITE_OUTCOMES, type WriteOutcome } from "../saving/ports";
 import { FULL_PERCENT, percentText } from "../ui/percent";
 
 export type Counts = Record<WriteOutcome, number>;

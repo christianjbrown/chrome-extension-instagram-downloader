@@ -1,7 +1,6 @@
 import { TAGS } from "../../shared/dom";
-import type { Command, UsernameCommand } from "../actions/profileCommands";
-import type { CurrentViewer } from "../actions/viewerSource";
-import type { RunProgress } from "../bulk/runStore";
+import type { Command, UsernameCommand, CurrentViewer } from "../actions/ports";
+import type { RunProgress } from "../bulk/ports";
 import { parseRoute } from "../dom/route";
 import { PROFILE_HEADER } from "../dom/selectors";
 import { bySelector, CLASS } from "../ui/classNames";

@@ -1,13 +1,13 @@
 import { ATTRIBUTES, TAGS } from "../../shared/dom";
 import { shortcodeFromPath, shortcodeToMediaId } from "../../shared/shortcode";
-import type { PostDownloads, PostTarget } from "../actions/postDownloader";
+import type { PostDownloads, PostTarget } from "../actions/ports";
+import type { AssetFinder } from "../dom/ports";
+import type { Notifier } from "../ui/ports";
 import { carouselSlide, isCarousel } from "../dom/carousel";
 import { parseRoute } from "../dom/route";
-import type { AssetFinder } from "../dom/visibleAsset";
 import { ARTICLE, MAIN } from "../dom/selectors";
 import { createButton } from "../ui/buttons";
 import { bySelector, CLASS, classes } from "../ui/classNames";
-import type { Notifier } from "../ui/notifier";
 import type { Feature, PageView } from "./feature";
 
 // Instagram's bookmark icon, saved or not, marks every post's action bar.

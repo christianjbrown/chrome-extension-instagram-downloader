@@ -1,27 +1,14 @@
 import { errorMessage } from "../errorText";
 import { isAbortError } from "../errors";
-import type { FolderSource } from "../saving/folderPicker";
-import type { Notifier } from "../ui/notifier";
-import type { RunPanel, RunReporter } from "../ui/progressPanel";
+import type { FolderSource } from "../saving/ports";
+import type { Notifier, RunPanel } from "../ui/ports";
+import type { BulkJob, JobRunner } from "./ports";
 
 const text = {
   alreadyRunning: "A download is already running.",
   noFolder: "Could not get access to the download folder.",
   stopped: "Stopped. Start it again to carry on where it left off.",
 } as const;
-
-export interface BulkJob {
-  readonly title: string;
-  run(
-    folder: FileSystemDirectoryHandle,
-    signal: AbortSignal,
-    reporter: RunReporter,
-  ): Promise<string>;
-}
-
-export interface JobRunner {
-  run(job: BulkJob): Promise<void>;
-}
 
 // Runs one bulk download at a time: asks for the folder while the click is
 // still fresh, shows the panel with its Stop button, and reports how it ended.

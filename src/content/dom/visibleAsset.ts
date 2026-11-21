@@ -1,10 +1,6 @@
 import { assetName } from "../../shared/media";
 import { IMAGE_TAG, MEDIA_ELEMENTS, VIDEO_TAG } from "./selectors";
-
-/** Finds the picture on screen that stands for a post, slide or story. */
-export interface AssetFinder {
-  largest(container: ParentNode): string | undefined;
-}
+import type { AssetFinder } from "./ports";
 
 /** How much of the page is on screen, read at click time. */
 export interface Viewport {

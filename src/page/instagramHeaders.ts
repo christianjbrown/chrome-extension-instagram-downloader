@@ -1,11 +1,7 @@
 // The headers that make a REST call look like Instagram's own, read from
 // Instagram's own modules at call time.
 import { HEADERS, MODULES } from "./instagramApi";
-import type { ModuleRequire } from "./relayClient";
-
-export interface HeaderSource {
-  headers(): Record<string, string>;
-}
+import type { ModuleRequire, HeaderSource } from "./ports";
 
 export class InstagramHeaders implements HeaderSource {
   constructor(private readonly require: ModuleRequire) {}

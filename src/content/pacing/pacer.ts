@@ -1,5 +1,4 @@
-import type { Gate } from "./apiGate";
-import type { Sleeper } from "./sleeper";
+import type { Gate, Sleeper } from "./ports";
 
 /** Everything an account archive needs to keep its pace. */
 export interface Pacer {
