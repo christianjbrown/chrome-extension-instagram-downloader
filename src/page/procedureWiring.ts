@@ -8,8 +8,10 @@ import {
 import type {
   FollowingPages,
   MediaLookup,
+  MediaQuery,
+  PostsQuery,
   ProcedureTable,
-  Queries,
+  ProfileQuery,
   ReelLookup,
   UserLookup,
   ViewerIdSource,
@@ -29,7 +31,9 @@ export interface ProcedureSources {
   readonly users: UserLookup;
   readonly reels: ReelLookup;
   readonly viewer: ViewerIdSource;
-  readonly queries: Queries;
+  readonly mediaQuery: MediaQuery;
+  readonly postsQuery: PostsQuery;
+  readonly profileQuery: ProfileQuery;
   readonly following: FollowingPages;
 }
 
@@ -58,21 +62,28 @@ function fields(limits: InputLimits) {
 
 // The compiler refuses this table until every procedure has its entry.
 export function procedureTable(
-  { media, users, reels, viewer, queries, following }: ProcedureSources,
+  sources: ProcedureSources,
   limits: InputLimits,
 ): ProcedureTable {
+  const { media, users, reels, viewer, following } = sources;
+  const { mediaQuery, postsQuery, profileQuery } = sources;
   const field = fields(limits);
   return {
-    viewer: new ViewerProcedure(viewer, queries),
-    media: new MediaProcedure(media, queries, field.mediaId),
+    viewer: new ViewerProcedure(viewer, profileQuery),
+    media: new MediaProcedure(media, mediaQuery, field.mediaId),
     mediaByAsset: new MediaByAssetProcedure(media, field.asset),
     postsPage: new PostsPageProcedure(
       users,
-      queries,
+      postsQuery,
       field.username,
       field.text,
     ),
-    account: new AccountProcedure(users, queries, field.username),
+    account: new AccountProcedure(
+      users,
+      postsQuery,
+      profileQuery,
+      field.username,
+    ),
     followingPage: new FollowingPageProcedure(
       following,
       field.userId,

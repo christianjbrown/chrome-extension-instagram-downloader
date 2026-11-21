@@ -24,7 +24,8 @@ export class AccountProcedure implements PageProcedure<Name> {
 
   constructor(
     private readonly users: UserIdLookup,
-    private readonly queries: PostsQuery & ProfileQuery,
+    private readonly posts: PostsQuery,
+    private readonly profiles: ProfileQuery,
     private readonly username: FieldCheck,
   ) {}
 
@@ -34,7 +35,7 @@ export class AccountProcedure implements PageProcedure<Name> {
 
   async handle({ username }: Input<Name>): Promise<Account> {
     const id = await this.userId(username);
-    const profile = await this.queries.profile(id);
+    const profile = await this.profiles.profile(id);
     return { id, ...profile };
   }
 
@@ -44,7 +45,7 @@ export class AccountProcedure implements PageProcedure<Name> {
 
   // Pinned collaborations can put someone else's post first.
   private async idFromPosts(username: string): Promise<string> {
-    const { items } = await this.queries.postsPage(username, undefined);
+    const { items } = await this.posts.postsPage(username, undefined);
     const owner = items
       .map((item) => item.user)
       .find((user): user is JsonObject & { pk?: unknown } =>

@@ -119,8 +119,6 @@ export interface ProfileQuery {
   profile(userId: string): Promise<ProfileUser>;
 }
 
-export interface Queries extends MediaQuery, PostsQuery, ProfileQuery {}
-
 /** Whether one field of a request has the only shape it may have. */
 export interface FieldCheck {
   accepts(value: unknown): boolean;
