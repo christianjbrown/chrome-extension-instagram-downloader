@@ -1,4 +1,5 @@
 import { SlideFiles } from "../../../src/content/mediaFiles";
+import { LargestVersionChooser } from "../../../src/content/versionChooser";
 import { AccountArchiver } from "../../../src/content/bulk/accountArchiver";
 import { PinnedAwareCatchUp } from "../../../src/content/bulk/catchUp";
 import { CONTENT_CONFIG } from "../../../src/content/config";
@@ -49,7 +50,7 @@ function setup(
     pacer,
     totals,
     archiver: new AccountArchiver({
-      files: new SlideFiles(),
+      files: new SlideFiles(new LargestVersionChooser()),
       bridge,
       writer,
       pacer: pacer as never,

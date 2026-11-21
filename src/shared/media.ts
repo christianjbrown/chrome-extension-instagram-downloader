@@ -29,24 +29,6 @@ export interface DownloadItem {
   readonly video?: true;
 }
 
-const area = (version: MediaVersion): number => version.width * version.height;
-
-export function largestVersion(
-  versions: readonly MediaVersion[],
-): MediaVersion | undefined {
-  return versions.reduce<MediaVersion | undefined>(
-    (best, version) =>
-      best === undefined || area(version) > area(best) ? version : best,
-    undefined,
-  );
-}
-
-export function bestUrl(media: InstagramMedia): string | undefined {
-  const versions =
-    media.video_versions ?? media.image_versions2?.candidates ?? [];
-  return largestVersion(versions)?.url;
-}
-
 // The last path segment of a CDN URL is the same for every size of a picture,
 // which is how a picture on screen is matched back to its media.
 export function assetName(url: string): string {

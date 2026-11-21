@@ -17,3 +17,8 @@ export interface MediaFiles {
   /** `owner` names the files when the media itself does not say whose it is. */
   items(media: InstagramMedia, owner?: string): DownloadItem[];
 }
+
+/** Picks the address a media is saved from. */
+export interface VersionChooser {
+  url(media: InstagramMedia): string | undefined;
+}

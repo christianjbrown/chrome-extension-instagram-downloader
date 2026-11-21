@@ -1,4 +1,5 @@
 import { SlideFiles } from "../../../src/content/mediaFiles";
+import { LargestVersionChooser } from "../../../src/content/versionChooser";
 import { PostDownloader } from "../../../src/content/actions/postDownloader";
 import { cdn, photo } from "../../fixtures";
 import { fakeBridge, notifier } from "../helpers";
@@ -17,7 +18,12 @@ function setup() {
   return {
     downloader,
     notes,
-    posts: new PostDownloader(bridge, downloader, notes, new SlideFiles()),
+    posts: new PostDownloader(
+      bridge,
+      downloader,
+      notes,
+      new SlideFiles(new LargestVersionChooser()),
+    ),
   };
 }
 
@@ -47,7 +53,7 @@ describe("PostDownloader", () => {
       bridge,
       downloader,
       notifier(),
-      new SlideFiles(),
+      new SlideFiles(new LargestVersionChooser()),
     ).download({ mediaId: "3", slide: undefined }, "bob");
     expect(downloader.download).toHaveBeenCalledWith(
       expect.objectContaining({ username: "bob" }),

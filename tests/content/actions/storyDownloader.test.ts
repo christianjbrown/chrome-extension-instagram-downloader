@@ -1,4 +1,5 @@
 import { SlideFiles } from "../../../src/content/mediaFiles";
+import { LargestVersionChooser } from "../../../src/content/versionChooser";
 import { HighlightStories } from "../../../src/content/actions/highlightStories";
 import { StoryDownloader } from "../../../src/content/actions/storyDownloader";
 import { UserStories } from "../../../src/content/actions/userStories";
@@ -32,7 +33,7 @@ function setup() {
       bridge,
       downloader,
       notifier: notes,
-      files: new SlideFiles(),
+      files: new SlideFiles(new LargestVersionChooser()),
       kinds: [new UserStories(bridge), new HighlightStories(bridge)],
     }),
   };
@@ -79,7 +80,7 @@ describe("StoryDownloader", () => {
       bridge,
       downloader,
       notifier: notes,
-      files: new SlideFiles(),
+      files: new SlideFiles(new LargestVersionChooser()),
       kinds: [],
     });
     await stories.all(highlight);

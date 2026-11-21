@@ -12,6 +12,7 @@ import { ToastNotifier } from "./ui/notifier";
 import type { Bridge, Scheduler } from "./ports";
 import { DomButtons } from "./ui/buttons";
 import { SlideFiles } from "./mediaFiles";
+import { LargestVersionChooser } from "./versionChooser";
 
 import { features } from "./featureWiring";
 import type { ContentEnvironment } from "./wiring";
@@ -50,7 +51,7 @@ export function startContent(
   );
   const bridge = pageBridge(env, config, scheduler);
   const buttons = new DomButtons(document);
-  const files = new SlideFiles();
+  const files = new SlideFiles(new LargestVersionChooser());
   const wiring = {
     env,
     config,
