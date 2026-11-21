@@ -1,7 +1,7 @@
 import { TextButtonClasses } from "../../../src/content/ui/buttons";
 import { SignedInProfile } from "../../../src/content/actions/ownProfile";
 import { StoppedFollowingRun } from "../../../src/content/bulk/resumableRun";
-import { BUTTON_LOOKS } from "../../../src/content/buttonLooks";
+import { BUTTON_LOOKS } from "../../../src/content/featureWiring";
 import {
   CommandButton,
   FollowingButton,

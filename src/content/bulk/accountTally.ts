@@ -1,10 +1,10 @@
 import type { AccountProgress, DetailReporter } from "../ui/ports";
 import type { WriteOutcome } from "../saving/ports";
-import { AccountCounts } from "./accountCounts";
 import type { Counts } from "./counts";
 import type {
   AccountCounter,
   AccountTally,
+  CounterClass,
   ProgressWording,
   TallyStarter,
 } from "./ports";
@@ -58,9 +58,12 @@ class BarTally implements AccountTally {
 
 /** Starts a bar tally, with its own counts, for each account. */
 export class BarTallies implements TallyStarter {
-  constructor(private readonly wording: ProgressWording) {}
+  constructor(
+    private readonly wording: ProgressWording,
+    private readonly counterClass: CounterClass,
+  ) {}
 
   start(reporter: DetailReporter & AccountProgress): AccountTally {
-    return new BarTally(reporter, this.wording, new AccountCounts());
+    return new BarTally(reporter, this.wording, new this.counterClass());
   }
 }

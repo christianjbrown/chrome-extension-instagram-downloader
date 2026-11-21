@@ -23,3 +23,14 @@ export interface Sleeper {
 export interface RandomWait {
   between(range: readonly [number, number], signal: AbortSignal): Promise<void>;
 }
+
+/** How long to wait after each refusal in a row. */
+export interface RefusalBackoff {
+  /**
+   * The wait after one more refusal, or undefined once every wait is spent,
+   * which also starts the count again.
+   */
+  next(): number | undefined;
+  /** A request went through, so the count starts again. */
+  reset(): void;
+}

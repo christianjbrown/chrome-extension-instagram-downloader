@@ -1,6 +1,7 @@
 import { abortError } from "../../../src/content/errors";
 import { RefusedError } from "../../../src/shared/refusal";
 import { ApiGate } from "../../../src/content/pacing/apiGate";
+import { SteppedBackoff } from "../../../src/content/pacing/steppedBackoff";
 import { CONTENT_CONFIG } from "../../../src/content/config";
 import { reporter, signal } from "../helpers";
 
@@ -20,10 +21,12 @@ function gate(backoffMs = [10, 20]) {
   return {
     sleeper,
     budget,
-    gate: new ApiGate(sleeper, budget, {
-      ...defaultPacing,
-      backoffMs,
-    }),
+    gate: new ApiGate(
+      sleeper,
+      budget,
+      defaultPacing,
+      new SteppedBackoff(backoffMs),
+    ),
   };
 }
 

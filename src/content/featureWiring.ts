@@ -2,17 +2,16 @@
 import { FirstKeyFinder } from "./actions/mediaFinder";
 import { AssetLookup, MediaIdLookup } from "./actions/mediaLookups";
 import { PostDownloader } from "./actions/postDownloader";
-import {
-  ChangeFolderCommand,
-  DownloadAccountCommand,
-  DownloadFollowingCommand,
-  ProfilePictureCommand,
-} from "./actions/profileCommands";
+import { ChangeFolderCommand } from "./actions/changeFolderCommand";
+import { DownloadAccountCommand } from "./actions/downloadAccountCommand";
+import { DownloadFollowingCommand } from "./actions/downloadFollowingCommand";
+import { ProfilePictureCommand } from "./actions/profilePictureCommand";
+import { EnglishProfileWording } from "./actions/profileWording";
 import { HighlightStories } from "./actions/highlightStories";
 import { StoryDownloader } from "./actions/storyDownloader";
 import { UserStories } from "./actions/userStories";
 import { ViewerSource } from "./actions/viewerSource";
-import type { Feature, ProfileButton } from "./features/feature";
+import type { ButtonLook, Feature, ProfileButton } from "./features/feature";
 import { GridButtons } from "./features/gridButtons";
 import { PostActions } from "./features/postActions";
 import { PostTargetDownload } from "./features/postTargetDownload";
@@ -33,32 +32,66 @@ import { SignedInProfile } from "./actions/ownProfile";
 import { StoppedFollowingRun } from "./bulk/resumableRun";
 import { AllSlidesButton, ShowingSlideButton } from "./features/postButtons";
 import { CommandButton, FollowingButton } from "./features/profileButtons";
-import { BUTTON_LOOKS } from "./buttonLooks";
 import { bulk, type BulkParts } from "./bulkWiring";
 import type { Wiring } from "./wiring";
 
-// The buttons under a profile's header, in the order they appear.
-function profileButtons(
+// How each labelled button looks: its words, and the icon content.css draws
+// before them. A new button adds its look here, beside the rest of its
+// wiring.
+export const BUTTON_LOOKS = {
+  downloadAll: { icon: "download-all", label: "Download all posts" },
+  picture: { icon: "picture", label: "Download profile picture" },
+  folder: { icon: "folder", label: "Change download folder" },
+  following: { icon: "following", label: "Download following" },
+  resumeFollowing: { icon: "following", label: "Resume downloading following" },
+  story: { icon: "download", label: "Download this story" },
+  allStories: { icon: "download-all", label: "Download all" },
+} as const satisfies Record<string, ButtonLook>;
+
+// What the buttons on a profile do, worded in English.
+function profileCommands(
   { bridge, notifier, errors }: Wiring,
   parts: BulkParts,
   viewers: CurrentViewer,
   downloader: ItemDownloader,
+) {
+  const wording = new EnglishProfileWording();
+  const { runner } = parts;
+  return {
+    account: new DownloadAccountCommand(
+      runner,
+      parts.archiver,
+      parts.wording,
+      wording,
+    ),
+    picture: new ProfilePictureCommand(
+      { bridge, downloader, notifier, errors },
+      wording,
+    ),
+    folder: new ChangeFolderCommand(parts.folders, notifier, wording),
+    following: new DownloadFollowingCommand(
+      runner,
+      parts.following,
+      viewers,
+      wording,
+    ),
+  };
+}
+
+// The buttons under a profile's header, in the order they appear.
+function profileButtons(
+  wiring: Wiring,
+  parts: BulkParts,
+  viewers: CurrentViewer,
+  downloader: ItemDownloader,
 ): ProfileButton[] {
+  const commands = profileCommands(wiring, parts, viewers, downloader);
   return [
-    new CommandButton(
-      BUTTON_LOOKS.downloadAll,
-      new DownloadAccountCommand(parts.runner, parts.archiver, parts.wording),
-    ),
-    new CommandButton(
-      BUTTON_LOOKS.picture,
-      new ProfilePictureCommand(bridge, downloader, notifier, errors),
-    ),
-    new CommandButton(
-      BUTTON_LOOKS.folder,
-      new ChangeFolderCommand(parts.folders, notifier),
-    ),
+    new CommandButton(BUTTON_LOOKS.downloadAll, commands.account),
+    new CommandButton(BUTTON_LOOKS.picture, commands.picture),
+    new CommandButton(BUTTON_LOOKS.folder, commands.folder),
     new FollowingButton(
-      new DownloadFollowingCommand(parts.runner, parts.following, viewers),
+      commands.following,
       new SignedInProfile(viewers),
       new StoppedFollowingRun(parts.runs),
       {

@@ -112,6 +112,9 @@ export interface AccountTally {
 }
 
 /** Starts the tally for one account, reporting to that run's panel. */
+/** Makes a fresh counter, with nothing counted yet, for each account. */
+export type CounterClass = new () => AccountCounter;
+
 export interface TallyStarter {
   start(reporter: DetailReporter & AccountProgress): AccountTally;
 }

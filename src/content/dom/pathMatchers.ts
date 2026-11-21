@@ -7,36 +7,19 @@ import { PROFILE_KIND } from "./routes/profile";
 import { USER_STORY_KIND } from "./routes/userStory";
 import type { PathMatcher } from "./ports";
 
-const storiesSegment = "stories";
+/** The first segment of every story and highlight address. */
+export const STORIES_SEGMENT = "stories";
 const highlightsSegment = "highlights";
-
-const postPrefixes = new Set(["p", "reel", "tv"]);
 
 // Where the post prefix sits: first, or after the name of the profile the
 // post was opened from.
 const prefixFirst = 0;
 const prefixAfterName = 1;
 
-// First segments that are Instagram's own pages rather than an account.
-const reservedFirstSegments = new Set([
-  "accounts",
-  "direct",
-  "explore",
-  "reels",
-  storiesSegment,
-  ...postPrefixes,
-]);
-
-const isPostPrefix = (segment: string | undefined): boolean =>
-  segment !== undefined && postPrefixes.has(segment);
-
-const isAccountName = (segment: string | undefined): segment is string =>
-  segment !== undefined && !reservedFirstSegments.has(segment);
-
 // /stories/name/id/, or /stories/highlights/id/ for a highlight.
 export class StoryPath implements PathMatcher {
   match([first, owner, media]: readonly string[]): Route | undefined {
-    return first === storiesSegment ? this.story(owner, media) : undefined;
+    return first === STORIES_SEGMENT ? this.story(owner, media) : undefined;
   }
 
   private story(owner: string | undefined, media: string | undefined): Route {
@@ -57,7 +40,10 @@ export class StoryPath implements PathMatcher {
 }
 
 // /p/code/, or /name/p/code/ for a post opened from a profile.
+// The prefixes, one per kind of post, are passed in.
 export class PostPath implements PathMatcher {
+  constructor(private readonly prefixes: ReadonlySet<string>) {}
+
   match(segments: readonly string[]): Route | undefined {
     const [first] = segments;
     return first === undefined
@@ -66,16 +52,20 @@ export class PostPath implements PathMatcher {
   }
 
   private start(first: string): number {
-    return postPrefixes.has(first) ? prefixFirst : prefixAfterName;
+    return this.prefixes.has(first) ? prefixFirst : prefixAfterName;
   }
 
   private fromPrefix(
     segments: readonly string[],
     start: number,
   ): Route | undefined {
-    return isPostPrefix(segments[start])
+    return this.isPrefix(segments[start])
       ? this.post(segments[start + 1])
       : undefined;
+  }
+
+  private isPrefix(segment: string | undefined): boolean {
+    return segment !== undefined && this.prefixes.has(segment);
   }
 
   private post(shortcode: string | undefined): Route | undefined {
@@ -83,15 +73,22 @@ export class PostPath implements PathMatcher {
   }
 }
 
-// /name/, as long as the name is not one of Instagram's own pages.
+// /name/, as long as the name is not one of Instagram's own pages, which are
+// passed in.
 export class ProfilePath implements PathMatcher {
+  constructor(private readonly reserved: ReadonlySet<string>) {}
+
   match([first, ...rest]: readonly string[]): Route | undefined {
     return rest.length === 0 ? this.profile(first) : undefined;
   }
 
   private profile(first: string | undefined): Route | undefined {
-    return isAccountName(first)
+    return this.isAccountName(first)
       ? { kind: PROFILE_KIND, username: first }
       : undefined;
+  }
+
+  private isAccountName(segment: string | undefined): segment is string {
+    return segment !== undefined && !this.reserved.has(segment);
   }
 }

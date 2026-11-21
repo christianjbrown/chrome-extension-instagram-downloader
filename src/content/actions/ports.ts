@@ -69,3 +69,27 @@ export interface OwnProfile {
   /** The signed-in account when the profile is its own, otherwise undefined. */
   viewerOn(username: string): Promise<Viewer | undefined>;
 }
+
+/** The words of downloading a whole account. */
+export interface AccountJobWording {
+  accountTitle(username: string): string;
+  /** The run's last line, given the counts already in words. */
+  accountFinished(counts: string): string;
+}
+
+/** The words of downloading every account the viewer follows. */
+export interface FollowingJobWording {
+  followingTitle(): string;
+  noViewer(): string;
+}
+
+/** The words of saving a profile picture. */
+export interface PictureWording {
+  noPicture(): string;
+  pictureFailed(reason: string): string;
+}
+
+/** The words of changing the download folder. */
+export interface FolderWording {
+  folderUnchanged(): string;
+}

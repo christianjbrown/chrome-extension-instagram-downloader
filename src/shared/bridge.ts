@@ -57,8 +57,12 @@ export type ProcedureOutputs = {
   readonly [N in ProcedureName]: ProcedureOutput<N>;
 };
 
+/**
+ * A request as the page receives it. The name is only known to be text: the
+ * page checks it against the procedures it was given before trusting it.
+ */
 export interface BridgeRequest {
-  readonly igdlProcedure: ProcedureName;
+  readonly igdlProcedure: string;
   readonly input: unknown;
 }
 
