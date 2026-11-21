@@ -66,6 +66,9 @@ export class AccountArchiver {
       if (request.onlyNew && page > 1 && tally.counts.saved === saved) break;
       cursor = result.cursor;
     } while (cursor !== undefined);
+    // Instagram's count can include posts it never sends, so a finished
+    // account fills its bar rather than stopping short of the end.
+    if (tally.total !== undefined) reporter.accountBar(1);
     return tally.counts;
   }
 

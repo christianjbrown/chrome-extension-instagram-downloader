@@ -1,3 +1,4 @@
+import type { FollowingPage } from "../../../src/shared/bridge";
 import type { AccountArchiver } from "../../../src/content/bulk/accountArchiver";
 import { ConsecutiveFailureTally } from "../../../src/content/bulk/failureTally";
 import { FollowingDownloader } from "../../../src/content/bulk/followingDownloader";
@@ -12,7 +13,12 @@ import {
   signal,
 } from "../helpers";
 
-function setup(initial?: unknown) {
+const twoPages = ({ next }: { next: string | undefined }): FollowingPage =>
+  next === undefined
+    ? { usernames: ["a", "b"], next: "n" }
+    : { usernames: ["b", "c"], next: undefined };
+
+function setup(initial?: unknown, followingPage = twoPages) {
   const data: Record<string, unknown> =
     initial === undefined ? {} : { "followingDownload:1": initial };
   const store = new RunStore({
@@ -22,12 +28,7 @@ function setup(initial?: unknown) {
       return Promise.resolve();
     },
   });
-  const bridge = fakeBridge({
-    followingPage: ({ next }) =>
-      next === undefined
-        ? { usernames: ["a", "b"], next: "n" }
-        : { usernames: ["b", "c"], next: undefined },
-  });
+  const bridge = fakeBridge({ followingPage });
   const archiver = {
     archive: vi.fn((_request: { username: string }) =>
       Promise.resolve({ saved: 1, skipped: 0, failed: 0 }),
@@ -64,6 +65,7 @@ describe("FollowingDownloader", () => {
       ["Account 1 of 3 (0%)", 0],
       ["Account 2 of 3 (33%)", 1 / 3],
       ["Account 3 of 3 (66%)", 2 / 3],
+      ["Account 3 of 3 (100%)", 1],
     ]);
     expect(report.heading).toHaveBeenLastCalledWith("c");
     expect(
@@ -97,6 +99,7 @@ describe("FollowingDownloader", () => {
     );
     expect(report.overall.mock.calls).toEqual([
       ["Account 3 of 3 (66%)", 2 / 3],
+      ["Account 3 of 3 (100%)", 1],
     ]);
   });
 
@@ -123,5 +126,14 @@ describe("FollowingDownloader", () => {
       "Finished all 3 accounts you follow. Could not read 1: a.",
     );
     expect(archiver.archive).toHaveBeenCalledTimes(3);
+  });
+
+  it("leaves the overall line alone when nobody is followed", async () => {
+    const { run, report } = setup(undefined, () => ({
+      usernames: [],
+      next: undefined,
+    }));
+    await expect(run()).resolves.toBe("Finished all 0 accounts you follow.");
+    expect(report.overall).not.toHaveBeenCalled();
   });
 });

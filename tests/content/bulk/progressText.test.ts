@@ -1,5 +1,6 @@
 import {
   describeAccount,
+  describeAccountsFinished,
   describeCounts,
   describeProgress,
   percent,
@@ -30,6 +31,10 @@ it("counts posts against the account's total when it is known", () => {
 it("counts accounts by those already finished", () => {
   expect(describeAccount(1, 120)).toBe("Account 1 of 120 (0%)");
   expect(describeAccount(61, 120)).toBe("Account 61 of 120 (50%)");
+});
+
+it("reaches a hundred percent once the last account is finished", () => {
+  expect(describeAccountsFinished(109)).toBe("Account 109 of 109 (100%)");
 });
 
 it("only reaches a hundred percent at the end", () => {

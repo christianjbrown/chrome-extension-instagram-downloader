@@ -32,6 +32,13 @@ export function describeProgress(
   return `Post ${String(post)}${of}: ${describeCounts(counts)}`;
 }
 
-export function describeAccount(position: number, total: number): string {
-  return `Account ${String(position)} of ${String(total)} (${String(percent(position - 1, total))}%)`;
-}
+const accountLine = (position: number, total: number, done: number): string =>
+  `Account ${String(position)} of ${String(total)} (${String(percent(done, total))}%)`;
+
+/** The account being worked on, counting only those before it as done. */
+export const describeAccount = (position: number, total: number): string =>
+  accountLine(position, total, position - 1);
+
+/** The same line once the last account has finished too. */
+export const describeAccountsFinished = (total: number): string =>
+  accountLine(total, total, total);
