@@ -14,6 +14,11 @@ export interface PostButton {
   shows(container: ParentNode): boolean;
 }
 
+/** Saves the post, or every slide of it, shown in a container on the page. */
+export interface ContainerDownload {
+  download(container: ParentNode, all: boolean): Promise<void>;
+}
+
 /** What a labelled button says, and the icon content.css draws for it. */
 export interface ButtonLook {
   readonly icon: string;

@@ -15,6 +15,7 @@ import { ViewerSource } from "./actions/viewerSource";
 import type { Feature, ProfileButton } from "./features/feature";
 import { GridButtons } from "./features/gridButtons";
 import { PostActions } from "./features/postActions";
+import { PostTargetDownload } from "./features/postTargetDownload";
 import { ProfileToolbar } from "./features/profileToolbar";
 import { StoryToolbar } from "./features/storyToolbar";
 import { AllStoriesButton, CurrentStoryButton } from "./features/storyButtons";
@@ -114,9 +115,11 @@ function postFeatures(
   return [
     new PostActions({
       document,
-      downloader: posts,
-      notifier,
-      locator: new PagePostLocator(routes.posts, assets, carousel),
+      action: new PostTargetDownload(
+        new PagePostLocator(routes.posts, assets, carousel),
+        posts,
+        notifier,
+      ),
       postButtons: [new ShowingSlideButton(), new AllSlidesButton(carousel)],
       buttons,
     }),
