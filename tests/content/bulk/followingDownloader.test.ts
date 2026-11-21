@@ -9,6 +9,7 @@ import type { RunState } from "../../../src/content/bulk/runState";
 import {
   MemoryFolder,
   asFolder,
+  errorText,
   fakeBridge,
   reporter,
   signal,
@@ -65,7 +66,7 @@ function setup(
     store,
     resume,
     now: () => 1234,
-    tally: new ConsecutiveFailureTally(2, new StopOrBlockPolicy()),
+    tally: new ConsecutiveFailureTally(2, new StopOrBlockPolicy(), errorText()),
   });
   const report = reporter();
   const run = () =>

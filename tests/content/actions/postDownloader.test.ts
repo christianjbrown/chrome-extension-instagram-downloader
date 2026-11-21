@@ -2,7 +2,7 @@ import { SlideFiles } from "../../../src/content/mediaFiles";
 import { LargestVersionChooser } from "../../../src/content/versionChooser";
 import { PostDownloader } from "../../../src/content/actions/postDownloader";
 import { cdn, photo } from "../../fixtures";
-import { fakeBridge, notifier } from "../helpers";
+import { errorText, fakeBridge, notifier } from "../helpers";
 
 function setup() {
   const carousel = {
@@ -18,12 +18,13 @@ function setup() {
   return {
     downloader,
     notes,
-    posts: new PostDownloader(
+    posts: new PostDownloader({
       bridge,
       downloader,
-      notes,
-      new SlideFiles(new LargestVersionChooser()),
-    ),
+      notifier: notes,
+      files: new SlideFiles(new LargestVersionChooser()),
+      errors: errorText(),
+    }),
   };
 }
 
@@ -49,12 +50,13 @@ describe("PostDownloader", () => {
       },
     };
     const bridge = fakeBridge({ media: () => anonymous });
-    await new PostDownloader(
+    await new PostDownloader({
       bridge,
       downloader,
-      notifier(),
-      new SlideFiles(new LargestVersionChooser()),
-    ).download({ mediaId: "3", slide: undefined }, "bob");
+      notifier: notifier(),
+      files: new SlideFiles(new LargestVersionChooser()),
+      errors: errorText(),
+    }).download({ mediaId: "3", slide: undefined }, "bob");
     expect(downloader.download).toHaveBeenCalledWith(
       expect.objectContaining({ username: "bob" }),
     );

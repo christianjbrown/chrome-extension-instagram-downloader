@@ -1,39 +1,43 @@
 import type { InstagramMedia } from "../../shared/media";
-import type { Bridge, MediaFiles } from "../ports";
+import type { Bridge, ErrorDescriber, MediaFiles } from "../ports";
 import type { ItemDownloader } from "../saving/ports";
 import type { Notifier } from "../ui/ports";
 import type { PostTarget, PostDownloads } from "./ports";
-import { errorMessage } from "../errorText";
 
 const text = {
   nothing: "nothing to download",
   failed: "Could not download this post",
 } as const;
 
+export interface PostDownloaderDependencies {
+  readonly bridge: Bridge;
+  readonly downloader: ItemDownloader;
+  readonly notifier: Notifier;
+  readonly files: MediaFiles;
+  readonly errors: ErrorDescriber;
+}
+
 export class PostDownloader implements PostDownloads {
-  constructor(
-    private readonly bridge: Bridge,
-    private readonly downloader: ItemDownloader,
-    private readonly notifier: Notifier,
-    private readonly files: MediaFiles,
-  ) {}
+  constructor(private readonly deps: PostDownloaderDependencies) {}
 
   async download(target: PostTarget, owner?: string): Promise<void> {
     try {
-      const items = this.files.items(await this.find(target), owner);
+      const items = this.deps.files.items(await this.find(target), owner);
       const slide = "slide" in target ? target.slide : undefined;
       const chosen =
         slide === undefined ? items : items.slice(slide, slide + 1);
       if (chosen.length === 0) throw new Error(text.nothing);
-      for (const item of chosen) await this.downloader.download(item);
+      for (const item of chosen) await this.deps.downloader.download(item);
     } catch (error) {
-      this.notifier.error(`${text.failed}: ${errorMessage(error)}`);
+      this.deps.notifier.error(
+        `${text.failed}: ${this.deps.errors.describe(error)}`,
+      );
     }
   }
 
   private find(target: PostTarget): Promise<InstagramMedia> {
     return "mediaId" in target
-      ? this.bridge.call("media", { mediaId: target.mediaId })
-      : this.bridge.call("mediaByAsset", { asset: target.asset });
+      ? this.deps.bridge.call("media", { mediaId: target.mediaId })
+      : this.deps.bridge.call("mediaByAsset", { asset: target.asset });
   }
 }

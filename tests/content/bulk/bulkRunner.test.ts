@@ -1,6 +1,6 @@
 import { BulkRunner } from "../../../src/content/bulk/bulkRunner";
 import { abortError } from "../../../src/content/errors";
-import { notifier } from "../helpers";
+import { errorText, notifier } from "../helpers";
 
 function setup(
   pick: () => Promise<FileSystemDirectoryHandle> = () =>
@@ -19,7 +19,13 @@ function setup(
   return {
     panel,
     notes,
-    runner: new BulkRunner({ pick }, panel, notes, AbortController),
+    runner: new BulkRunner({
+      folders: { pick },
+      panel,
+      notifier: notes,
+      controllerClass: AbortController,
+      errors: errorText(),
+    }),
   };
 }
 

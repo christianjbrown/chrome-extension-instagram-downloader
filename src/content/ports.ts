@@ -18,6 +18,11 @@ export interface MediaFiles {
   items(media: InstagramMedia, owner?: string): DownloadItem[];
 }
 
+/** Turns any error into the words shown to the user. */
+export interface ErrorDescriber {
+  describe(error: unknown): string;
+}
+
 /** Picks the address a media is saved from. */
 export interface VersionChooser {
   url(media: InstagramMedia): string | undefined;

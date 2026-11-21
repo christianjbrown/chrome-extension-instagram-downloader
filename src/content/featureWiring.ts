@@ -40,7 +40,7 @@ import type { ContentEnvironment, Wiring } from "./wiring";
 
 // The buttons under a profile's header, in the order they appear.
 function profileButtons(
-  { bridge, notifier }: Wiring,
+  { bridge, notifier, errors }: Wiring,
   parts: BulkParts,
   viewers: CurrentViewer,
   downloader: ItemDownloader,
@@ -52,7 +52,7 @@ function profileButtons(
     ),
     new CommandButton(
       PROFILE_BUTTON_LOOKS.picture,
-      new ProfilePictureCommand(bridge, downloader, notifier),
+      new ProfilePictureCommand(bridge, downloader, notifier, errors),
     ),
     new CommandButton(
       PROFILE_BUTTON_LOOKS.folder,
@@ -103,7 +103,13 @@ function shared(wiring: Wiring) {
     parts,
     downloader,
     assets,
-    posts: new PostDownloader(bridge, downloader, notifier, wiring.files),
+    posts: new PostDownloader({
+      bridge,
+      downloader,
+      notifier,
+      files: wiring.files,
+      errors: wiring.errors,
+    }),
     viewers: new ViewerSource(bridge, Date.now, config.viewerRetryMs),
   };
 }
@@ -155,6 +161,7 @@ function accountFeatures(
         downloader,
         notifier,
         files: wiring.files,
+        errors: wiring.errors,
         kinds: [new UserStories(bridge), new HighlightStories(bridge)],
       }),
       assets,

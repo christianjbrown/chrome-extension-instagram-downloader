@@ -5,7 +5,7 @@ import {
   ProfilePictureCommand,
 } from "../../../src/content/actions/profileCommands";
 import type { BulkRunner } from "../../../src/content/bulk/bulkRunner";
-import { fakeBridge, notifier, reporter, signal } from "../helpers";
+import { fakeBridge, notifier, reporter, signal, errorText } from "../helpers";
 import type { BulkJob } from "../../../src/content/bulk/ports";
 
 const folder = {} as FileSystemDirectoryHandle;
@@ -64,7 +64,12 @@ describe("ProfilePictureCommand", () => {
         totalPosts: 0,
       }),
     });
-    await new ProfilePictureCommand(bridge, downloader, notifier()).run("a");
+    await new ProfilePictureCommand(
+      bridge,
+      downloader,
+      notifier(),
+      errorText(),
+    ).run("a");
     expect(downloader.download).toHaveBeenCalledWith({
       id: "9_profile",
       username: "a",
@@ -87,6 +92,7 @@ describe("ProfilePictureCommand", () => {
       noPicture,
       { download: vi.fn() },
       notes,
+      errorText(),
     ).run("a");
     expect(notes.error).toHaveBeenCalledWith(
       "Could not download the profile picture: no picture",

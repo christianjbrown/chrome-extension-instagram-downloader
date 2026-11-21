@@ -4,7 +4,7 @@ import { HighlightStories } from "../../../src/content/actions/highlightStories"
 import { StoryDownloader } from "../../../src/content/actions/storyDownloader";
 import { UserStories } from "../../../src/content/actions/userStories";
 import { photo } from "../../fixtures";
-import { fakeBridge, notifier } from "../helpers";
+import { fakeBridge, notifier, errorText } from "../helpers";
 
 function setup() {
   const bridge = fakeBridge({
@@ -34,6 +34,7 @@ function setup() {
       downloader,
       notifier: notes,
       files: new SlideFiles(new LargestVersionChooser()),
+      errors: errorText(),
       kinds: [new UserStories(bridge), new HighlightStories(bridge)],
     }),
   };
@@ -81,6 +82,7 @@ describe("StoryDownloader", () => {
       downloader,
       notifier: notes,
       files: new SlideFiles(new LargestVersionChooser()),
+      errors: errorText(),
       kinds: [],
     });
     await stories.all(highlight);

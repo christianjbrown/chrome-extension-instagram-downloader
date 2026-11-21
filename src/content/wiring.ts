@@ -2,7 +2,7 @@
 import type { KeyValueArea } from "./bulk/runStore";
 import type { ContentConfig } from "./config";
 import type { ShowDirectoryPicker } from "./saving/folderPicker";
-import type { Bridge, MediaFiles, Scheduler } from "./ports";
+import type { Bridge, ErrorDescriber, MediaFiles, Scheduler } from "./ports";
 import type { ButtonFactory, Notifier } from "./ui/ports";
 
 export interface ContentEnvironment {
@@ -20,4 +20,5 @@ export interface Wiring {
   readonly notifier: Notifier;
   readonly buttons: ButtonFactory;
   readonly files: MediaFiles;
+  readonly errors: ErrorDescriber;
 }

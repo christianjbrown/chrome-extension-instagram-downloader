@@ -1,6 +1,6 @@
-import { errorMessage } from "../errorText";
 import { BlockedError } from "../errors";
 import { describeFailureStop, describeUnreadable } from "./progressText";
+import type { ErrorDescriber } from "../ports";
 import type { FailureTally, RunStopPolicy } from "./ports";
 
 // Keeps a run of the following list going past one account that will not
@@ -13,6 +13,7 @@ export class ConsecutiveFailureTally implements FailureTally {
   constructor(
     private readonly limit: number,
     private readonly stops: RunStopPolicy,
+    private readonly errors: ErrorDescriber,
   ) {}
 
   reset(): void {
@@ -30,7 +31,7 @@ export class ConsecutiveFailureTally implements FailureTally {
     this.inARow += 1;
     if (this.inARow >= this.limit)
       throw new BlockedError(
-        describeFailureStop(this.inARow, username, errorMessage(error)),
+        describeFailureStop(this.inARow, username, this.errors.describe(error)),
       );
   }
 
