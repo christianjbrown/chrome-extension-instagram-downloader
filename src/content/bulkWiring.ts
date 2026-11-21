@@ -22,7 +22,6 @@ import { blobFetcher } from "./saving/fetchBlob";
 import { SafeFileNamer } from "./saving/fileNamer";
 import { FolderPicker } from "./saving/folderPicker";
 import { MemoryFolderStore } from "./saving/folderStore";
-import { isMediaUrl } from "../shared/mediaUrl";
 import { StoppedRunWording, WordedErrors } from "./errorText";
 import { SecondCountdown } from "./ui/countdown";
 import { ProgressPanel } from "./ui/progressPanel";
@@ -90,10 +89,10 @@ function jobRunner(
 }
 
 export function bulk(wiring: Wiring): BulkParts {
-  const { env, config, bridge, errors } = wiring;
+  const { env, config, bridge, errors, mediaUrls } = wiring;
   const pacer = bulkPacer(wiring);
   const namer = new SafeFileNamer();
-  const fetchBlob = blobFetcher((url) => env.window.fetch(url), isMediaUrl);
+  const fetchBlob = blobFetcher((url) => env.window.fetch(url), mediaUrls);
   const writer = new DirectoryWriter(fetchBlob, namer);
   const stops = stopPolicies();
   const archiver = new AccountArchiver({

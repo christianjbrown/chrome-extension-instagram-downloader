@@ -1,8 +1,17 @@
 import { SlideFiles } from "../../../src/content/mediaFiles";
 import { LargestVersionChooser } from "../../../src/content/versionChooser";
+import { FirstKeyFinder } from "../../../src/content/actions/mediaFinder";
+import {
+  AssetLookup,
+  MediaIdLookup,
+} from "../../../src/content/actions/mediaLookups";
 import { PostDownloader } from "../../../src/content/actions/postDownloader";
+import type { Bridge } from "../../../src/content/ports";
 import { cdn, photo } from "../../fixtures";
 import { errorText, fakeBridge, notifier } from "../helpers";
+
+const finder = (bridge: Bridge) =>
+  new FirstKeyFinder([new MediaIdLookup(bridge), new AssetLookup(bridge)]);
 
 function setup() {
   const carousel = {
@@ -19,7 +28,7 @@ function setup() {
     downloader,
     notes,
     posts: new PostDownloader({
-      bridge,
+      finder: finder(bridge),
       downloader,
       notifier: notes,
       files: new SlideFiles(new LargestVersionChooser()),
@@ -51,7 +60,7 @@ describe("PostDownloader", () => {
     };
     const bridge = fakeBridge({ media: () => anonymous });
     await new PostDownloader({
-      bridge,
+      finder: finder(bridge),
       downloader,
       notifier: notifier(),
       files: new SlideFiles(new LargestVersionChooser()),
@@ -81,5 +90,21 @@ describe("PostDownloader", () => {
     );
     await posts.download({ mediaId: "1", slide: 7 });
     expect(notes.error).toHaveBeenCalledTimes(2);
+  });
+
+  it("explains when nothing can find the post", async () => {
+    const notes = notifier();
+    const downloader = { download: vi.fn(() => Promise.resolve()) };
+    await new PostDownloader({
+      finder: new FirstKeyFinder([]),
+      downloader,
+      notifier: notes,
+      files: new SlideFiles(new LargestVersionChooser()),
+      errors: errorText(),
+    }).download({ asset: "a.jpg" });
+    expect(notes.error).toHaveBeenCalledWith(
+      "Could not download this post: nothing to download",
+    );
+    expect(downloader.download).not.toHaveBeenCalled();
   });
 });

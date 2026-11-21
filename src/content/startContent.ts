@@ -21,12 +21,16 @@ import { LargestVersionChooser } from "./versionChooser";
 
 import { features } from "./featureWiring";
 import type { ContentEnvironment } from "./wiring";
-import { PROCEDURE_OUTPUTS } from "./procedureWiring";
+import { procedureOutputs } from "./procedureWiring";
+import type { MediaUrlPolicy } from "../shared/checks";
+import { MediaSchema } from "../shared/mediaSchema";
+import { isMediaUrl } from "../shared/mediaUrl";
 
 function pageBridge(
   env: ContentEnvironment,
   config: ContentConfig,
   scheduler: Scheduler,
+  mediaUrls: MediaUrlPolicy,
 ): Bridge {
   return new ValidatedBridge(
     new PageBridge(
@@ -40,7 +44,7 @@ function pageBridge(
         timeoutMs: config.bridgeTimeoutMs,
       },
     ),
-    PROCEDURE_OUTPUTS,
+    procedureOutputs(new MediaSchema(mediaUrls)),
   );
 }
 
@@ -56,7 +60,9 @@ export function startContent(
     scheduler,
     config.toastLifetimeMs,
   );
-  const bridge = pageBridge(env, config, scheduler);
+  // Every media address, in an answer or a download, is held to the same
+  // host policy.
+  const bridge = pageBridge(env, config, scheduler, isMediaUrl);
   const buttons = new DomButtons(document);
   const files = new SlideFiles(new LargestVersionChooser());
   const wiring = {
@@ -67,6 +73,7 @@ export function startContent(
     notifier,
     buttons,
     files,
+    mediaUrls: isMediaUrl,
     errors: new WordedErrors(
       [new ReloadedExtensionWording()],
       new OwnMessage(),

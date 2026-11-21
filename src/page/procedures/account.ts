@@ -12,12 +12,12 @@ import type {
 } from "../ports";
 import { found } from "./lookup";
 
-type Name = typeof ACCOUNT_PROCEDURE.name;
+type Name = typeof ACCOUNT_PROCEDURE;
 
 const notFound = "Could not find";
 
 export class AccountProcedure implements PageProcedure<Name> {
-  readonly name = ACCOUNT_PROCEDURE.name;
+  readonly name = ACCOUNT_PROCEDURE;
 
   constructor(
     private readonly users: UserIdLookup,

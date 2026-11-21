@@ -1,3 +1,4 @@
+import type { MediaUrlPolicy } from "../../shared/checks";
 import type { FetchBlob } from "./ports";
 const text = {
   refused: "Refusing to download that address",
@@ -8,7 +9,7 @@ const text = {
 // pointed at another site.
 export function blobFetcher(
   fetchFn: (url: string) => Promise<Response>,
-  isAllowed: (url: string) => boolean,
+  isAllowed: MediaUrlPolicy,
 ): FetchBlob {
   return async (url) => {
     if (!isAllowed(url)) throw new Error(text.refused);

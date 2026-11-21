@@ -1,5 +1,6 @@
 // What every part of the content script's object graph is built from.
 import type { KeyValueArea } from "./bulk/runStore";
+import type { MediaUrlPolicy } from "../shared/checks";
 import type { ContentConfig } from "./config";
 import type { ShowDirectoryPicker } from "./saving/folderPicker";
 import type { Bridge, ErrorDescriber, MediaFiles, Scheduler } from "./ports";
@@ -20,5 +21,7 @@ export interface Wiring {
   readonly notifier: Notifier;
   readonly buttons: ButtonFactory;
   readonly files: MediaFiles;
+  /** Which addresses media may be fetched from. */
+  readonly mediaUrls: MediaUrlPolicy;
   readonly errors: ErrorDescriber;
 }

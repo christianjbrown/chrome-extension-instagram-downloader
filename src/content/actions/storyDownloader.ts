@@ -1,8 +1,13 @@
-import type { DownloadItem, InstagramMedia } from "../../shared/media";
-import type { Bridge, ErrorDescriber, MediaFiles } from "../ports";
+import type { DownloadItem } from "../../shared/media";
+import type { ErrorDescriber, MediaFiles } from "../ports";
 import type { ItemDownloader } from "../saving/ports";
 import type { Notifier } from "../ui/ports";
-import type { StoryDownloads, StoryKind, StoryRoute } from "./ports";
+import type {
+  MediaFinder,
+  StoryDownloads,
+  StoryKind,
+  StoryRoute,
+} from "./ports";
 
 const text = {
   unknownStory: "could not tell which story is showing",
@@ -10,7 +15,8 @@ const text = {
 } as const;
 
 export interface StoryDownloaderDependencies {
-  readonly bridge: Bridge;
+  /** Finds the story showing, by its id or by the picture on screen. */
+  readonly finder: MediaFinder;
   readonly downloader: ItemDownloader;
   readonly notifier: Notifier;
   readonly files: MediaFiles;
@@ -25,8 +31,12 @@ export class StoryDownloader implements StoryDownloads {
   async current(route: StoryRoute, asset: string | undefined): Promise<void> {
     await this.attempt(async () => {
       const kind = this.kind(route);
-      const media = await this.findCurrent(kind.mediaId(route), asset);
-      return this.deps.files.items(media, kind.owner(route));
+      const found = this.deps.finder.find({
+        mediaId: kind.mediaId(route),
+        asset,
+      });
+      if (found === undefined) throw new Error(text.unknownStory);
+      return this.deps.files.items(await found, kind.owner(route));
     });
   }
 
@@ -45,17 +55,6 @@ export class StoryDownloader implements StoryDownloads {
     const kind = this.deps.kinds.find((candidate) => candidate.matches(route));
     if (kind === undefined) throw new Error(text.unknownStory);
     return kind;
-  }
-
-  private findCurrent(
-    mediaId: string | undefined,
-    asset: string | undefined,
-  ): Promise<InstagramMedia> {
-    if (mediaId !== undefined)
-      return this.deps.bridge.call("media", { mediaId });
-    if (asset !== undefined)
-      return this.deps.bridge.call("mediaByAsset", { asset });
-    return Promise.reject(new Error(text.unknownStory));
   }
 
   private async attempt(items: () => Promise<DownloadItem[]>): Promise<void> {

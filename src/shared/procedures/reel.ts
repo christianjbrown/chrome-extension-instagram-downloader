@@ -1,6 +1,8 @@
 // A reel of stories, by the reel's id.
-import type { ProcedureOutput } from "../bridge";
-import { reel } from "../schemas";
+import type { ProcedureOutput, Reel } from "../bridge";
+import type { ReelCheck } from "../checks";
+
+export const REEL_PROCEDURE = "reel";
 
 declare module "../bridge" {
   interface Procedures {
@@ -8,7 +10,12 @@ declare module "../bridge" {
   }
 }
 
-export const REEL_PROCEDURE = {
-  name: "reel",
-  parse: reel,
-} as const satisfies ProcedureOutput<"reel">;
+export class ReelOutput implements ProcedureOutput<typeof REEL_PROCEDURE> {
+  readonly name = REEL_PROCEDURE;
+
+  constructor(private readonly check: ReelCheck) {}
+
+  parse(value: unknown): Reel {
+    return this.check.reel(value);
+  }
+}

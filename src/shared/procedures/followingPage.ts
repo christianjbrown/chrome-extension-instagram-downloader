@@ -1,6 +1,8 @@
 // One page of who an account follows.
-import type { ProcedureOutput } from "../bridge";
+import type { FollowingPage, ProcedureOutput } from "../bridge";
 import { list, optional, record, text } from "../schemas";
+
+export const FOLLOWING_PAGE_PROCEDURE = "followingPage";
 
 declare module "../bridge" {
   interface Procedures {
@@ -11,9 +13,12 @@ declare module "../bridge" {
   }
 }
 
-export const FOLLOWING_PAGE_PROCEDURE = {
-  name: "followingPage",
-  parse: (value) => {
+export class FollowingPageOutput implements ProcedureOutput<
+  typeof FOLLOWING_PAGE_PROCEDURE
+> {
+  readonly name = FOLLOWING_PAGE_PROCEDURE;
+
+  parse(value: unknown): FollowingPage {
     const raw = record(value, "page of accounts");
     return {
       usernames: list(
@@ -23,5 +28,5 @@ export const FOLLOWING_PAGE_PROCEDURE = {
       ),
       next: optional(raw.next, (v) => text(v, "cursor")),
     };
-  },
-} as const satisfies ProcedureOutput<"followingPage">;
+  }
+}

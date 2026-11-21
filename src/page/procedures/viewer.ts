@@ -4,10 +4,10 @@ import { isRecord } from "../../shared/json";
 import { VIEWER_PROCEDURE } from "../../shared/procedures/viewer";
 import type { PageProcedure, ProfileQuery, ViewerIdSource } from "../ports";
 
-type Name = typeof VIEWER_PROCEDURE.name;
+type Name = typeof VIEWER_PROCEDURE;
 
 export class ViewerProcedure implements PageProcedure<Name> {
-  readonly name = VIEWER_PROCEDURE.name;
+  readonly name = VIEWER_PROCEDURE;
 
   constructor(
     private readonly viewer: ViewerIdSource,
