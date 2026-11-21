@@ -6,6 +6,7 @@ import { ConsecutiveFailureTally } from "./bulk/failureTally";
 import { FollowingDownloader } from "./bulk/followingDownloader";
 import { FollowingLister } from "./bulk/followingLister";
 import { GatedPostTotals } from "./bulk/postTotals";
+import { FollowedAccountsResume } from "./bulk/resumePolicy";
 import {
   AnyStopPolicy,
   ReloadedExtensionPolicy,
@@ -86,6 +87,7 @@ export function bulk(wiring: Wiring): BulkParts {
     lister: new FollowingLister(bridge, pacer.gate),
     archiver,
     store: runs,
+    resume: new FollowedAccountsResume(),
     now: Date.now,
     tally: new ConsecutiveFailureTally(config.failuresInARow, stops.any),
   });

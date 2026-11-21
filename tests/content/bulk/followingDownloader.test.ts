@@ -3,7 +3,9 @@ import { ConsecutiveFailureTally } from "../../../src/content/bulk/failureTally"
 import { StopOrBlockPolicy } from "../../../src/content/bulk/stopPolicies";
 import { FollowingDownloader } from "../../../src/content/bulk/followingDownloader";
 import { FollowingLister } from "../../../src/content/bulk/followingLister";
+import type { ResumePolicy } from "../../../src/content/bulk/ports";
 import { RunStore } from "../../../src/content/bulk/runStore";
+import type { RunState } from "../../../src/content/bulk/runState";
 import {
   MemoryFolder,
   asFolder,
@@ -17,7 +19,28 @@ const twoPages = ({ next }: { next: string | undefined }): FollowingPage =>
     ? { usernames: ["a", "b"], next: "n" }
     : { usernames: ["b", "c"], next: undefined };
 
-function setup(initial?: unknown, followingPage = twoPages) {
+// Resumes without dropping anyone, so these tests only see what the
+// downloader does with the policy's answers.
+const fakeResume = (): ResumePolicy => ({
+  begin: vi.fn((state: RunState, following: string[]) => ({
+    ...state,
+    following,
+  })),
+  remaining: vi.fn((state: RunState, following: string[]) =>
+    following.filter((name) => !state.done.includes(name)),
+  ),
+  finished: vi.fn((state: RunState) => ({
+    ...state,
+    following: null,
+    done: [],
+  })),
+});
+
+function setup(
+  initial?: unknown,
+  followingPage = twoPages,
+  resume = fakeResume(),
+) {
   const data: Record<string, unknown> =
     initial === undefined ? {} : { "followingDownload:1": initial };
   const store = new RunStore({
@@ -40,6 +63,7 @@ function setup(initial?: unknown, followingPage = twoPages) {
     lister: new FollowingLister(bridge, gate as never),
     archiver: archiver,
     store,
+    resume,
     now: () => 1234,
     tally: new ConsecutiveFailureTally(2, new StopOrBlockPolicy()),
   });
@@ -101,20 +125,24 @@ describe("FollowingDownloader", () => {
     ]);
   });
 
-  it("lists again on resume and skips accounts unfollowed since the run began", async () => {
-    const { run, archiver, data } = setup({
-      following: ["a", "gone", "b", "left", "c"],
-      done: ["a", "gone"],
-      completed: { a: 1, gone: 1 },
-    });
-    await expect(run()).resolves.toBe("Finished all 3 accounts you follow.");
+  it("archives what the resume policy leaves and stores what it begins and finishes", async () => {
+    const begun: RunState = { following: ["x"], done: [], completed: {} };
+    const ended: RunState = { following: null, done: [], completed: {} };
+    const resume: ResumePolicy = {
+      begin: vi.fn(() => begun),
+      remaining: vi.fn(() => ["c"]),
+      finished: vi.fn(() => ended),
+    };
+    const stored = { following: ["a"], done: ["a"], completed: { a: 1 } };
+    const { run, archiver, data } = setup(stored, twoPages, resume);
+    await run();
+    expect(resume.begin).toHaveBeenCalledWith(stored, ["a", "b", "c"]);
+    expect(resume.remaining).toHaveBeenCalledWith(begun, ["a", "b", "c"]);
+    expect(resume.finished).toHaveBeenCalledWith(begun);
     expect(
       archiver.archive.mock.calls.map(([request]) => request.username),
-    ).toEqual(["b", "c"]);
-    expect(data["followingDownload:1"]).toMatchObject({
-      following: null,
-      done: [],
-    });
+    ).toEqual(["c"]);
+    expect(data["followingDownload:1"]).toEqual(ended);
   });
 
   it("carries on past an account that fails and names it at the end", async () => {

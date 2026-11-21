@@ -6,6 +6,7 @@ import type {
   FollowingSource,
   RunStateStore,
   FollowingRequest,
+  ResumePolicy,
   FollowingRunner,
 } from "./ports";
 import {
@@ -13,7 +14,7 @@ import {
   describeAccountsFinished,
   describeFollowingFinished,
 } from "./progressText";
-import { begin, finished, remaining, type RunState } from "./runState";
+import type { RunState } from "./runState";
 
 // Archives every account the viewer follows, one at a time, keeping its
 // place so a stopped run carries on where it left off. Every run, a resumed
@@ -25,6 +26,7 @@ export interface FollowingDependencies {
   readonly lister: FollowingSource;
   readonly archiver: Archiver;
   readonly store: RunStateStore;
+  readonly resume: ResumePolicy;
   readonly now: () => number;
   readonly tally: FailureTally;
 }
@@ -36,9 +38,10 @@ export class FollowingDownloader implements FollowingRunner {
     const { viewer } = request;
     const stored = await this.deps.store.load(viewer.id);
     const following = await this.deps.lister.list(request);
-    const state = begin(stored, following);
+    const { resume } = this.deps;
+    const state = resume.begin(stored, following);
     await this.deps.store.save(viewer.id, state);
-    const left = remaining(state, following);
+    const left = resume.remaining(state, following);
     this.deps.tally.reset();
     const before = following.length - left.length;
     for (const [index, username] of left.entries()) {
@@ -50,7 +53,7 @@ export class FollowingDownloader implements FollowingRunner {
         describeAccountsFinished(following.length),
         ALL_DONE,
       );
-    await this.deps.store.save(viewer.id, finished(state));
+    await this.deps.store.save(viewer.id, resume.finished(state));
     return `${describeFollowingFinished(following.length)}${this.deps.tally.summary()}`;
   }
 
