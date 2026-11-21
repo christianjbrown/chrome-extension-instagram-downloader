@@ -19,7 +19,7 @@ export interface KeyedStore<V> {
 
 /** A store whose values can also be gone through, for lookups by anything else. */
 export interface IterableStore<V> extends KeyedStore<V> {
-  values(): MapIterator<V>;
+  values(): Iterable<V>;
 }
 
 /** Takes in whatever Instagram sent the page. */

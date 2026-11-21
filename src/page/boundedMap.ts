@@ -22,7 +22,7 @@ export class BoundedMap<V> implements IterableStore<V> {
     }
   }
 
-  values(): MapIterator<V> {
+  values(): Iterable<V> {
     return this.entries.values();
   }
 }
