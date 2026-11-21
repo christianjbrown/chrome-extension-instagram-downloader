@@ -3,7 +3,7 @@
 import type { PostsPage } from "../shared/bridge";
 import type { InstagramMedia } from "../shared/media";
 import { isJsonObject, type JsonObject } from "../shared/json";
-import type { ModuleRequire, Relay } from "./relayClient";
+import type { Relay } from "./relayClient";
 import { MODULES, POST_BY_ID_MEMBER, RESPONSE_KEYS } from "./instagramApi";
 
 export interface ProfileUser {
@@ -56,7 +56,6 @@ function profilePicture(user: JsonObject): string | undefined {
 }
 
 export interface Queries {
-  viewerId(): string;
   mediaById(mediaId: string): Promise<InstagramMedia>;
   postsPage(username: string, cursor: string | undefined): Promise<PostsPage>;
   profile(userId: string): Promise<ProfileUser>;
@@ -65,16 +64,8 @@ export interface Queries {
 export class InstagramQueries implements Queries {
   constructor(
     private readonly relay: Relay,
-    private readonly require: ModuleRequire,
     private readonly postsPageSize: number,
   ) {}
-
-  viewerId(): string {
-    const config = this.require(MODULES.config) as {
-      getViewerId(): string | number;
-    };
-    return String(config.getViewerId());
-  }
 
   async mediaById(mediaId: string): Promise<InstagramMedia> {
     const query = this.relay.query(MODULES.postQuery, POST_BY_ID_MEMBER);

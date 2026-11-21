@@ -4,8 +4,8 @@ import { memory } from "./memory";
 
 function setup() {
   const { cache, media, users, reels } = memory();
+  const viewer = { viewerId: vi.fn(() => "1") };
   const queries = {
-    viewerId: vi.fn(() => "1"),
     profile: vi.fn(() =>
       Promise.resolve({
         username: "me",
@@ -25,6 +25,7 @@ function setup() {
     page: vi.fn(() => Promise.resolve({ usernames: ["a"], next: undefined })),
   };
   const procedures = createProcedures({
+    viewer,
     media,
     users,
     reels,

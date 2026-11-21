@@ -14,6 +14,7 @@ import { MediaCache } from "./mediaCache";
 import { MediaIndex } from "./mediaIndex";
 import { ReelIndex } from "./reelIndex";
 import { UserIndex } from "./userIndex";
+import { PolarisViewerId } from "./viewerIdentity";
 import { createProcedures } from "./procedures";
 import { RelayClient, windowRequire } from "./relayClient";
 import { InstagramApiPolicy, tapFetch, tapXhr } from "./responseTap";
@@ -48,9 +49,9 @@ export function startPage(target: PageWindow, config: PageConfig): void {
     media,
     users,
     reels,
+    viewer: new PolarisViewerId(require),
     queries: new InstagramQueries(
       new RelayClient(require),
-      require,
       config.postsPageSize,
     ),
     following: new FollowingClient(

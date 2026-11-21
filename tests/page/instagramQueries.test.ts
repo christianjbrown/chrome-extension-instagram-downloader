@@ -2,7 +2,7 @@ import { InstagramQueries } from "../../src/page/instagramQueries";
 import type { Relay } from "../../src/page/relayClient";
 import { photo } from "../fixtures";
 
-function queries(data: unknown, modules: Record<string, unknown> = {}) {
+function queries(data: unknown) {
   const relay = {
     query: vi.fn((name: string, member?: string) => ({
       params: `${name}.${member ?? ""}`,
@@ -11,23 +11,11 @@ function queries(data: unknown, modules: Record<string, unknown> = {}) {
   };
   return {
     relay,
-    queries: new InstagramQueries(
-      relay as unknown as Relay,
-      (name) => modules[name],
-      12,
-    ),
+    queries: new InstagramQueries(relay as unknown as Relay, 12),
   };
 }
 
 describe("InstagramQueries", () => {
-  it("reads the signed-in account id", () => {
-    const { queries: q } = queries(
-      {},
-      { PolarisConfig: { getViewerId: () => 42 } },
-    );
-    expect(q.viewerId()).toBe("42");
-  });
-
   it("loads a post by id", async () => {
     const media = photo("5");
     const { relay, queries: q } = queries({

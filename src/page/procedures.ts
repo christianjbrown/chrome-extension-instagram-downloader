@@ -4,12 +4,14 @@ import type { Account, PostsPage, Reel } from "../shared/bridge";
 import type { Handlers } from "./bridgeServer";
 import type { FollowingPages } from "./followingClient";
 import type { Queries } from "./instagramQueries";
+import type { ViewerIdSource } from "./viewerIdentity";
 import type { MediaLookup, ReelLookup, UserLookup } from "./ports";
 
 interface Dependencies {
   readonly media: MediaLookup;
   readonly users: UserLookup;
   readonly reels: ReelLookup;
+  readonly viewer: ViewerIdSource;
   readonly queries: Queries;
   readonly following: FollowingPages;
 }
@@ -70,10 +72,10 @@ function reel(reels: ReelLookup, reelId: string | undefined): Reel {
 }
 
 export function createProcedures(dependencies: Dependencies): Handlers {
-  const { media, users, reels, queries, following } = dependencies;
+  const { viewer, media, users, reels, queries, following } = dependencies;
   return {
     viewer: async () => {
-      const id = queries.viewerId();
+      const id = viewer.viewerId();
       const profile = await queries.profile(id);
       return { id, username: profile.username };
     },
