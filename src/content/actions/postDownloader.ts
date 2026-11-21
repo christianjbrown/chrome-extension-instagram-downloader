@@ -14,14 +14,18 @@ export type PostTarget =
   | { readonly mediaId: string; readonly slide: number | undefined }
   | { readonly asset: string };
 
-export class PostDownloader {
+export interface PostDownloads {
+  /** `owner` names the files when the post itself does not say whose it is. */
+  download(target: PostTarget, owner?: string): Promise<void>;
+}
+
+export class PostDownloader implements PostDownloads {
   constructor(
     private readonly bridge: Bridge,
     private readonly downloader: ItemDownloader,
     private readonly notifier: Notifier,
   ) {}
 
-  /** `owner` names the files when the post itself does not say whose it is. */
   async download(target: PostTarget, owner?: string): Promise<void> {
     try {
       const items = downloadItems(await this.find(target), owner);

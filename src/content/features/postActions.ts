@@ -1,5 +1,5 @@
 import { shortcodeFromPath, shortcodeToMediaId } from "../../shared/shortcode";
-import type { PostDownloader, PostTarget } from "../actions/postDownloader";
+import type { PostDownloads, PostTarget } from "../actions/postDownloader";
 import { carouselSlide, isCarousel } from "../dom/carousel";
 import { parseRoute } from "../dom/route";
 import type { AssetFinder } from "../dom/visibleAsset";
@@ -74,7 +74,7 @@ const postButtons: readonly PostButton[] = [
 export class PostActions implements Feature {
   constructor(
     private readonly view: PageView,
-    private readonly downloader: PostDownloader,
+    private readonly downloader: PostDownloads,
     private readonly notifier: Notifier,
     private readonly assets: AssetFinder,
   ) {}

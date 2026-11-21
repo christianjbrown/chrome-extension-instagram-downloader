@@ -8,7 +8,7 @@ import {
   ProfilePictureCommand,
 } from "./actions/profileCommands";
 import { StoryDownloader } from "./actions/storyDownloader";
-import { ViewerSource } from "./actions/viewerSource";
+import { ViewerSource, type CurrentViewer } from "./actions/viewerSource";
 import { type Bridge, PageBridge } from "./bridgeClient";
 import { AccountArchiver } from "./bulk/accountArchiver";
 import { BulkRunner } from "./bulk/bulkRunner";
@@ -36,7 +36,7 @@ import { TimerSleeper } from "./pacing/sleeper";
 import { DirectoryWriter } from "./saving/directoryWriter";
 import { blobFetcher } from "./saving/fetchBlob";
 import { SafeFileNamer } from "./saving/fileNamer";
-import { FileDownloader } from "./saving/fileDownloader";
+import { FileDownloader, type ItemDownloader } from "./saving/fileDownloader";
 import { FolderPicker, type ShowDirectoryPicker } from "./saving/folderPicker";
 import { MemoryFolderStore } from "./saving/folderStore";
 import { LegacyFolderDatabase } from "./saving/legacyFolderDatabase";
@@ -44,7 +44,7 @@ import { pageOrigin } from "../shared/origin";
 import { isMediaUrl } from "../shared/mediaUrl";
 import { ValidatedBridge } from "./validatedBridge";
 import { TimeoutScheduler, type Scheduler } from "./scheduler";
-import { ToastNotifier } from "./ui/notifier";
+import { ToastNotifier, type Notifier } from "./ui/notifier";
 import { SecondCountdown } from "./ui/countdown";
 import { ProgressPanel } from "./ui/progressPanel";
 
@@ -54,23 +54,29 @@ export interface ContentEnvironment {
   readonly storage: KeyValueArea;
 }
 
-function bulkPacer({ pacing }: ContentConfig): Pacer {
-  const sleeper = new TimerSleeper();
+// What every part of the graph is built from.
+interface Wiring {
+  readonly env: ContentEnvironment;
+  readonly config: ContentConfig;
+  readonly scheduler: Scheduler;
+  readonly bridge: Bridge;
+  readonly notifier: Notifier;
+}
+
+function bulkPacer({ config, scheduler }: Wiring): Pacer {
+  const { pacing } = config;
+  const sleeper = new TimerSleeper(scheduler, Math.random);
   const gate = new ApiGate(
     sleeper,
     new HourlyBudget(pacing.apiCallsPerHour, sleeper, Date.now),
     pacing,
   );
-  return { gate, sleeper, pacing };
+  return { gate, sleeper, fileDelayMs: pacing.fileDelayMs };
 }
 
-function bulk(
-  env: ContentEnvironment,
-  config: ContentConfig,
-  bridge: Bridge,
-  notifier: ToastNotifier,
-) {
-  const pacer = bulkPacer(config);
+function bulk(wiring: Wiring) {
+  const { env, config, bridge, notifier, scheduler } = wiring;
+  const pacer = bulkPacer(wiring);
   const namer = new SafeFileNamer();
   const fetchBlob = blobFetcher((url) => env.window.fetch(url), isMediaUrl);
   const writer = new DirectoryWriter(fetchBlob, namer);
@@ -83,7 +89,7 @@ function bulk(
   });
   const runs = new RunStore(env.storage);
   const following = new FollowingDownloader({
-    lister: new FollowingLister(bridge, pacer),
+    lister: new FollowingLister(bridge, pacer.gate),
     archiver,
     store: runs,
     now: Date.now,
@@ -96,7 +102,7 @@ function bulk(
     folders,
     new ProgressPanel(
       env.window.document,
-      new SecondCountdown(new TimeoutScheduler(), Date.now),
+      new SecondCountdown(scheduler, Date.now),
     ),
     notifier,
     env.window.AbortController,
@@ -126,16 +132,11 @@ function pageBridge(
 
 type BulkParts = ReturnType<typeof bulk>;
 
-interface SingleDownloads {
-  readonly bridge: Bridge;
-  readonly downloader: FileDownloader;
-  readonly notifier: ToastNotifier;
-}
-
 function profileCommands(
+  { bridge, notifier }: Wiring,
   parts: BulkParts,
-  viewers: ViewerSource,
-  { bridge, downloader, notifier }: SingleDownloads,
+  viewers: CurrentViewer,
+  downloader: ItemDownloader,
 ): ProfileCommands {
   return {
     account: new DownloadAccountCommand(parts.runner, parts.archiver),
@@ -149,12 +150,8 @@ function profileCommands(
   };
 }
 
-function features(
-  env: ContentEnvironment,
-  config: ContentConfig,
-  bridge: Bridge,
-  notifier: ToastNotifier,
-): Feature[] {
+function features(wiring: Wiring): Feature[] {
+  const { env, config, bridge, notifier } = wiring;
   const { document } = env.window;
   const view: PageView = {
     document,
@@ -164,7 +161,7 @@ function features(
     { viewportHeight: () => env.window.innerHeight },
     config.assetMinimumSide,
   );
-  const parts = bulk(env, config, bridge, notifier);
+  const parts = bulk(wiring);
   const downloader = new FileDownloader(
     document,
     parts.fetchBlob,
@@ -173,11 +170,7 @@ function features(
   );
   const posts = new PostDownloader(bridge, downloader, notifier);
   const viewers = new ViewerSource(bridge, Date.now, config.viewerRetryMs);
-  const commands = profileCommands(parts, viewers, {
-    bridge,
-    downloader,
-    notifier,
-  });
+  const commands = profileCommands(wiring, parts, viewers, downloader);
   return [
     new PostActions(view, posts, notifier, assets),
     new GridButtons(view, posts, config.gridMinimumWidth),
@@ -196,18 +189,15 @@ export function startContent(
 ): void {
   const { document } = env.window;
   new LegacyFolderDatabase(env.window.indexedDB).remove();
-  const scheduler = new TimeoutScheduler();
+  const scheduler = new TimeoutScheduler(env.window);
   const notifier = new ToastNotifier(
     document,
     scheduler,
     config.toastLifetimeMs,
   );
   const bridge = pageBridge(env, config, scheduler);
-  new PageScanner(
-    features(env, config, bridge, notifier),
-    scheduler,
-    config.scanDelayMs,
-  ).start(
+  const wiring = { env, config, scheduler, bridge, notifier };
+  new PageScanner(features(wiring), scheduler, config.scanDelayMs).start(
     document.body,
     (callback) => new env.window.MutationObserver(callback),
   );

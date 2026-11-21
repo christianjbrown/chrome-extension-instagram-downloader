@@ -33,5 +33,11 @@ export const HEADERS = {
   claim: "x-ig-www-claim",
 } as const;
 
+/** Query parameters of the REST following list. */
+export const FOLLOWING_QUERY = {
+  count: "count",
+  after: "max_id",
+} as const;
+
 /** What a REST answer says in its status field when it turned a call down. */
 export const FAILED_STATUS = "fail";

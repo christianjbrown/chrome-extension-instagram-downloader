@@ -42,6 +42,10 @@ function environment() {
     indexedDB: new IDBFactory(),
     MutationObserver,
     MessageChannel,
+    setTimeout: (callback: () => void, ms: number) => setTimeout(callback, ms),
+    clearTimeout: (timer: number) => {
+      clearTimeout(timer);
+    },
     URL: { createObjectURL: () => "blob:1", revokeObjectURL: vi.fn() },
   };
   const storage = {

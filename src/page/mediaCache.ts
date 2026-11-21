@@ -13,7 +13,21 @@ import {
   type Json,
 } from "./mediaShapes";
 
-export class MediaCache {
+/** Takes in whatever Instagram sent the page. */
+interface MediaSink {
+  ingest(root: unknown): void;
+}
+
+/** What has been remembered of what Instagram sent. */
+export interface MediaLookups {
+  mediaById(pk: string): InstagramMedia | undefined;
+  userId(username: string): string | undefined;
+  postCount(username: string): number | undefined;
+  reel(reelId: string): Reel | undefined;
+  mediaByAsset(asset: string): InstagramMedia | undefined;
+}
+
+export class MediaCache implements MediaSink, MediaLookups {
   private readonly media: BoundedMap<InstagramMedia>;
   private readonly users: BoundedMap<string>;
   private readonly postCounts: BoundedMap<number>;

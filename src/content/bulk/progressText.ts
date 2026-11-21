@@ -41,6 +41,21 @@ export function describeFollowingFinished(total: number): string {
   return `Finished all ${String(total)} accounts you follow.`;
 }
 
+export function describeFailureStop(
+  inARow: number,
+  username: string,
+  reason: string,
+): string {
+  return `Stopped after ${String(inARow)} accounts in a row failed. The last, ${username}, failed with: ${reason}`;
+}
+
+// Starts with a space, since it follows the sentence that ends a run.
+export function describeUnreadable(usernames: readonly string[]): string {
+  return usernames.length === 0
+    ? ""
+    : ` Could not read ${String(usernames.length)}: ${usernames.join(", ")}.`;
+}
+
 const accountLine = (position: number, total: number, done: number): string =>
   `Account ${String(position)} of ${String(total)} (${percentText(percent(done, total))})`;
 

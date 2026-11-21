@@ -1,7 +1,4 @@
-import type { ProfileCommands } from "../../../src/content/features/profileToolbar";
 import { ProfileToolbar } from "../../../src/content/features/profileToolbar";
-import type { ViewerSource } from "../../../src/content/actions/viewerSource";
-import type { RunStore } from "../../../src/content/bulk/runStore";
 import { view } from "./view";
 
 function setup(
@@ -19,9 +16,9 @@ function setup(
   const page = view(path, html);
   const feature = new ProfileToolbar(
     page,
-    commands as unknown as ProfileCommands,
-    { current: () => Promise.resolve(viewer) } as unknown as ViewerSource,
-    { inProgress: () => Promise.resolve(inProgress) } as unknown as RunStore,
+    commands,
+    { current: () => Promise.resolve(viewer) },
+    { inProgress: () => Promise.resolve(inProgress) },
   );
   feature.scan();
   return { commands, feature, page };

@@ -1,5 +1,5 @@
 import { shortcodeFromPath, shortcodeToMediaId } from "../../shared/shortcode";
-import type { PostDownloader } from "../actions/postDownloader";
+import type { PostDownloads } from "../actions/postDownloader";
 import { parseRoute } from "../dom/route";
 import { ARTICLE } from "../dom/selectors";
 import { createButton } from "../ui/buttons";
@@ -14,7 +14,7 @@ const label = "Download post";
 export class GridButtons implements Feature {
   constructor(
     private readonly view: PageView,
-    private readonly downloader: PostDownloader,
+    private readonly downloader: PostDownloads,
     private readonly minimumWidth: number,
   ) {}
 

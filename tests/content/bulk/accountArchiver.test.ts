@@ -39,7 +39,7 @@ function setup(
   const pacer = {
     gate: { call: vi.fn((request: () => Promise<unknown>) => request()) },
     sleeper: { sleep: vi.fn(), between: vi.fn(() => Promise.resolve()) },
-    pacing: defaultPacing,
+    fileDelayMs: defaultPacing.fileDelayMs,
   };
   const totals = { find: vi.fn(() => Promise.resolve(total)) };
   return {

@@ -6,11 +6,11 @@ import {
   describeAccountsFinished,
   describeFollowingFinished,
 } from "./progressText";
-import type { AccountArchiver } from "./accountArchiver";
+import type { Archiver } from "./accountArchiver";
 import type { FailureTally } from "./failureTally";
 import type { FollowingSource } from "./followingLister";
 import { begin, finished, remaining, type RunState } from "./runState";
-import type { RunStore } from "./runStore";
+import type { RunStateStore } from "./runStore";
 
 export interface FollowingRequest {
   readonly viewer: Viewer;
@@ -27,13 +27,17 @@ export interface FollowingRequest {
 // costs and nothing more.
 export interface FollowingDependencies {
   readonly lister: FollowingSource;
-  readonly archiver: AccountArchiver;
-  readonly store: RunStore;
+  readonly archiver: Archiver;
+  readonly store: RunStateStore;
   readonly now: () => number;
   readonly tally: FailureTally;
 }
 
-export class FollowingDownloader {
+export interface FollowingRunner {
+  run(request: FollowingRequest): Promise<string>;
+}
+
+export class FollowingDownloader implements FollowingRunner {
   constructor(private readonly deps: FollowingDependencies) {}
 
   async run(request: FollowingRequest): Promise<string> {

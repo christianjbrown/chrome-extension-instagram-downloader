@@ -1,4 +1,4 @@
-import type { StoryDownloader, StoryRoute } from "../actions/storyDownloader";
+import type { StoryDownloads, StoryRoute } from "../actions/storyDownloader";
 import { parseRoute } from "../dom/route";
 import type { AssetFinder } from "../dom/visibleAsset";
 import { bySelector, CLASS } from "../ui/classNames";
@@ -25,7 +25,7 @@ function storyRoute(pathname: string): StoryRoute | undefined {
 export class StoryToolbar implements Feature {
   constructor(
     private readonly view: PageView,
-    private readonly downloader: StoryDownloader,
+    private readonly downloader: StoryDownloads,
     private readonly assets: AssetFinder,
   ) {}
 

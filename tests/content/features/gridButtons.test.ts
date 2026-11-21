@@ -1,14 +1,9 @@
-import type { PostDownloader } from "../../../src/content/actions/postDownloader";
 import { GridButtons } from "../../../src/content/features/gridButtons";
 import { click, view } from "./view";
 
 function setup(html: string, width = 300, path = "/alice/") {
   const downloader = { download: vi.fn(() => Promise.resolve()) };
-  const feature = new GridButtons(
-    view(path, html),
-    downloader as unknown as PostDownloader,
-    100,
-  );
+  const feature = new GridButtons(view(path, html), downloader, 100);
   for (const link of document.querySelectorAll("a"))
     link.getBoundingClientRect = () => ({ width }) as DOMRect;
   feature.scan();

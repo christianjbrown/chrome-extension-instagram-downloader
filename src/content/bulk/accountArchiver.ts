@@ -32,9 +32,13 @@ export interface ArchiverDependencies {
   readonly catchUp: CatchUpPolicy;
 }
 
+export interface Archiver {
+  archive(request: ArchiveRequest): Promise<Counts>;
+}
+
 // Writes every post of one account into folder/<username>/, skipping files
 // already there.
-export class AccountArchiver {
+export class AccountArchiver implements Archiver {
   constructor(private readonly deps: ArchiverDependencies) {}
 
   async archive(request: ArchiveRequest): Promise<Counts> {
@@ -113,7 +117,7 @@ export class AccountArchiver {
       counts.skipped += 1;
       return;
     }
-    await pacer.sleeper.between(pacer.pacing.fileDelayMs, signal);
+    await pacer.sleeper.between(pacer.fileDelayMs, signal);
     counts[await writer.write(folder, item)] += 1;
   }
 }

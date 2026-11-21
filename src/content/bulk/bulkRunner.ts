@@ -19,9 +19,13 @@ export interface BulkJob {
   ): Promise<string>;
 }
 
+export interface JobRunner {
+  run(job: BulkJob): Promise<void>;
+}
+
 // Runs one bulk download at a time: asks for the folder while the click is
 // still fresh, shows the panel with its Stop button, and reports how it ended.
-export class BulkRunner {
+export class BulkRunner implements JobRunner {
   private running = false;
 
   constructor(

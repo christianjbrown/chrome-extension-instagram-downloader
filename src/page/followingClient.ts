@@ -2,6 +2,7 @@
 // endpoint Instagram's own "Following" dialog uses.
 import type { FollowingPage } from "../shared/bridge";
 import { parseFollowingPage } from "./followingResponse";
+import { FOLLOWING_QUERY } from "./instagramApi";
 import type { HeaderSource } from "./instagramHeaders";
 
 type Fetch = (url: string, init: RequestInit) => Promise<Response>;
@@ -18,7 +19,11 @@ export interface FollowingEndpoint {
 const invalidUser = "Invalid user id";
 const numericId = /^\d+$/;
 
-export class FollowingClient {
+export interface FollowingPages {
+  page(userId: string, next: string | undefined): Promise<FollowingPage>;
+}
+
+export class FollowingClient implements FollowingPages {
   constructor(
     private readonly headers: HeaderSource,
     private readonly fetch: Fetch,
@@ -40,9 +45,9 @@ export class FollowingClient {
       encodeURIComponent(userId),
     );
     const query = new URLSearchParams({
-      count: String(this.endpoint.pageSize),
+      [FOLLOWING_QUERY.count]: String(this.endpoint.pageSize),
     });
-    if (next !== undefined) query.set("max_id", next);
+    if (next !== undefined) query.set(FOLLOWING_QUERY.after, next);
     return `${path}?${query.toString()}`;
   }
 }

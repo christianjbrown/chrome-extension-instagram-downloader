@@ -1,11 +1,6 @@
-import type {
-  ChangeFolderCommand,
-  DownloadAccountCommand,
-  DownloadFollowingCommand,
-  ProfilePictureCommand,
-} from "../actions/profileCommands";
-import type { ViewerSource } from "../actions/viewerSource";
-import type { RunStore } from "../bulk/runStore";
+import type { Command, UsernameCommand } from "../actions/profileCommands";
+import type { CurrentViewer } from "../actions/viewerSource";
+import type { RunProgress } from "../bulk/runStore";
 import { parseRoute } from "../dom/route";
 import { PROFILE_HEADER } from "../dom/selectors";
 import { bySelector, CLASS } from "../ui/classNames";
@@ -25,10 +20,10 @@ const text = {
 } as const;
 
 export interface ProfileCommands {
-  readonly account: DownloadAccountCommand;
-  readonly following: DownloadFollowingCommand;
-  readonly picture: ProfilePictureCommand;
-  readonly folder: ChangeFolderCommand;
+  readonly account: UsernameCommand;
+  readonly following: Command;
+  readonly picture: UsernameCommand;
+  readonly folder: Command;
 }
 
 interface ToolbarButton {
@@ -63,8 +58,8 @@ export class ProfileToolbar implements Feature {
   constructor(
     private readonly view: PageView,
     private readonly commands: ProfileCommands,
-    private readonly viewers: ViewerSource,
-    private readonly runs: RunStore,
+    private readonly viewers: CurrentViewer,
+    private readonly runs: RunProgress,
   ) {}
 
   scan(): void {

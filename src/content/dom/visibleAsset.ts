@@ -1,5 +1,5 @@
 import { assetName } from "../../shared/media";
-import { MEDIA_ELEMENTS } from "./selectors";
+import { IMAGE_TAG, MEDIA_ELEMENTS, VIDEO_TAG } from "./selectors";
 
 /** Finds the picture on screen that stands for a post, slide or story. */
 export interface AssetFinder {
@@ -11,11 +11,15 @@ export interface Viewport {
   viewportHeight(): number;
 }
 
+// Told apart by tag, so nothing here reaches for the window's classes.
+const isImage = (element: Element): element is HTMLImageElement =>
+  element.localName === IMAGE_TAG;
+const isVideo = (element: Element): element is HTMLVideoElement =>
+  element.localName === VIDEO_TAG;
+
 function sourceOf(element: Element): string | undefined {
-  if (element instanceof HTMLImageElement)
-    return element.currentSrc || element.src;
-  if (element instanceof HTMLVideoElement && element.poster !== "")
-    return element.poster;
+  if (isImage(element)) return element.currentSrc || element.src;
+  if (isVideo(element) && element.poster !== "") return element.poster;
   return undefined;
 }
 

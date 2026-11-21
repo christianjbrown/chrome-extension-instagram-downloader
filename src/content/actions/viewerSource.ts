@@ -1,9 +1,13 @@
 import type { Viewer } from "../../shared/bridge";
 import type { Bridge } from "../bridgeClient";
 
+export interface CurrentViewer {
+  current(): Promise<Viewer | undefined>;
+}
+
 // The signed-in account, looked up once. Callers poll on a timer, so a failed
 // lookup is not retried until a while has passed.
-export class ViewerSource {
+export class ViewerSource implements CurrentViewer {
   private viewer: Viewer | undefined;
   private failedAt = Number.NEGATIVE_INFINITY;
 

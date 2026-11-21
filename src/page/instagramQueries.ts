@@ -6,7 +6,7 @@ import {
   isJsonObject,
   type JsonObject,
   type ModuleRequire,
-  type RelayClient,
+  type Relay,
 } from "./relayClient";
 import { MODULES, POST_BY_ID_MEMBER, RESPONSE_KEYS } from "./instagramApi";
 
@@ -59,9 +59,16 @@ function profilePicture(user: JsonObject): string | undefined {
   return typeof url === "string" ? url : undefined;
 }
 
-export class InstagramQueries {
+export interface Queries {
+  viewerId(): string;
+  mediaById(mediaId: string): Promise<InstagramMedia>;
+  postsPage(username: string, cursor: string | undefined): Promise<PostsPage>;
+  profile(userId: string): Promise<ProfileUser>;
+}
+
+export class InstagramQueries implements Queries {
   constructor(
-    private readonly relay: RelayClient,
+    private readonly relay: Relay,
     private readonly require: ModuleRequire,
     private readonly postsPageSize: number,
   ) {}

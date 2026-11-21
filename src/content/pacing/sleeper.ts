@@ -1,4 +1,5 @@
 import { abortError } from "../errors";
+import type { Scheduler } from "../scheduler";
 
 export interface Sleeper {
   sleep(ms: number, signal: AbortSignal): Promise<void>;
@@ -7,7 +8,10 @@ export interface Sleeper {
 
 // Waits that end early, with an AbortError, when the run is stopped.
 export class TimerSleeper implements Sleeper {
-  constructor(private readonly random: () => number = Math.random) {}
+  constructor(
+    private readonly scheduler: Scheduler,
+    private readonly random: () => number,
+  ) {}
 
   sleep(ms: number, signal: AbortSignal): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -16,13 +20,13 @@ export class TimerSleeper implements Sleeper {
         return;
       }
       const onAbort = (): void => {
-        clearTimeout(timer);
+        cancel();
         reject(abortError());
       };
-      const timer = setTimeout(() => {
+      const cancel = this.scheduler.after(ms, () => {
         signal.removeEventListener("abort", onAbort);
         resolve();
-      }, ms);
+      });
       signal.addEventListener("abort", onAbort, { once: true });
     });
   }

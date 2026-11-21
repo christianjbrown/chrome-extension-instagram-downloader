@@ -48,7 +48,13 @@ const fetchFresh = { force: true } as const;
 const isQuery = (value: unknown): value is RelayQuery =>
   isJsonObject(value) && value.params !== undefined;
 
-export class RelayClient {
+export interface Relay {
+  /** Loads a query from Instagram's modules, or one member of the module. */
+  query(moduleName: string, member?: string): RelayQuery;
+  run(query: RelayQuery, variables: JsonObject): Promise<JsonObject>;
+}
+
+export class RelayClient implements Relay {
   constructor(private readonly require: ModuleRequire) {}
 
   query(moduleName: string, member?: string): RelayQuery {

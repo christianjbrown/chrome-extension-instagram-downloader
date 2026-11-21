@@ -4,10 +4,7 @@ import {
   DownloadFollowingCommand,
   ProfilePictureCommand,
 } from "../../../src/content/actions/profileCommands";
-import type { ViewerSource } from "../../../src/content/actions/viewerSource";
-import type { AccountArchiver } from "../../../src/content/bulk/accountArchiver";
 import type { BulkJob, BulkRunner } from "../../../src/content/bulk/bulkRunner";
-import type { FollowingDownloader } from "../../../src/content/bulk/followingDownloader";
 import { fakeBridge, notifier, reporter, signal } from "../helpers";
 
 const folder = {} as FileSystemDirectoryHandle;
@@ -25,10 +22,7 @@ it("downloading an account archives it in full", async () => {
   const archiver = {
     archive: vi.fn(() => Promise.resolve({ saved: 2, skipped: 1, failed: 0 })),
   };
-  await new DownloadAccountCommand(
-    runner,
-    archiver as unknown as AccountArchiver,
-  ).run("alice");
+  await new DownloadAccountCommand(runner, archiver).run("alice");
   const report = reporter();
   await expect(jobs[0]?.run(folder, signal(), report)).resolves.toBe(
     "Finished: 2 new files, 1 already exists.",
@@ -48,11 +42,7 @@ it("downloading following needs the signed-in account", async () => {
       .mockResolvedValueOnce(undefined)
       .mockResolvedValue({ id: "1", username: "me" }),
   };
-  const command = new DownloadFollowingCommand(
-    runner,
-    following as unknown as FollowingDownloader,
-    viewers as unknown as ViewerSource,
-  );
+  const command = new DownloadFollowingCommand(runner, following, viewers);
   await command.run();
   await expect(jobs[0]?.run(folder, signal(), reporter())).rejects.toThrow(
     "Could not find your account.",

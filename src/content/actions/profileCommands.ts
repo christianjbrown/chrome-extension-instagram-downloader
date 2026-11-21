@@ -1,7 +1,7 @@
 // What the buttons on a profile do.
-import type { AccountArchiver } from "../bulk/accountArchiver";
-import type { BulkJob, BulkRunner } from "../bulk/bulkRunner";
-import type { FollowingDownloader } from "../bulk/followingDownloader";
+import type { Archiver } from "../bulk/accountArchiver";
+import type { BulkJob, JobRunner } from "../bulk/bulkRunner";
+import type { FollowingRunner } from "../bulk/followingDownloader";
 import { describeCounts } from "../bulk/progressText";
 import type { Bridge } from "../bridgeClient";
 import { errorMessage } from "../errorText";
@@ -9,7 +9,7 @@ import type { FolderSource } from "../saving/folderPicker";
 import type { ItemDownloader } from "../saving/fileDownloader";
 import type { Notifier } from "../ui/notifier";
 import { UNKNOWN_TAKEN_AT } from "../../shared/media";
-import type { ViewerSource } from "./viewerSource";
+import type { CurrentViewer } from "./viewerSource";
 
 const text = {
   downloading: "Downloading",
@@ -24,10 +24,20 @@ const text = {
 // Ends a profile picture's id, so its file cannot clash with a post's.
 const profilePictureSuffix = "_profile";
 
-export class DownloadAccountCommand {
+/** A button's action that needs nothing more. */
+export interface Command {
+  run(): Promise<void>;
+}
+
+/** A button's action on the profile it sits on. */
+export interface UsernameCommand {
+  run(username: string): Promise<void>;
+}
+
+export class DownloadAccountCommand implements UsernameCommand {
   constructor(
-    private readonly runner: BulkRunner,
-    private readonly archiver: AccountArchiver,
+    private readonly runner: JobRunner,
+    private readonly archiver: Archiver,
   ) {}
 
   run(username: string): Promise<void> {
@@ -49,11 +59,11 @@ export class DownloadAccountCommand {
   }
 }
 
-export class DownloadFollowingCommand {
+export class DownloadFollowingCommand implements Command {
   constructor(
-    private readonly runner: BulkRunner,
-    private readonly following: FollowingDownloader,
-    private readonly viewers: ViewerSource,
+    private readonly runner: JobRunner,
+    private readonly following: FollowingRunner,
+    private readonly viewers: CurrentViewer,
   ) {}
 
   run(): Promise<void> {
@@ -68,7 +78,7 @@ export class DownloadFollowingCommand {
   }
 }
 
-export class ProfilePictureCommand {
+export class ProfilePictureCommand implements UsernameCommand {
   constructor(
     private readonly bridge: Bridge,
     private readonly downloader: ItemDownloader,
@@ -91,7 +101,7 @@ export class ProfilePictureCommand {
   }
 }
 
-export class ChangeFolderCommand {
+export class ChangeFolderCommand implements Command {
   constructor(
     private readonly folders: FolderSource,
     private readonly notifier: Notifier,

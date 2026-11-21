@@ -3,11 +3,19 @@ export interface Scheduler {
   after(ms: number, callback: () => void): () => void;
 }
 
+/** The window's own timers, which the scheduler is the only user of. */
+export type Timers = Pick<
+  WindowOrWorkerGlobalScope,
+  "setTimeout" | "clearTimeout"
+>;
+
 export class TimeoutScheduler implements Scheduler {
+  constructor(private readonly timers: Timers) {}
+
   after(ms: number, callback: () => void): () => void {
-    const timer = setTimeout(callback, ms);
+    const timer = this.timers.setTimeout(callback, ms);
     return () => {
-      clearTimeout(timer);
+      this.timers.clearTimeout(timer);
     };
   }
 }

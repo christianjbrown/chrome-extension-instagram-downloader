@@ -1,4 +1,3 @@
-import type { PostDownloader } from "../../../src/content/actions/postDownloader";
 import { PostActions } from "../../../src/content/features/postActions";
 import { notifier } from "../helpers";
 import { assets, bookmark, click, view } from "./view";
@@ -8,7 +7,7 @@ function setup(path: string, html: string) {
   const notes = notifier();
   const feature = new PostActions(
     view(path, html),
-    downloader as unknown as PostDownloader,
+    downloader,
     notes,
     assets(),
   );

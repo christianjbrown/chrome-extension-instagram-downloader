@@ -13,7 +13,14 @@ const text = {
 
 export type StoryRoute = Extract<Route, { kind: "story" | "highlight" }>;
 
-export class StoryDownloader {
+export interface StoryDownloads {
+  /** The story showing, found by its id or by the picture on screen. */
+  current(route: StoryRoute, asset: string | undefined): Promise<void>;
+  /** Every story in the reel or highlight. */
+  all(route: StoryRoute): Promise<void>;
+}
+
+export class StoryDownloader implements StoryDownloads {
   constructor(
     private readonly bridge: Bridge,
     private readonly downloader: ItemDownloader,

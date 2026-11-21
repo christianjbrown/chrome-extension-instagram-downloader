@@ -1,5 +1,6 @@
 import { errorMessage } from "../errorText";
 import { BlockedError, isAbortError, isContextInvalidated } from "../errors";
+import { describeFailureStop, describeUnreadable } from "./progressText";
 
 export interface FailureTally {
   /** Forgets the last run, ready for a new one. */
@@ -41,13 +42,11 @@ export class ConsecutiveFailureTally implements FailureTally {
     this.inARow += 1;
     if (this.inARow >= this.limit)
       throw new BlockedError(
-        `Stopped after ${String(this.inARow)} accounts in a row failed. The last, ${username}, failed with: ${errorMessage(error)}`,
+        describeFailureStop(this.inARow, username, errorMessage(error)),
       );
   }
 
   summary(): string {
-    return this.names.length === 0
-      ? ""
-      : ` Could not read ${String(this.names.length)}: ${this.names.join(", ")}.`;
+    return describeUnreadable(this.names);
   }
 }
