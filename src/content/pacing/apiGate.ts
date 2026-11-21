@@ -1,10 +1,16 @@
 import { RefusedError } from "../../shared/refusal";
 import { BlockedError } from "../errors";
-import type { Budget, Gate, RandomWait, Sleeper } from "./ports";
+import type {
+  Budget,
+  Gate,
+  RandomWait,
+  RefusalBackoff,
+  Sleeper,
+} from "./ports";
 import type { Pacing, WaitReporter } from "./pacing";
 
 // The parts of the pacing the gate itself applies.
-type GatePacing = Pick<Pacing, "apiDelayMs" | "backoffMs">;
+type GatePacing = Pick<Pacing, "apiDelayMs">;
 
 const text = {
   hourlyLimit: "Hourly request limit reached",
@@ -14,16 +20,14 @@ const text = {
 } as const;
 
 // Every bulk API call goes through here: the hourly budget, a random delay,
-// and a backoff when Instagram refuses. Any
-// other failure is passed straight on, with its own message, rather than
-// waited out.
+// and the backoff's wait when Instagram refuses. Any other failure is passed
+// straight on, with its own message, rather than waited out.
 export class ApiGate implements Gate {
-  private refusals = 0;
-
   constructor(
     private readonly sleeper: Sleeper & RandomWait,
     private readonly budget: Budget,
     private readonly pacing: GatePacing,
+    private readonly backoff: RefusalBackoff,
   ) {}
 
   async call<T>(
@@ -45,7 +49,7 @@ export class ApiGate implements Gate {
   ): Promise<T> {
     try {
       const result = await request();
-      this.refusals = 0;
+      this.backoff.reset();
       return result;
     } catch (error) {
       return this.retry(error, request, signal, reporter);
@@ -68,12 +72,8 @@ export class ApiGate implements Gate {
     signal: AbortSignal,
     reporter: WaitReporter,
   ): Promise<void> {
-    const wait = this.pacing.backoffMs[this.refusals];
-    if (wait === undefined) {
-      this.refusals = 0;
-      throw new BlockedError(text.blocked);
-    }
-    this.refusals += 1;
+    const wait = this.backoff.next();
+    if (wait === undefined) throw new BlockedError(text.blocked);
     reporter.waiting(text.slowDown, wait);
     await this.sleeper.sleep(wait, signal);
   }

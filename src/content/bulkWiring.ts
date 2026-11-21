@@ -20,6 +20,7 @@ import type { Pacer } from "./pacing/pacer";
 import { RunStore } from "./bulk/runStore";
 import { ApiGate } from "./pacing/apiGate";
 import { HourlyBudget } from "./pacing/hourlyBudget";
+import { SteppedBackoff } from "./pacing/steppedBackoff";
 import { TimerSleeper } from "./pacing/sleeper";
 import { DirectoryWriter } from "./saving/directoryWriter";
 import { blobFetcher } from "./saving/fetchBlob";
@@ -71,6 +72,7 @@ function bulkPacer({ config, scheduler }: Wiring): Pacer {
     sleeper,
     new HourlyBudget(pacing.apiCallsPerHour, sleeper, Date.now),
     pacing,
+    new SteppedBackoff(pacing.backoffMs),
   );
   return { gate, sleeper, fileDelayMs: pacing.fileDelayMs };
 }
