@@ -109,12 +109,9 @@ function jobRunner(
 
 // The download folder, chosen through Chrome's own folder chooser.
 function folderSource(env: ContentEnvironment): FolderSource {
-  const picker = new WindowDirectoryPicker(
-    env.window,
-    env.window.FileSystemDirectoryHandle,
-  );
-  return new FolderPicker(new MemoryFolderStore(), (options) =>
-    picker.show(options),
+  return new FolderPicker(
+    new MemoryFolderStore(),
+    new WindowDirectoryPicker(env.window, env.window.FileSystemDirectoryHandle),
   );
 }
 

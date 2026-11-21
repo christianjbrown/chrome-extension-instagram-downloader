@@ -39,3 +39,15 @@ export interface FolderStore {
   get(): Promise<FileSystemDirectoryHandle | undefined>;
   set(folder: FileSystemDirectoryHandle): Promise<void>;
 }
+
+/** What the folder chooser is opened with. */
+export interface PickerOptions {
+  readonly id: string;
+  readonly mode: "readwrite";
+  readonly startIn: "downloads";
+}
+
+/** Opens a folder chooser and hands back the folder picked. */
+export interface DirectoryChooser {
+  show(options: PickerOptions): Promise<FileSystemDirectoryHandle>;
+}

@@ -137,6 +137,11 @@ export type ProcedureTable = {
   readonly [N in ProcedureName]: PageProcedure<N>;
 };
 
+/** Answers the content script's requests as they arrive. */
+export interface RequestListener {
+  listen(target: Pick<Window, "addEventListener">): void;
+}
+
 export interface RefusalDetector {
   isRefusal(error: unknown): boolean;
 }

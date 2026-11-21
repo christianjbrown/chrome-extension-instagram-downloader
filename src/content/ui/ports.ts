@@ -25,7 +25,7 @@ export interface AccountProgress {
   accountBar(fraction: number | undefined): void;
 }
 
-interface OverallProgress {
+export interface OverallProgress {
   /** Where a run over many accounts has got to, as words and a fraction done. */
   overall(text: string, fraction: number): void;
 }

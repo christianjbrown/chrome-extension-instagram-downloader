@@ -1,5 +1,5 @@
 import { isJsonObject, type JsonObject } from "../../shared/json";
-import type { FolderStore, FolderSource } from "./ports";
+import type { DirectoryChooser, FolderStore, FolderSource } from "./ports";
 
 const readwrite = { mode: "readwrite" } as const;
 
@@ -12,16 +12,6 @@ interface PermissionHandle {
   queryPermission(options: Mode): Promise<unknown>;
   requestPermission(options: Mode): Promise<unknown>;
 }
-
-/** What the folder chooser is opened with. */
-export interface PickerOptions extends Mode {
-  readonly id: string;
-  readonly startIn: "downloads";
-}
-
-export type ShowDirectoryPicker = (
-  options: PickerOptions,
-) => Promise<FileSystemDirectoryHandle>;
 
 const granted = "granted";
 
@@ -54,7 +44,7 @@ const pickerId = "instagram-downloader";
 export class FolderPicker implements FolderSource {
   constructor(
     private readonly store: FolderStore,
-    private readonly showPicker: ShowDirectoryPicker,
+    private readonly chooser: DirectoryChooser,
   ) {}
 
   async pick(chooseAgain?: boolean): Promise<FileSystemDirectoryHandle> {
@@ -83,7 +73,7 @@ export class FolderPicker implements FolderSource {
   }
 
   private async choose(): Promise<FileSystemDirectoryHandle> {
-    const chosen = await this.showPicker({
+    const chosen = await this.chooser.show({
       id: pickerId,
       ...readwrite,
       startIn,

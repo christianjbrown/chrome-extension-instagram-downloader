@@ -14,7 +14,7 @@ function picker(stored: FileSystemDirectoryHandle | undefined) {
     set: vi.fn(() => Promise.resolve()),
   };
   const show = vi.fn(() => Promise.resolve(chosen));
-  return { chosen, store, show, picker: new FolderPicker(store, show) };
+  return { chosen, store, show, picker: new FolderPicker(store, { show }) };
 }
 
 describe("FolderPicker", () => {

@@ -2,7 +2,7 @@
 // describe it yet, so it is looked up by name, and what it hands back is
 // checked to be a folder before anything uses it.
 import { callMember, type ClassOf } from "../../shared/members";
-import type { PickerOptions } from "./folderPicker";
+import type { DirectoryChooser, PickerOptions } from "./ports";
 
 const pickerName = "showDirectoryPicker";
 
@@ -10,7 +10,7 @@ const text = {
   notAFolder: "The folder chooser did not give a folder",
 } as const;
 
-export class WindowDirectoryPicker {
+export class WindowDirectoryPicker implements DirectoryChooser {
   constructor(
     private readonly target: object,
     // The kind of handle a chosen folder is, as the window defines it.

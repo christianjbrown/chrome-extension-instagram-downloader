@@ -2,7 +2,7 @@
 // watches the page for places to add buttons.
 import type { PageWatcher, StartupStep } from "./ports";
 
-export class ContentStartup {
+export class ContentStartup implements PageWatcher {
   constructor(
     private readonly tidyUps: readonly StartupStep[],
     private readonly watcher: PageWatcher,

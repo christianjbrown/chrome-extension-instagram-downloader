@@ -6,6 +6,7 @@ import type {
   AccountProgress,
   DetailReporter,
   HeadingReporter,
+  OverallProgress,
   RunReporter,
 } from "../ui/ports";
 import type { WriteOutcome } from "../saving/ports";
@@ -162,12 +163,12 @@ export interface FollowingRequest {
 export interface FollowingProgress {
   /** The account starting now, counting those already done before it. */
   account(
-    reporter: RunReporter,
+    reporter: OverallProgress & HeadingReporter,
     done: number,
     total: number,
     username: string,
   ): void;
-  finished(reporter: RunReporter, total: number): void;
+  finished(reporter: OverallProgress, total: number): void;
   /** The sentence that ends the run, followed by the accounts it could not read. */
   summary(total: number, unreadable: string): string;
 }

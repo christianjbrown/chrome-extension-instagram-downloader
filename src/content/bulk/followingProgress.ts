@@ -1,14 +1,14 @@
 // Shows on the panel where a run over the accounts the viewer follows has
 // got to, and words how it ended.
 import { ALL_DONE } from "../ui/percent";
-import type { RunReporter } from "../ui/ports";
+import type { HeadingReporter, OverallProgress } from "../ui/ports";
 import type { FollowingProgress, FollowingWording } from "./ports";
 
 export class PanelFollowingProgress implements FollowingProgress {
   constructor(private readonly wording: FollowingWording) {}
 
   account(
-    reporter: RunReporter,
+    reporter: OverallProgress & HeadingReporter,
     done: number,
     total: number,
     username: string,
@@ -17,7 +17,7 @@ export class PanelFollowingProgress implements FollowingProgress {
     reporter.heading(username);
   }
 
-  finished(reporter: RunReporter, total: number): void {
+  finished(reporter: OverallProgress, total: number): void {
     if (total > 0)
       reporter.overall(this.wording.accountsFinished(total), ALL_DONE);
   }

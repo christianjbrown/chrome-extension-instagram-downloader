@@ -7,7 +7,12 @@ import {
 } from "../shared/bridge";
 import { EVENTS } from "../shared/dom";
 import { errorMessage } from "../shared/errorMessage";
-import type { PageProcedure, ProcedureTable, RefusalDetector } from "./ports";
+import type {
+  PageProcedure,
+  ProcedureTable,
+  RefusalDetector,
+  RequestListener,
+} from "./ports";
 
 const unknownRequest: BridgeResponse = { ok: false, error: "Unknown request" };
 const invalidRequest: BridgeResponse = { ok: false, error: "Invalid request" };
@@ -20,7 +25,7 @@ export interface TrustedSender {
   readonly source: MessageEventSource;
 }
 
-export class BridgeServer {
+export class BridgeServer implements RequestListener {
   constructor(
     private readonly procedures: ProcedureTable,
     private readonly sender: TrustedSender,
