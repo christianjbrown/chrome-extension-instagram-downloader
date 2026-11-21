@@ -1,19 +1,21 @@
-import { ALL_DONE } from "../ui/percent";
 import type { AccountProgress, DetailReporter } from "../ui/ports";
 import type { WriteOutcome } from "../saving/ports";
-import { noCounts, type Counts } from "./counts";
-import type { AccountTally, ProgressWording, TallyStarter } from "./ports";
+import { AccountCounts } from "./accountCounts";
+import type { Counts } from "./counts";
+import type {
+  AccountCounter,
+  AccountTally,
+  ProgressWording,
+  TallyStarter,
+} from "./ports";
 
-// Counts one account's posts and files, and shows them on the panel as words
-// and as the account's bar.
+// Shows one account's counts on the panel, as words and as the account's
+// bar. The counting is the counter's.
 class BarTally implements AccountTally {
-  private readonly counts = noCounts();
-  private post = 0;
-  private known: number | undefined;
-
   constructor(
     private readonly reporter: DetailReporter & AccountProgress,
     private readonly wording: ProgressWording,
+    private readonly counter: AccountCounter,
   ) {}
 
   begin(): void {
@@ -21,53 +23,44 @@ class BarTally implements AccountTally {
   }
 
   total(total: number | undefined): void {
-    this.known = total;
+    this.counter.total(total);
   }
 
   unreadable(count: number | undefined): void {
-    const posts = count ?? 0;
-    this.counts.failed += posts;
-    this.post += posts;
+    this.counter.unreadable(count);
   }
 
   nextPost(): void {
-    this.post += 1;
-    this.showBar(this.known);
+    this.counter.nextPost();
+    this.showBar(this.counter.fraction());
   }
 
   file(outcome: WriteOutcome): void {
-    this.counts[outcome] += 1;
-    this.reporter.detail(
-      this.wording.progress(this.post, this.known, this.counts),
-    );
+    this.counter.file(outcome);
+    const { post, total, counts } = this.counter.position();
+    this.reporter.detail(this.wording.progress(post, total, counts));
   }
 
   saved(): number {
-    return this.counts.saved;
+    return this.counter.saved();
   }
 
-  // Instagram's count can include posts it never sends, so a finished
-  // account fills its bar rather than stopping short of the end.
   finish(): Counts {
-    this.fill(this.known);
-    return this.counts;
+    this.showBar(this.counter.finishedFraction());
+    return this.counter.tally();
   }
 
-  private showBar(total: number | undefined): void {
-    if (total !== undefined)
-      this.reporter.accountBar(Math.min(ALL_DONE, this.post / total));
-  }
-
-  private fill(total: number | undefined): void {
-    if (total !== undefined) this.reporter.accountBar(ALL_DONE);
+  // The bar stays as it is while the account's total is unknown.
+  private showBar(fraction: number | undefined): void {
+    if (fraction !== undefined) this.reporter.accountBar(fraction);
   }
 }
 
-/** Starts a bar tally for each account. */
+/** Starts a bar tally, with its own counts, for each account. */
 export class BarTallies implements TallyStarter {
   constructor(private readonly wording: ProgressWording) {}
 
   start(reporter: DetailReporter & AccountProgress): AccountTally {
-    return new BarTally(reporter, this.wording);
+    return new BarTally(reporter, this.wording, new AccountCounts());
   }
 }

@@ -71,6 +71,29 @@ export interface ItemSaver {
   ): Promise<WriteOutcome>;
 }
 
+/** Where an account has got to: the post, its total when known, and its files. */
+export interface AccountPosition {
+  readonly post: number;
+  readonly total: number | undefined;
+  readonly counts: Counts;
+}
+
+/** Counts one account's posts and files. */
+export interface AccountCounter {
+  total(total: number | undefined): void;
+  /** Posts the page could not read, counted as failed. */
+  unreadable(count: number | undefined): void;
+  nextPost(): void;
+  file(outcome: WriteOutcome): void;
+  saved(): number;
+  tally(): Counts;
+  position(): AccountPosition;
+  /** How far through the account, or undefined while its total is unknown. */
+  fraction(): number | undefined;
+  /** What a finished account's bar shows, or undefined to leave it be. */
+  finishedFraction(): number | undefined;
+}
+
 /** One account's counts, and how far through it the panel shows. */
 export interface AccountTally {
   /** Hides the bar until the account's total is known. */
