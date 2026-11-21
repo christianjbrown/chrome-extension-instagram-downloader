@@ -2,6 +2,8 @@
 // built. Each concrete class implements one or more of these.
 import type {
   FollowingPage,
+  Input,
+  Output,
   PostsPage,
   ProcedureName,
   Reel,
@@ -30,18 +32,30 @@ export interface Rememberer {
   remember(value: JsonObject): void;
 }
 
-/** The posts, stories and slides remembered so far. */
-export interface MediaLookup {
+/** The posts, stories and slides remembered so far, by id. */
+export interface MediaByIdLookup {
   mediaById(pk: string): InstagramMedia | undefined;
+}
+
+/** The posts, stories and slides remembered so far, by picture. */
+export interface MediaByAssetLookup {
   /** The media, or the carousel slide, a picture on screen belongs to. */
   mediaByAsset(asset: string): InstagramMedia | undefined;
 }
 
-/** The accounts remembered so far. */
-export interface UserLookup {
+export interface MediaLookup extends MediaByIdLookup, MediaByAssetLookup {}
+
+/** The ids of the accounts remembered so far. */
+export interface UserIdLookup {
   userId(username: string): string | undefined;
+}
+
+/** How many posts the accounts remembered so far have. */
+export interface PostCountLookup {
   postCount(username: string): number | undefined;
 }
+
+export interface UserLookup extends UserIdLookup, PostCountLookup {}
 
 /** The story reels remembered so far. */
 export interface ReelLookup {
@@ -67,16 +81,37 @@ export interface ProfileUser {
   readonly totalPosts: number;
 }
 
-export interface Queries {
+export interface MediaQuery {
   mediaById(mediaId: string): Promise<InstagramMedia>;
+}
+
+export interface PostsQuery {
   postsPage(username: string, cursor: string | undefined): Promise<PostsPage>;
+}
+
+export interface ProfileQuery {
   profile(userId: string): Promise<ProfileUser>;
 }
 
-export interface InputValidator {
-  isProcedureName(name: string): name is ProcedureName;
-  isValidInput(name: ProcedureName, input: unknown): boolean;
+export interface Queries extends MediaQuery, PostsQuery, ProfileQuery {}
+
+/** Whether one field of a request has the only shape it may have. */
+export interface FieldCheck {
+  accepts(value: unknown): boolean;
 }
+
+/** One thing the content script can ask the page for, answered here. */
+export interface PageProcedure<N extends ProcedureName> {
+  readonly name: N;
+  /** Whether a request has the only shape this procedure accepts. */
+  isInput(input: unknown): input is Input<N>;
+  handle(input: Input<N>): Promise<Output<N>>;
+}
+
+/** Every procedure the page answers, by name. */
+export type ProcedureTable = {
+  readonly [N in ProcedureName]: PageProcedure<N>;
+};
 
 export interface RefusalDetector {
   isRefusal(error: unknown): boolean;

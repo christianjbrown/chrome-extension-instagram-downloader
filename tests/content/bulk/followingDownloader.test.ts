@@ -1,5 +1,6 @@
 import type { FollowingPage } from "../../../src/shared/bridge";
 import { ConsecutiveFailureTally } from "../../../src/content/bulk/failureTally";
+import { StopOrBlockPolicy } from "../../../src/content/bulk/stopPolicies";
 import { FollowingDownloader } from "../../../src/content/bulk/followingDownloader";
 import { FollowingLister } from "../../../src/content/bulk/followingLister";
 import { RunStore } from "../../../src/content/bulk/runStore";
@@ -40,7 +41,7 @@ function setup(initial?: unknown, followingPage = twoPages) {
     archiver: archiver,
     store,
     now: () => 1234,
-    tally: new ConsecutiveFailureTally(2),
+    tally: new ConsecutiveFailureTally(2, new StopOrBlockPolicy()),
   });
   const report = reporter();
   const run = () =>

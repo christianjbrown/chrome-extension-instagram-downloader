@@ -2,23 +2,30 @@
 // else needs to look at a route's kind.
 import type { StoryRoute } from "../actions/ports";
 import type { RouteKind } from "./ports";
-import type { PostRoute, ProfileRoute, Route } from "./route";
+import {
+  ROUTE_KINDS,
+  type PostRoute,
+  type ProfileRoute,
+  type Route,
+} from "./route";
 
 export class PostPage implements RouteKind<PostRoute> {
   matches(route: Route): route is PostRoute {
-    return route.kind === "post";
+    return route.kind === ROUTE_KINDS.post;
   }
 }
 
 export class ProfilePage implements RouteKind<ProfileRoute> {
   matches(route: Route): route is ProfileRoute {
-    return route.kind === "profile";
+    return route.kind === ROUTE_KINDS.profile;
   }
 }
 
 // Stories and highlights share the story viewer.
 export class StoryPage implements RouteKind<StoryRoute> {
   matches(route: Route): route is StoryRoute {
-    return route.kind === "story" || route.kind === "highlight";
+    return (
+      route.kind === ROUTE_KINDS.story || route.kind === ROUTE_KINDS.highlight
+    );
   }
 }

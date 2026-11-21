@@ -1,40 +1,5 @@
-import {
-  assetName,
-  assetNames,
-  bestUrl,
-  largestVersion,
-} from "../../src/shared/media";
+import { assetName, assetNames } from "../../src/shared/media";
 import { cdn, photo } from "../fixtures";
-
-describe("largestVersion", () => {
-  it("is undefined for no versions", () => {
-    expect(largestVersion([])).toBeUndefined();
-  });
-
-  it("picks the version with the largest area", () => {
-    const small = { url: "a", width: 10, height: 10 };
-    const big = { url: "b", width: 20, height: 20 };
-    expect(largestVersion([small, big, small])).toBe(big);
-  });
-});
-
-describe("bestUrl", () => {
-  it("prefers video over the cover image", () => {
-    const media = {
-      ...photo("1"),
-      video_versions: [{ url: "v.mp4", width: 1, height: 1 }],
-    };
-    expect(bestUrl(media)).toBe("v.mp4");
-  });
-
-  it("falls back to the largest image", () => {
-    expect(bestUrl(photo("1", "x.jpg"))).toBe(cdn("x.jpg", 1080));
-  });
-
-  it("is undefined when there is nothing to download", () => {
-    expect(bestUrl({ pk: "1" })).toBeUndefined();
-  });
-});
 
 describe("asset names", () => {
   it("is the last path segment of absolute and relative URLs", () => {

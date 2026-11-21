@@ -1,7 +1,8 @@
 import { SlideFiles } from "../../src/content/mediaFiles";
+import { LargestVersionChooser } from "../../src/content/versionChooser";
 import { cdn, photo } from "../fixtures";
 
-const files = new SlideFiles();
+const files = new SlideFiles(new LargestVersionChooser());
 
 describe("SlideFiles", () => {
   it("gives one item for a single post", () => {

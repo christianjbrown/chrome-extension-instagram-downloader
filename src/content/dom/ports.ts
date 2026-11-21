@@ -13,6 +13,11 @@ export interface PostLocator {
   target(container: ParentNode, all: boolean): PostTarget | undefined;
 }
 
+/** Recognises the addresses of one kind of page, from their path segments. */
+export interface PathMatcher {
+  match(segments: readonly string[]): Route | undefined;
+}
+
 /** Turns an address path into the kind of page it shows. */
 export interface RouteParser {
   parse(pathname: string): Route;

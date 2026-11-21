@@ -1,7 +1,7 @@
-// Checks what the page script sent back before the content script uses it.
-// Any script on the page can answer a request, so every reply is treated as
-// untrusted input and rejected when it does not have the expected shape.
-import type { Output, ProcedureName } from "./bridge";
+// The checks every procedure's answer is built from. Any script on the page
+// can answer a request, so every reply is treated as untrusted input and
+// rejected when it does not have the expected shape.
+import type { Reel } from "./bridge";
 import type { InstagramMedia, MediaVersion } from "./media";
 import { isJsonObject, isRecord, type JsonObject } from "./json";
 import { isMediaUrl } from "./mediaUrl";
@@ -12,24 +12,24 @@ function reject(what: string): never {
   throw new Error(`The page sent an unexpected ${what}`);
 }
 
-const record = (value: unknown, what: string): JsonObject =>
+export const record = (value: unknown, what: string): JsonObject =>
   isRecord(value) ? value : reject(what);
 
-const text = (value: unknown, what: string): string =>
+export const text = (value: unknown, what: string): string =>
   typeof value === "string" ? value : reject(what);
 
-const count = (value: unknown, what: string): number =>
+export const count = (value: unknown, what: string): number =>
   typeof value === "number" && Number.isFinite(value) ? value : reject(what);
 
 // Instagram marks a missing field with null as often as it leaves it out: a
 // photo arrives with video_versions and carousel_media set to null.
-const optional = <T>(value: unknown, parse: Parser<T>): T | undefined =>
+export const optional = <T>(value: unknown, parse: Parser<T>): T | undefined =>
   value === undefined || value === null ? undefined : parse(value);
 
-const list = <T>(value: unknown, parse: Parser<T>, what: string): T[] =>
+export const list = <T>(value: unknown, parse: Parser<T>, what: string): T[] =>
   Array.isArray(value) ? (value as unknown[]).map(parse) : reject(what);
 
-const mediaUrl = (value: unknown): string => {
+export const mediaUrl = (value: unknown): string => {
   const url = text(value, "address");
   return isMediaUrl(url) ? url : reject("address");
 };
@@ -69,7 +69,7 @@ function candidates(value: unknown): { candidates: MediaVersion[] } {
 }
 
 // Optional fields are left out rather than set to undefined, as Instagram does.
-function media(value: unknown): InstagramMedia {
+export function media(value: unknown): InstagramMedia {
   const raw = record(value, "post");
   const id = optional(raw.id, (v) => text(v, "post"));
   const takenAt = optional(raw.taken_at, (v) => count(v, "post"));
@@ -95,7 +95,7 @@ const mediaList = (value: unknown): InstagramMedia[] =>
 
 // One odd post should not cost the rest of its page, so a post that fails its
 // check is counted and left out instead of rejecting the lot.
-function readablePosts(value: unknown): {
+export function readablePosts(value: unknown): {
   items: InstagramMedia[];
   unreadable: number;
 } {
@@ -113,62 +113,11 @@ function readablePosts(value: unknown): {
   return { items, unreadable: raw.length - items.length };
 }
 
-const outputs: { [N in ProcedureName]: Parser<Output<N>> } = {
-  viewer: (value) => {
-    const raw = record(value, "viewer");
-    return {
-      id: text(raw.id, "viewer"),
-      username: text(raw.username, "viewer"),
-    };
-  },
-  media,
-  mediaByAsset: media,
-  postsPage: (value) => {
-    const raw = record(value, "page of posts");
-    const { items, unreadable } = readablePosts(raw.items);
-    const total = optional(raw.total, (v) => count(v, "post count"));
-    return {
-      items,
-      cursor: optional(raw.cursor, (v) => text(v, "cursor")),
-      ...(unreadable === 0 ? {} : { unreadable }),
-      ...(total === undefined ? {} : { total }),
-    };
-  },
-  account: (value) => {
-    const raw = record(value, "account");
-    return {
-      id: text(raw.id, "account"),
-      username: text(raw.username, "account"),
-      profilePicUrl: optional(raw.profilePicUrl, mediaUrl),
-      totalPosts: count(raw.totalPosts, "account"),
-    };
-  },
-  followingPage: (value) => {
-    const raw = record(value, "page of accounts");
-    return {
-      usernames: list(
-        raw.usernames,
-        (v) => text(v, "username"),
-        "list of usernames",
-      ),
-      next: optional(raw.next, (v) => text(v, "cursor")),
-    };
-  },
-  reel: reelOf,
-  userReel: reelOf,
-};
-
-function reelOf(value: unknown): Output<"reel"> {
+// Stories, whether asked for by reel or by account.
+export function reel(value: unknown): Reel {
   const raw = record(value, "story");
   return {
     owner: optional(raw.owner, (v) => text(v, "story")),
     items: mediaList(raw.items),
   };
-}
-
-export function parseOutput<N extends ProcedureName>(
-  name: N,
-  value: unknown,
-): Output<N> {
-  return outputs[name](value);
 }

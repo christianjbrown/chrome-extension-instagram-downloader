@@ -1,3 +1,8 @@
+import {
+  PostPath,
+  ProfilePath,
+  StoryPath,
+} from "../../../src/content/dom/pathMatchers";
 import { AddressRoute } from "../../../src/content/dom/addressRoute";
 import { DotCarousel } from "../../../src/content/dom/carousel";
 import type { StoryRoute } from "../../../src/content/actions/ports";
@@ -51,7 +56,11 @@ export function routes(page: TestPage): {
   profiles: RouteReader<ProfileRoute>;
   stories: RouteReader<StoryRoute>;
 } {
-  const parser = new PathRouteParser();
+  const parser = new PathRouteParser([
+    new StoryPath(),
+    new PostPath(),
+    new ProfilePath(),
+  ]);
   const pathname = (): string => page.pathname();
   return {
     posts: new AddressRoute(pathname, parser, new PostPage()),

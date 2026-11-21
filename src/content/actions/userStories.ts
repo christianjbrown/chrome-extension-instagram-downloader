@@ -1,16 +1,16 @@
 import type { Reel } from "../../shared/bridge";
-import type { Route } from "../dom/route";
+import { ROUTE_KINDS, type Route } from "../dom/route";
 import type { Bridge } from "../ports";
 import type { StoryKind, StoryRoute } from "./ports";
 
-type UserStoryRoute = Extract<Route, { kind: "story" }>;
+type UserStoryRoute = Extract<Route, { kind: typeof ROUTE_KINDS.story }>;
 
 // /stories/name/ and /stories/name/id/: one account's current stories.
 export class UserStories implements StoryKind<UserStoryRoute> {
   constructor(private readonly bridge: Bridge) {}
 
   matches(route: StoryRoute): route is UserStoryRoute {
-    return route.kind === "story";
+    return route.kind === ROUTE_KINDS.story;
   }
 
   mediaId(route: UserStoryRoute): string | undefined {

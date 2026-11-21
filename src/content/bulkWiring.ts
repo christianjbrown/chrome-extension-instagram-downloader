@@ -6,6 +6,11 @@ import { ConsecutiveFailureTally } from "./bulk/failureTally";
 import { FollowingDownloader } from "./bulk/followingDownloader";
 import { FollowingLister } from "./bulk/followingLister";
 import { GatedPostTotals } from "./bulk/postTotals";
+import {
+  AnyStopPolicy,
+  ReloadedExtensionPolicy,
+  StopOrBlockPolicy,
+} from "./bulk/stopPolicies";
 import type { Pacer } from "./pacing/pacer";
 import { RunStore } from "./bulk/runStore";
 import { ApiGate } from "./pacing/apiGate";
@@ -51,18 +56,29 @@ function bulkPacer({ config, scheduler }: Wiring): Pacer {
   return { gate, sleeper, fileDelayMs: pacing.fileDelayMs };
 }
 
+// The errors that end a run: a stop or a block anywhere, and for the
+// following list also a reloaded extension, which fails every account after.
+function stopPolicies() {
+  const stopOrBlock = new StopOrBlockPolicy();
+  return {
+    stopOrBlock,
+    any: new AnyStopPolicy([stopOrBlock, new ReloadedExtensionPolicy()]),
+  };
+}
+
 export function bulk(wiring: Wiring): BulkParts {
   const { env, config, bridge, notifier, scheduler } = wiring;
   const pacer = bulkPacer(wiring);
   const namer = new SafeFileNamer();
   const fetchBlob = blobFetcher((url) => env.window.fetch(url), isMediaUrl);
   const writer = new DirectoryWriter(fetchBlob, namer);
+  const stops = stopPolicies();
   const archiver = new AccountArchiver({
     files: wiring.files,
     bridge,
     writer,
     pacer,
-    totals: new GatedPostTotals(bridge, pacer.gate),
+    totals: new GatedPostTotals(bridge, pacer.gate, stops.stopOrBlock),
     catchUp: new PinnedAwareCatchUp(),
   });
   const runs = new RunStore(env.storage);
@@ -71,7 +87,7 @@ export function bulk(wiring: Wiring): BulkParts {
     archiver,
     store: runs,
     now: Date.now,
-    tally: new ConsecutiveFailureTally(config.failuresInARow),
+    tally: new ConsecutiveFailureTally(config.failuresInARow, stops.any),
   });
   const folders = new FolderPicker(new MemoryFolderStore(), (options) =>
     env.window.showDirectoryPicker(options),

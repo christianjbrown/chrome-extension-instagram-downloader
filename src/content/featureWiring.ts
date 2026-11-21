@@ -23,6 +23,7 @@ import type { ItemDownloader } from "./saving/ports";
 import { AddressRoute } from "./dom/addressRoute";
 import { DotCarousel } from "./dom/carousel";
 import { GridThumbnails } from "./dom/gridThumbnails";
+import { PostPath, ProfilePath, StoryPath } from "./dom/pathMatchers";
 import { PathRouteParser } from "./dom/route";
 import { PostPage, ProfilePage, StoryPage } from "./dom/routeKinds";
 
@@ -68,7 +69,13 @@ function profileButtons(
 // The readers of the address, one per kind of page a feature looks for.
 function routes(env: ContentEnvironment) {
   const pathname = (): string => env.window.location.pathname;
-  const parser = new PathRouteParser();
+  // Tried in this order, so a story or post address is never read as a
+  // profile.
+  const parser = new PathRouteParser([
+    new StoryPath(),
+    new PostPath(),
+    new ProfilePath(),
+  ]);
   return {
     posts: new AddressRoute(pathname, parser, new PostPage()),
     profiles: new AddressRoute(pathname, parser, new ProfilePage()),

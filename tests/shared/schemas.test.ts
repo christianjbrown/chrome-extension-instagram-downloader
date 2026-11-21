@@ -1,7 +1,13 @@
-import { parseOutput } from "../../src/shared/schemas";
+import { PROCEDURE_OUTPUTS } from "../../src/content/procedureWiring";
+import type { Output, ProcedureName } from "../../src/shared/bridge";
+
+const parseOutput = <N extends ProcedureName>(
+  name: N,
+  value: unknown,
+): Output<N> => PROCEDURE_OUTPUTS[name].parse(value);
 import { cdn, photo } from "../fixtures";
 
-describe("parseOutput", () => {
+describe("procedure answer checks", () => {
   it("passes valid replies through unchanged", () => {
     const media = {
       ...photo("1"),

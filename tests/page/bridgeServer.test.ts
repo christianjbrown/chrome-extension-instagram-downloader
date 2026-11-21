@@ -1,6 +1,5 @@
-import { BridgeServer, type Handlers } from "../../src/page/bridgeServer";
-import { PAGE_CONFIG } from "../../src/page/config";
-import { ProcedureInputs } from "../../src/page/procedureInputs";
+import { BridgeServer } from "../../src/page/bridgeServer";
+import type { ProcedureTable } from "../../src/page/ports";
 
 const pageWindow = {} as unknown as MessageEventSource;
 
@@ -22,21 +21,33 @@ function event(
   };
 }
 
-const handlers = {
-  viewer: () => Promise.resolve({ id: "1", username: "me" }),
-  media: () => Promise.reject(new Error("broken")),
-  account: () => Promise.reject(new Error("x")),
+const isObject = (input: unknown): boolean =>
+  typeof input === "object" && input !== null && !Array.isArray(input);
+
+const procedure = (
+  handle: () => Promise<unknown>,
+  isInput: (input: unknown) => boolean = isObject,
+) => ({ isInput, handle });
+
+// No "reel", so a known name the page does not answer is turned away too.
+const procedures = {
+  viewer: procedure(() => Promise.resolve({ id: "1", username: "me" })),
+  media: procedure(
+    () => Promise.reject(new Error("broken")),
+    (input) =>
+      isObject(input) && (input as { mediaId?: unknown }).mediaId === "1",
+  ),
+  account: procedure(() => Promise.reject(new Error("x"))),
   // Instagram's code can reject with things that are not Errors.
   // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
-  postsPage: () => Promise.reject("plain string"),
-} as unknown as Handlers;
+  postsPage: procedure(() => Promise.reject("plain string")),
+} as unknown as ProcedureTable;
 
 describe("BridgeServer", () => {
   const server = new BridgeServer(
-    handlers,
+    procedures,
     { origin: "https://www.instagram.com", source: pageWindow },
     { isRefusal: (error) => error instanceof Error && error.message === "x" },
-    new ProcedureInputs(PAGE_CONFIG.inputLimits),
   );
 
   it("answers a request on its port", async () => {

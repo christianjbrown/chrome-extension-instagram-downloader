@@ -1,7 +1,7 @@
 import { errorMessage } from "../errorText";
-import { BlockedError, endsTheRun, isContextInvalidated } from "../errors";
+import { BlockedError } from "../errors";
 import { describeFailureStop, describeUnreadable } from "./progressText";
-import type { FailureTally } from "./ports";
+import type { FailureTally, RunStopPolicy } from "./ports";
 
 // Keeps a run of the following list going past one account that will not
 // load, a private or renamed one say, but gives up when several in a row
@@ -10,7 +10,10 @@ export class ConsecutiveFailureTally implements FailureTally {
   private names: string[] = [];
   private inARow = 0;
 
-  constructor(private readonly limit: number) {}
+  constructor(
+    private readonly limit: number,
+    private readonly stops: RunStopPolicy,
+  ) {}
 
   reset(): void {
     this.names = [];
@@ -22,9 +25,7 @@ export class ConsecutiveFailureTally implements FailureTally {
   }
 
   failed(username: string, error: unknown): void {
-    // Only reloading the page fixes a reloaded extension, so it ends the run
-    // too rather than failing every account after it.
-    if (endsTheRun(error) || isContextInvalidated(error)) throw error;
+    if (this.stops.endsTheRun(error)) throw error;
     this.names.push(username);
     this.inARow += 1;
     if (this.inARow >= this.limit)

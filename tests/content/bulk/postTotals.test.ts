@@ -1,4 +1,5 @@
 import { GatedPostTotals } from "../../../src/content/bulk/postTotals";
+import { StopOrBlockPolicy } from "../../../src/content/bulk/stopPolicies";
 import { BlockedError, abortError } from "../../../src/content/errors";
 import { photo } from "../../fixtures";
 import { fakeBridge, reporter, signal } from "../helpers";
@@ -8,7 +9,11 @@ const page = { items: [photo("1")], cursor: undefined };
 function setup(account: () => Promise<unknown>) {
   const bridge = fakeBridge({ account: account as never });
   const gate = { call: vi.fn((request: () => Promise<unknown>) => request()) };
-  return { bridge, gate, totals: new GatedPostTotals(bridge, gate as never) };
+  return {
+    bridge,
+    gate,
+    totals: new GatedPostTotals(bridge, gate as never, new StopOrBlockPolicy()),
+  };
 }
 
 const find = (totals: GatedPostTotals, first = page as never) =>

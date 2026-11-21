@@ -5,7 +5,6 @@ import { BridgeServer } from "./bridgeServer";
 import { whenParsed } from "./documentReady";
 import { scanEmbeddedJson } from "./embeddedJson";
 import type { PageConfig } from "./config";
-import { ProcedureInputs } from "./procedureInputs";
 import { InstagramRefusalDetector } from "./refusalDetector";
 import { FollowingClient } from "./followingClient";
 import { FollowingPageParser } from "./followingParser";
@@ -17,7 +16,7 @@ import { MediaIndex } from "./mediaIndex";
 import { ReelIndex } from "./reelIndex";
 import { UserIndex } from "./userIndex";
 import { PolarisViewerId } from "./viewerIdentity";
-import { createProcedures } from "./procedures";
+import { procedureTable } from "./procedureWiring";
 import { RelayClient, windowRequire } from "./relayClient";
 import { tapFetch, tapXhr } from "./responseTap";
 import { InstagramApiPolicy } from "./urlPolicy";
@@ -45,26 +44,28 @@ export function startPage(target: PageWindow, config: PageConfig): void {
     scanEmbeddedJson(target.document, ingest);
   });
   const require = windowRequire(target);
-  const procedures = createProcedures({
-    media,
-    users,
-    reels,
-    viewer: new PolarisViewerId(require),
-    queries: new InstagramQueries(
-      new RelayClient(require),
-      config.postsPageSize,
-    ),
-    following: new FollowingClient(
-      new InstagramHeaders(require),
-      (url, init) => target.fetch(url, init),
-      { path: config.followingPath, pageSize: config.followingPageSize },
-      { policy: new FollowingPolicy(), parser: new FollowingPageParser() },
-    ),
-  });
+  const procedures = procedureTable(
+    {
+      media,
+      users,
+      reels,
+      viewer: new PolarisViewerId(require),
+      queries: new InstagramQueries(
+        new RelayClient(require),
+        config.postsPageSize,
+      ),
+      following: new FollowingClient(
+        new InstagramHeaders(require),
+        (url, init) => target.fetch(url, init),
+        { path: config.followingPath, pageSize: config.followingPageSize },
+        { policy: new FollowingPolicy(), parser: new FollowingPageParser() },
+      ),
+    },
+    config.inputLimits,
+  );
   new BridgeServer(
     procedures,
     { origin: pageOrigin, source: target },
     new InstagramRefusalDetector(),
-    new ProcedureInputs(config.inputLimits),
   ).listen(target);
 }
