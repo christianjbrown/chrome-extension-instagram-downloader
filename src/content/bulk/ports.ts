@@ -1,7 +1,12 @@
 // The parts of a bulk download, as the others see them.
 import type { PostsPage, Viewer } from "../../shared/bridge";
 import type { WaitReporter } from "../pacing/pacing";
-import type { RunReporter } from "../ui/ports";
+import type {
+  AccountProgress,
+  DetailReporter,
+  HeadingReporter,
+  RunReporter,
+} from "../ui/ports";
 import type { Counts } from "./progressText";
 import type { RunState } from "./runState";
 
@@ -11,7 +16,7 @@ export interface ArchiveRequest {
   /** The account was archived in full before, so stop at posts already saved. */
   readonly onlyNew: boolean;
   readonly signal: AbortSignal;
-  readonly reporter: RunReporter;
+  readonly reporter: DetailReporter & WaitReporter & AccountProgress;
 }
 
 export interface Archiver {
@@ -63,7 +68,7 @@ export interface FollowingRunner {
 export interface ListRequest {
   readonly viewer: Viewer;
   readonly signal: AbortSignal;
-  readonly reporter: RunReporter;
+  readonly reporter: HeadingReporter & DetailReporter & WaitReporter;
 }
 
 export interface FollowingSource {

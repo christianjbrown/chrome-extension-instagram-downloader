@@ -1,11 +1,11 @@
 import type { JsonObject } from "../shared/json";
 import { assetNames, type InstagramMedia } from "../shared/media";
 import { isMedia } from "./mediaShapes";
-import type { KeyedStore, MediaLookup, Rememberer } from "./ports";
+import type { IterableStore, MediaLookup, Rememberer } from "./ports";
 
 // Every post and slide Instagram has sent, by id.
 export class MediaIndex implements Rememberer, MediaLookup {
-  constructor(private readonly media: KeyedStore<InstagramMedia>) {}
+  constructor(private readonly media: IterableStore<InstagramMedia>) {}
 
   remember(value: JsonObject): void {
     if (!isMedia(value)) return;

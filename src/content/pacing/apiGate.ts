@@ -1,7 +1,10 @@
 import { RefusedError } from "../../shared/refusal";
 import { BlockedError } from "../errors";
-import type { Budget, Sleeper, Gate } from "./ports";
+import type { Budget, Gate, RandomWait, Sleeper } from "./ports";
 import type { Pacing, WaitReporter } from "./pacing";
+
+// The parts of the pacing the gate itself applies.
+type GatePacing = Pick<Pacing, "apiDelayMs" | "backoffMs">;
 
 const text = {
   hourlyLimit: "Hourly request limit reached",
@@ -18,9 +21,9 @@ export class ApiGate implements Gate {
   private refusals = 0;
 
   constructor(
-    private readonly sleeper: Sleeper,
+    private readonly sleeper: Sleeper & RandomWait,
     private readonly budget: Budget,
-    private readonly pacing: Pacing,
+    private readonly pacing: GatePacing,
   ) {}
 
   async call<T>(

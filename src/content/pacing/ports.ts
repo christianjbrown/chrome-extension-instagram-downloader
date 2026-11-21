@@ -14,7 +14,12 @@ export interface Budget {
   take(signal: AbortSignal, onWait: (ms: number) => void): Promise<void>;
 }
 
+/** Waits a set time, ending early when the run is stopped. */
 export interface Sleeper {
   sleep(ms: number, signal: AbortSignal): Promise<void>;
+}
+
+/** Waits a random time inside a range, ending early when the run is stopped. */
+export interface RandomWait {
   between(range: readonly [number, number], signal: AbortSignal): Promise<void>;
 }

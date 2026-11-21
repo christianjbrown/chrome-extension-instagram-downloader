@@ -1,8 +1,8 @@
-import type { KeyedStore } from "./ports";
+import type { IterableStore } from "./ports";
 
 // A map that keeps only its newest entries, forgetting the oldest past the
 // limit, so a long session cannot grow it without end.
-export class BoundedMap<V> implements KeyedStore<V> {
+export class BoundedMap<V> implements IterableStore<V> {
   private readonly entries = new Map<string, V>();
 
   constructor(private readonly limit: number) {}

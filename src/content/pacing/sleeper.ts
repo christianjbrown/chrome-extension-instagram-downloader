@@ -1,10 +1,10 @@
 import { EVENTS } from "../../shared/dom";
 import { abortError } from "../errors";
 import type { Scheduler } from "../ports";
-import type { Sleeper } from "./ports";
+import type { RandomWait, Sleeper } from "./ports";
 
 // Waits that end early, with an AbortError, when the run is stopped.
-export class TimerSleeper implements Sleeper {
+export class TimerSleeper implements Sleeper, RandomWait {
   constructor(
     private readonly scheduler: Scheduler,
     private readonly random: () => number,

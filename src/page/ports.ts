@@ -13,6 +13,10 @@ import type { InstagramMedia } from "../shared/media";
 export interface KeyedStore<V> {
   get(key: string): V | undefined;
   set(key: string, value: V): void;
+}
+
+/** A store whose values can also be gone through, for lookups by anything else. */
+export interface IterableStore<V> extends KeyedStore<V> {
   values(): MapIterator<V>;
 }
 
