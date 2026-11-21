@@ -1,9 +1,10 @@
+import { BoundedMap } from "../../src/page/boundedMap";
 import { MediaCache } from "../../src/page/mediaCache";
 import { createProcedures } from "../../src/page/procedures";
 import { photo } from "../fixtures";
 
 function setup() {
-  const cache = new MediaCache(100);
+  const cache = new MediaCache(<V>() => new BoundedMap<V>(100));
   const queries = {
     viewerId: vi.fn(() => "1"),
     profile: vi.fn(() =>

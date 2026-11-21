@@ -1,6 +1,6 @@
 import { RefusedError } from "../../shared/refusal";
 import { BlockedError } from "../errors";
-import type { HourlyBudget } from "./hourlyBudget";
+import type { Budget } from "./hourlyBudget";
 import type { Pacing, WaitReporter } from "./pacing";
 import type { Sleeper } from "./sleeper";
 
@@ -28,7 +28,7 @@ export class ApiGate implements Gate {
 
   constructor(
     private readonly sleeper: Sleeper,
-    private readonly budget: HourlyBudget,
+    private readonly budget: Budget,
     private readonly pacing: Pacing,
   ) {}
 

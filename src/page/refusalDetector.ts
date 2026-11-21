@@ -6,8 +6,10 @@ export interface RefusalDetector {
   isRefusal(error: unknown): boolean;
 }
 
-const refusalText =
-  /\b429\b|please wait|rate.?limit|too many requests|try again later|feedback_required/i;
+const refusalText = new RegExp(
+  `\\b${String(TOO_MANY_REQUESTS)}\\b|please wait|rate.?limit|too many requests|try again later|feedback_required`,
+  "i",
+);
 
 const statusOf = (error: unknown): unknown =>
   typeof error === "object" && error !== null
