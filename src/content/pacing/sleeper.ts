@@ -1,3 +1,4 @@
+import { EVENTS } from "../../shared/dom";
 import { abortError } from "../errors";
 import type { Scheduler } from "../scheduler";
 
@@ -24,10 +25,10 @@ export class TimerSleeper implements Sleeper {
         reject(abortError());
       };
       const cancel = this.scheduler.after(ms, () => {
-        signal.removeEventListener("abort", onAbort);
+        signal.removeEventListener(EVENTS.abort, onAbort);
         resolve();
       });
-      signal.addEventListener("abort", onAbort, { once: true });
+      signal.addEventListener(EVENTS.abort, onAbort, { once: true });
     });
   }
 

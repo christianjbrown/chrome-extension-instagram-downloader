@@ -19,6 +19,8 @@ export interface FolderSource {
 
 const readwrite = { mode: "readwrite" } as const;
 const granted: Permission = "granted";
+// Where the picker opens the first time, before Chrome remembers a folder.
+const startIn = "downloads";
 
 // Chrome remembers where this picker was last opened, separately from others.
 const pickerId = "instagram-downloader";
@@ -37,7 +39,7 @@ export class FolderPicker implements FolderSource {
     const chosen = await this.showPicker({
       id: pickerId,
       ...readwrite,
-      startIn: "downloads",
+      startIn,
     });
     await this.store.set(chosen);
     return chosen;

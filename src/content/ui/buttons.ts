@@ -1,3 +1,4 @@
+import { ATTRIBUTES, EVENTS, TAGS } from "../../shared/dom";
 import { CLASS, classes } from "./classNames";
 
 export interface ButtonSpec {
@@ -11,12 +12,12 @@ export function createButton(
   document: Document,
   spec: ButtonSpec,
 ): HTMLButtonElement {
-  const button = document.createElement("button");
+  const button = document.createElement(TAGS.button);
   button.type = "button";
   button.className = spec.className;
   button.title = spec.label;
-  button.setAttribute("aria-label", spec.label);
-  button.addEventListener("click", (event) => {
+  button.setAttribute(ATTRIBUTES.ariaLabel, spec.label);
+  button.addEventListener(EVENTS.click, (event) => {
     event.preventDefault();
     event.stopPropagation();
     spec.onClick();

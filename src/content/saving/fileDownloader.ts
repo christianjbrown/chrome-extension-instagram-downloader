@@ -1,3 +1,4 @@
+import { TAGS } from "../../shared/dom";
 import type { DownloadItem } from "../../shared/media";
 import type { FetchBlob } from "./fetchBlob";
 import type { FileNamer } from "./fileNamer";
@@ -22,7 +23,7 @@ export class FileDownloader implements ItemDownloader {
 
   async download(item: DownloadItem): Promise<void> {
     const url = this.urls.createObjectURL(await this.fetchBlob(item.url));
-    const link = this.document.createElement("a");
+    const link = this.document.createElement(TAGS.anchor);
     link.href = url;
     link.download = this.namer.nameFor(item);
     link.click();

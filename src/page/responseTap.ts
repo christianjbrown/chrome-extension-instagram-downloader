@@ -1,4 +1,5 @@
 // Reads the JSON Instagram's own requests bring back, without changing them.
+import { EVENTS } from "../shared/dom";
 
 type Sink = (value: unknown) => void;
 
@@ -70,7 +71,7 @@ export function tapXhr(
   };
   prototype.send = function (this: TappedRequest, ...args: unknown[]) {
     if (policy.isWatched(this.igdlUrl ?? "")) {
-      this.addEventListener("load", () => {
+      this.addEventListener(EVENTS.load, () => {
         if (textResponseTypes.has(this.responseType))
           feed(this.responseText, sink);
       });

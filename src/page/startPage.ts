@@ -1,4 +1,5 @@
 // Wires up the page script. Runs at document_start in Instagram's own world.
+import { EVENTS, LOADING_STATE } from "../shared/dom";
 import { pageOrigin } from "../shared/origin";
 import { BoundedMap } from "./boundedMap";
 import { BridgeServer } from "./bridgeServer";
@@ -27,8 +28,8 @@ export function startPage(target: PageWindow, config: PageConfig): void {
   const scan = (): void => {
     scanEmbeddedJson(target.document, ingest);
   };
-  if (target.document.readyState === "loading")
-    target.document.addEventListener("DOMContentLoaded", scan);
+  if (target.document.readyState === LOADING_STATE)
+    target.document.addEventListener(EVENTS.contentLoaded, scan);
   else scan();
   const require = windowRequire(target);
   const procedures = createProcedures({

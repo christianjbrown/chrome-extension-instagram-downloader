@@ -1,3 +1,4 @@
+import { TAGS } from "../../shared/dom";
 import type { StoryDownloads, StoryRoute } from "../actions/storyDownloader";
 import { parseRoute } from "../dom/route";
 import type { AssetFinder } from "../dom/visibleAsset";
@@ -41,7 +42,7 @@ export class StoryToolbar implements Feature {
   }
 
   private toolbar(): HTMLElement {
-    const toolbar = this.view.document.createElement("div");
+    const toolbar = this.view.document.createElement(TAGS.div);
     toolbar.className = CLASS.storyToolbar;
     this.add(toolbar, "download", text.download, (route) =>
       this.downloader.current(route, this.assets.largest(this.view.document)),

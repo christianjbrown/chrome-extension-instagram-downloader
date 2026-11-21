@@ -1,3 +1,4 @@
+import { ATTRIBUTES, TAGS } from "../../shared/dom";
 import { shortcodeFromPath, shortcodeToMediaId } from "../../shared/shortcode";
 import type { PostDownloads, PostTarget } from "../actions/postDownloader";
 import { carouselSlide, isCarousel } from "../dom/carousel";
@@ -96,7 +97,7 @@ export class PostActions implements Feature {
   }
 
   private buttons(slot: Element): HTMLElement {
-    const group = this.view.document.createElement("span");
+    const group = this.view.document.createElement(TAGS.span);
     group.className = CLASS.postActions;
     const container = this.container(slot);
     for (const { label, className, all, shows } of postButtons) {
@@ -137,7 +138,9 @@ export class PostActions implements Feature {
   private shortcode(container: ParentNode): string | undefined {
     const route = parseRoute(this.view.pathname());
     if (route.kind === "post") return route.shortcode;
-    const href = container.querySelector(postLink)?.getAttribute("href");
+    const href = container
+      .querySelector(postLink)
+      ?.getAttribute(ATTRIBUTES.href);
     return href ? shortcodeFromPath(href) : undefined;
   }
 }

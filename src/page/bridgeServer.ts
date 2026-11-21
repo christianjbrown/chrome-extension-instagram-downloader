@@ -6,6 +6,7 @@ import {
   type Output,
   type ProcedureName,
 } from "../shared/bridge";
+import { EVENTS } from "../shared/dom";
 import type { InputValidator } from "./procedureInputs";
 import type { RefusalDetector } from "./refusalDetector";
 
@@ -38,7 +39,7 @@ export class BridgeServer {
   ) {}
 
   listen(target: Pick<Window, "addEventListener">): void {
-    target.addEventListener("message", (event) => {
+    target.addEventListener(EVENTS.message, (event) => {
       void this.handle(event);
     });
   }

@@ -1,3 +1,4 @@
+import { TAGS } from "../../shared/dom";
 import { describeWait } from "../pacing/waitText";
 import { createTextButton } from "./buttons";
 import { bySelector, CLASS } from "./classNames";
@@ -53,7 +54,7 @@ export class ProgressPanel implements RunPanel {
   open(title: string, onStop: () => void): void {
     this.stopCountdown();
     this.element?.remove();
-    const panel = this.document.createElement("div");
+    const panel = this.document.createElement(TAGS.div);
     panel.className = CLASS.panel;
     for (const part of parts) panel.append(this.line(part));
     this.set("title", title, panel);
@@ -71,7 +72,7 @@ export class ProgressPanel implements RunPanel {
 
   private line(part: Part): HTMLElement {
     if (isBar(part)) return createProgressBar(this.document, partClass(part));
-    const line = this.document.createElement("div");
+    const line = this.document.createElement(TAGS.div);
     line.className = partClass(part);
     return line;
   }
