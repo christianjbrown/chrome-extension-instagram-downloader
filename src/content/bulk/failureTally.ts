@@ -27,6 +27,11 @@ export class ConsecutiveFailureTally implements FailureTally {
 
   failed(username: string, error: unknown): void {
     if (this.stops.endsTheRun(error)) throw error;
+    this.count(username, error);
+  }
+
+  // Several failures in a row mean something is wrong with every account.
+  private count(username: string, error: unknown): void {
     this.names.push(username);
     this.inARow += 1;
     if (this.inARow >= this.limit)

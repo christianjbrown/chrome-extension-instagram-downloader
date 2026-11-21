@@ -19,15 +19,17 @@ export function describeCounts(counts: Counts): string {
 
 // The account's total is left out when it is unknown, or when Instagram's
 // count has fallen behind the posts it actually sent.
+const isAhead = (post: number, total: number | undefined): total is number =>
+  total !== undefined && post <= total;
+
 export function describeProgress(
   post: number,
   total: number | undefined,
   counts: Counts,
 ): string {
-  const of =
-    total !== undefined && post <= total
-      ? ` of ${String(total)} (${percentText(percent(post, total))})`
-      : "";
+  const of = isAhead(post, total)
+    ? ` of ${String(total)} (${percentText(percent(post, total))})`
+    : "";
   return `Post ${String(post)}${of}: ${describeCounts(counts)}`;
 }
 

@@ -12,6 +12,10 @@ export class PinnedAwareCatchUp implements CatchUpPolicy {
 
   // Page one can be all pinned posts, so only trust a later page.
   caughtUp(page: number, onlyNew: boolean, newFiles: number): boolean {
-    return onlyNew && page > firstPage && newFiles === 0;
+    return onlyNew && this.laterPageWithNothingNew(page, newFiles);
+  }
+
+  private laterPageWithNothingNew(page: number, newFiles: number): boolean {
+    return page > firstPage && newFiles === 0;
   }
 }

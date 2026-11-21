@@ -37,13 +37,24 @@ export class BulkRunner implements JobRunner {
   }
 
   private async runWithFolder(job: BulkJob): Promise<void> {
-    let folder: FileSystemDirectoryHandle;
+    const folder = await this.folder();
+    if (folder !== undefined) await this.runIn(job, folder);
+  }
+
+  // The folder to save into, or undefined when none was picked.
+  private async folder(): Promise<FileSystemDirectoryHandle | undefined> {
     try {
-      folder = await this.deps.folders.pick();
+      return await this.deps.folders.pick();
     } catch {
       this.deps.notifier.error(text.noFolder);
-      return;
+      return undefined;
     }
+  }
+
+  private async runIn(
+    job: BulkJob,
+    folder: FileSystemDirectoryHandle,
+  ): Promise<void> {
     const controller = new this.deps.controllerClass();
     this.deps.panel.open(job.title, () => {
       controller.abort();
