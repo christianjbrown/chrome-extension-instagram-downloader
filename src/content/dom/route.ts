@@ -1,5 +1,5 @@
 // What kind of Instagram page a path is.
-import type { RouteParser } from "./ports";
+import type { PathMatcher, RouteParser } from "./ports";
 
 // The kinds of page a route can be, by the name each route carries.
 export const ROUTE_KINDS = {
@@ -26,69 +26,19 @@ export type Route =
 export type PostRoute = Extract<Route, { kind: Kinds["post"] }>;
 export type ProfileRoute = Extract<Route, { kind: Kinds["profile"] }>;
 
-const other: Route = { kind: ROUTE_KINDS.other };
+export const OTHER_ROUTE: Route = { kind: ROUTE_KINDS.other };
 
-const storiesSegment = "stories";
-const highlightsSegment = "highlights";
-
-const postPrefixes = new Set(["p", "reel", "tv"]);
-
-const reservedFirstSegments = new Set([
-  "accounts",
-  "direct",
-  "explore",
-  "reels",
-  storiesSegment,
-  ...postPrefixes,
-]);
-
-type RouteMatcher = (segments: readonly string[]) => Route | undefined;
-
-function storyRoute([owner, media]: readonly string[]): Route {
-  if (owner === undefined) return other;
-  if (owner !== highlightsSegment)
-    return { kind: ROUTE_KINDS.story, username: owner, mediaId: media };
-  return media === undefined
-    ? other
-    : { kind: ROUTE_KINDS.highlight, highlightId: media };
-}
-
-// /stories/name/id/, or /stories/highlights/id/ for a highlight.
-const story: RouteMatcher = ([first, ...rest]) =>
-  first === storiesSegment ? storyRoute(rest) : undefined;
-
-// /p/code/, or /name/p/code/ for a post opened from a profile.
-const post: RouteMatcher = (segments) => {
-  const [first] = segments;
-  if (first === undefined) return undefined;
-  const start = postPrefixes.has(first) ? 0 : 1;
-  const prefix = segments[start];
-  const shortcode = segments[start + 1];
-  return prefix !== undefined && postPrefixes.has(prefix) && shortcode
-    ? { kind: ROUTE_KINDS.post, shortcode }
-    : undefined;
-};
-
-// /name/, as long as the name is not one of Instagram's own pages.
-const profile: RouteMatcher = ([first, ...rest]) =>
-  first !== undefined && rest.length === 0 && !reservedFirstSegments.has(first)
-    ? { kind: ROUTE_KINDS.profile, username: first }
-    : undefined;
-
-// Tried in order, and the first that recognises the path wins.
-const matchers: readonly RouteMatcher[] = [story, post, profile];
-
-function parseRoute(pathname: string): Route {
-  const segments = pathname.split("/").filter((segment) => segment !== "");
-  for (const match of matchers) {
-    const route = match(segments);
-    if (route !== undefined) return route;
-  }
-  return other;
-}
-
+// Splits a path into its segments and asks each matcher in turn, in the
+// order given, and the first that recognises the path wins.
 export class PathRouteParser implements RouteParser {
+  constructor(private readonly matchers: readonly PathMatcher[]) {}
+
   parse(pathname: string): Route {
-    return parseRoute(pathname);
+    const segments = pathname.split("/").filter((segment) => segment !== "");
+    for (const matcher of this.matchers) {
+      const route = matcher.match(segments);
+      if (route !== undefined) return route;
+    }
+    return OTHER_ROUTE;
   }
 }

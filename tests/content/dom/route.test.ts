@@ -1,6 +1,15 @@
+import {
+  PostPath,
+  ProfilePath,
+  StoryPath,
+} from "../../../src/content/dom/pathMatchers";
 import { PathRouteParser } from "../../../src/content/dom/route";
 
-const parser = new PathRouteParser();
+const parser = new PathRouteParser([
+  new StoryPath(),
+  new PostPath(),
+  new ProfilePath(),
+]);
 
 it.each([
   ["/", { kind: "other" }],
