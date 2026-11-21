@@ -1,7 +1,7 @@
 import { TAGS } from "../../shared/dom";
 import type { PostDownloads } from "../actions/ports";
 import type { PostLocator } from "../dom/ports";
-import type { ButtonFactory, Notifier } from "../ui/ports";
+import type { IconButtons, Notifier } from "../ui/ports";
 import { ARTICLE, MAIN } from "../dom/selectors";
 import { bySelector, CLASS } from "../ui/classNames";
 import type { Feature, PostButton } from "./feature";
@@ -47,7 +47,7 @@ export interface PostActionsDependencies {
   readonly locator: PostLocator;
   /** The buttons beside the bookmark, in order. */
   readonly postButtons: readonly PostButton[];
-  readonly buttons: ButtonFactory;
+  readonly buttons: IconButtons;
 }
 
 export class PostActions implements Feature {

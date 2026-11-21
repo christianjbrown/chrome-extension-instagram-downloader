@@ -3,7 +3,7 @@ import type { StoryDownloads, StoryRoute } from "../actions/ports";
 import type { AssetFinder, RouteReader } from "../dom/ports";
 import { bySelector, CLASS } from "../ui/classNames";
 import { textButtonClass, type ButtonIcon } from "../ui/buttons";
-import type { ButtonFactory } from "../ui/ports";
+import type { TextButtons } from "../ui/ports";
 import type { Feature } from "./feature";
 
 const text = {
@@ -16,7 +16,7 @@ export interface StoryToolbarDependencies {
   readonly downloader: StoryDownloads;
   readonly assets: AssetFinder;
   readonly stories: RouteReader<StoryRoute>;
-  readonly buttons: ButtonFactory;
+  readonly buttons: TextButtons;
 }
 
 // Download buttons floating over the story viewer, for stories and highlights.

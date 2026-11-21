@@ -3,7 +3,7 @@ import type { PostDownloads } from "../actions/ports";
 import type { RouteReader, Thumbnail, ThumbnailSource } from "../dom/ports";
 import type { ProfileRoute } from "../dom/route";
 import { CLASS, classes } from "../ui/classNames";
-import type { ButtonFactory } from "../ui/ports";
+import type { IconButtons } from "../ui/ports";
 import type { Feature } from "./feature";
 
 const label = "Download post";
@@ -15,7 +15,7 @@ export class GridButtons implements Feature {
     private readonly thumbnails: ThumbnailSource,
     private readonly downloader: PostDownloads,
     private readonly profiles: RouteReader<ProfileRoute>,
-    private readonly buttons: ButtonFactory,
+    private readonly buttons: IconButtons,
   ) {}
 
   scan(): void {

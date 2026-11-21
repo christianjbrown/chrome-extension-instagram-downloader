@@ -4,7 +4,7 @@ import type { MediaUrlPolicy } from "../shared/checks";
 import type { ContentConfig } from "./config";
 import type { ShowDirectoryPicker } from "./saving/folderPicker";
 import type { Bridge, ErrorDescriber, MediaFiles, Scheduler } from "./ports";
-import type { ButtonFactory, Notifier } from "./ui/ports";
+import type { IconButtons, Notifier, TextButtons } from "./ui/ports";
 
 export interface ContentEnvironment {
   readonly window: Window &
@@ -19,7 +19,7 @@ export interface Wiring {
   readonly scheduler: Scheduler;
   readonly bridge: Bridge;
   readonly notifier: Notifier;
-  readonly buttons: ButtonFactory;
+  readonly buttons: IconButtons & TextButtons;
   readonly files: MediaFiles;
   /** Which addresses media may be fetched from. */
   readonly mediaUrls: MediaUrlPolicy;

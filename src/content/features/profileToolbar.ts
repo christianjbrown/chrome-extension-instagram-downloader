@@ -4,13 +4,13 @@ import type { ProfileRoute } from "../dom/route";
 import { PROFILE_HEADER } from "../dom/selectors";
 import { textButtonClass } from "../ui/buttons";
 import { bySelector, CLASS } from "../ui/classNames";
-import type { ButtonFactory } from "../ui/ports";
+import type { TextButtons } from "../ui/ports";
 import type { ButtonLook, Feature, ProfileButton } from "./feature";
 
 export interface ProfileToolbarDependencies {
   readonly document: Document;
   readonly profiles: RouteReader<ProfileRoute>;
-  readonly buttons: ButtonFactory;
+  readonly buttons: TextButtons;
   /** The buttons, in the order they appear. */
   readonly profileButtons: readonly ProfileButton[];
 }

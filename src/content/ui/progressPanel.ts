@@ -1,7 +1,7 @@
 import { TAGS } from "../../shared/dom";
 import { describeWait } from "../pacing/waitText";
 import { bySelector, CLASS } from "./classNames";
-import type { ButtonFactory, Countdown, ProgressBars, RunPanel } from "./ports";
+import type { TextButtons, Countdown, ProgressBars, RunPanel } from "./ports";
 
 // Top to bottom. Bars stay hidden until something reports a fraction.
 const parts = [
@@ -32,7 +32,7 @@ export class ProgressPanel implements RunPanel {
   constructor(
     private readonly document: Document,
     private readonly countdown: Countdown,
-    private readonly buttons: ButtonFactory,
+    private readonly buttons: TextButtons,
     private readonly bars: ProgressBars,
   ) {}
 
