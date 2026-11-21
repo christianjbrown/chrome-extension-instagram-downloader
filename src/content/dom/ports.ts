@@ -33,10 +33,14 @@ export interface RouteReader<R extends Route> {
   read(): R | undefined;
 }
 
-/** Reads a carousel's dot indicators. */
-export interface CarouselReader {
+/** Tells which slide of a carousel is showing. */
+export interface SlideReader {
   /** The slide showing, counting from zero, or undefined for a single picture. */
   slide(container: ParentNode): number | undefined;
+}
+
+/** Tells whether a post is a carousel. */
+export interface CarouselCheck {
   isCarousel(container: ParentNode): boolean;
 }
 

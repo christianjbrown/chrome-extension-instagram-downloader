@@ -2,10 +2,10 @@
 // Instagram draws at most six dots, so the dot's label, not its position,
 // carries the slide number.
 import { ATTRIBUTES } from "../../shared/dom";
-import type { CarouselReader } from "./ports";
+import type { CarouselCheck, SlideReader } from "./ports";
 import { CURRENT_SLIDE_DOT } from "./selectors";
 
-export class DotCarousel implements CarouselReader {
+export class DotCarousel implements SlideReader, CarouselCheck {
   slide(container: ParentNode): number | undefined {
     const active = container.querySelector(CURRENT_SLIDE_DOT);
     if (active === null) return undefined;

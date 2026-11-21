@@ -3,7 +3,7 @@ import { shortcodeFromPath, shortcodeToMediaId } from "../../shared/shortcode";
 import type { PostTarget } from "../actions/ports";
 import type {
   AssetFinder,
-  CarouselReader,
+  SlideReader,
   PostLocator,
   RouteReader,
 } from "./ports";
@@ -17,7 +17,7 @@ export class PagePostLocator implements PostLocator {
   constructor(
     private readonly posts: RouteReader<PostRoute>,
     private readonly assets: AssetFinder,
-    private readonly carousel: CarouselReader,
+    private readonly carousel: SlideReader,
   ) {}
 
   target(container: ParentNode, all: boolean): PostTarget | undefined {
