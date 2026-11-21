@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Christian's Instagram Downloader",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Download photos, videos, stories and whole accounts from Instagram.",
   "icons": {
     "16": "icons/icon-16.png",
