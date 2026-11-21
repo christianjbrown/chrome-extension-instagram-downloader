@@ -1,18 +1,25 @@
-import {
-  createButton,
-  createTextButton,
-  textButtonClass,
-} from "../../../src/content/ui/buttons";
+import { DomButtons, textButtonClass } from "../../../src/content/ui/buttons";
 import { SecondCountdown } from "../../../src/content/ui/countdown";
 import { ToastNotifier } from "../../../src/content/ui/notifier";
+import type { Countdown } from "../../../src/content/ui/ports";
+import { DomProgressBars } from "../../../src/content/ui/progressBar";
 import { ProgressPanel } from "../../../src/content/ui/progressPanel";
 import { ManualScheduler } from "../helpers";
+
+const newPanel = (countdown: Countdown): ProgressPanel =>
+  new ProgressPanel(
+    document,
+    countdown,
+    new DomButtons(document),
+    new DomProgressBars(document),
+  );
 
 describe("buttons", () => {
   it("runs its action without letting the click reach the page", () => {
     const onClick = vi.fn();
     const outer = vi.fn();
-    const button = createButton(document, {
+    const buttons = new DomButtons(document);
+    const button = buttons.button({
       label: "Save",
       className: "b",
       onClick,
@@ -26,8 +33,7 @@ describe("buttons", () => {
     expect(click.defaultPrevented).toBe(true);
     expect(button.getAttribute("aria-label")).toBe("Save");
     expect(
-      createTextButton(document, { label: "Go", className: "b", onClick })
-        .textContent,
+      buttons.textButton({ label: "Go", className: "b", onClick }).textContent,
     ).toBe("Go");
   });
 });
@@ -61,7 +67,7 @@ describe("ProgressPanel", () => {
   };
 
   it("shows progress, stops, and closes when finished", () => {
-    const panel = new ProgressPanel(document, stillCountdown);
+    const panel = newPanel(stillCountdown);
     panel.heading("ignored before opening");
     panel.finish("ignored before opening");
     const onStop = vi.fn();
@@ -96,10 +102,7 @@ describe("ProgressPanel countdown", () => {
   it("counts a wait down, and stops when other news replaces it", () => {
     let clock = 0;
     const scheduler = new ManualScheduler();
-    const panel = new ProgressPanel(
-      document,
-      new SecondCountdown(scheduler, () => clock),
-    );
+    const panel = newPanel(new SecondCountdown(scheduler, () => clock));
     panel.open("Downloading", vi.fn());
     panel.waiting("Resting", 61_500);
     expect(detail()).toBe("Resting. Waiting 1 minute 2 seconds.");
@@ -114,10 +117,7 @@ describe("ProgressPanel countdown", () => {
   it("replaces an earlier wait and stops at zero", () => {
     let clock = 0;
     const scheduler = new ManualScheduler();
-    const panel = new ProgressPanel(
-      document,
-      new SecondCountdown(scheduler, () => clock),
-    );
+    const panel = newPanel(new SecondCountdown(scheduler, () => clock));
     panel.open("Downloading", vi.fn());
     panel.waiting("Resting", 5000);
     panel.waiting("Slow down", 1000);
@@ -139,7 +139,7 @@ describe("ProgressPanel bars", () => {
     document.querySelector<HTMLElement>(`.igdl-panel-${part}-bar`)!;
 
   it("keeps both bars hidden until a fraction arrives", () => {
-    const panel = new ProgressPanel(document, {
+    const panel = newPanel({
       start: () => vi.fn(),
     });
     panel.overall("ignored before opening", 0.5);

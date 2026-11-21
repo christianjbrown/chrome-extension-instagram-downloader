@@ -1,5 +1,5 @@
 import { StoryToolbar } from "../../../src/content/features/storyToolbar";
-import { assets, view } from "./view";
+import { assets, buttons, routes, view } from "./view";
 
 function setup(path: string) {
   const downloader = {
@@ -9,7 +9,13 @@ function setup(path: string) {
   const page = view(path, '<img src="https://cdn/story.jpg">');
   document.querySelector("img")!.getBoundingClientRect = () =>
     ({ top: 0, bottom: 500, width: 400, height: 500 }) as DOMRect;
-  const feature = new StoryToolbar(page, downloader, assets());
+  const feature = new StoryToolbar({
+    document,
+    downloader,
+    assets: assets(),
+    stories: routes(page).stories,
+    buttons: buttons(),
+  });
   feature.scan();
   return { downloader, feature, page };
 }

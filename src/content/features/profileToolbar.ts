@@ -1,15 +1,13 @@
 import { TAGS } from "../../shared/dom";
 import type { Command, UsernameCommand, CurrentViewer } from "../actions/ports";
 import type { RunProgress } from "../bulk/ports";
-import { parseRoute } from "../dom/route";
 import { PROFILE_HEADER } from "../dom/selectors";
 import { bySelector, CLASS } from "../ui/classNames";
-import {
-  createTextButton,
-  textButtonClass,
-  type ButtonIcon,
-} from "../ui/buttons";
-import type { Feature, PageView } from "./feature";
+import { textButtonClass, type ButtonIcon } from "../ui/buttons";
+import type { ButtonFactory } from "../ui/ports";
+import type { RouteReader } from "../dom/ports";
+import type { ProfileRoute } from "../dom/route";
+import type { Feature } from "./feature";
 
 const text = {
   downloadAll: "Download all posts",
@@ -54,18 +52,22 @@ const toolbarButtons: readonly ToolbarButton[] = [
 
 // The row of links under a profile's header. Download following only shows
 // on your own profile.
+export interface ProfileToolbarDependencies {
+  readonly document: Document;
+  readonly commands: ProfileCommands;
+  readonly viewers: CurrentViewer;
+  readonly runs: RunProgress;
+  readonly profiles: RouteReader<ProfileRoute>;
+  readonly buttons: ButtonFactory;
+}
+
 export class ProfileToolbar implements Feature {
-  constructor(
-    private readonly view: PageView,
-    private readonly commands: ProfileCommands,
-    private readonly viewers: CurrentViewer,
-    private readonly runs: RunProgress,
-  ) {}
+  constructor(private readonly deps: ProfileToolbarDependencies) {}
 
   scan(): void {
-    const route = parseRoute(this.view.pathname());
-    const header = this.view.document.querySelector(PROFILE_HEADER);
-    if (route.kind !== "profile" || header === null) return;
+    const route = this.deps.profiles.read();
+    const header = this.deps.document.querySelector(PROFILE_HEADER);
+    if (route === undefined || header === null) return;
     const existing = header.querySelector<HTMLElement>(
       bySelector(CLASS.profileToolbar),
     );
@@ -75,11 +77,11 @@ export class ProfileToolbar implements Feature {
   }
 
   private toolbar(username: string): HTMLElement {
-    const toolbar = this.view.document.createElement(TAGS.div);
+    const toolbar = this.deps.document.createElement(TAGS.div);
     toolbar.className = CLASS.profileToolbar;
     toolbar.dataset.username = username;
     for (const { icon, label, run } of toolbarButtons)
-      this.add(toolbar, icon, label, () => run(this.commands, username));
+      this.add(toolbar, icon, label, () => run(this.deps.commands, username));
     void this.addFollowing(toolbar, username);
     return toolbar;
   }
@@ -91,7 +93,7 @@ export class ProfileToolbar implements Feature {
     run: () => Promise<void>,
   ): void {
     toolbar.append(
-      createTextButton(this.view.document, {
+      this.deps.buttons.textButton({
         label,
         className: textButtonClass(icon),
         onClick: () => void run(),
@@ -103,11 +105,13 @@ export class ProfileToolbar implements Feature {
     toolbar: HTMLElement,
     username: string,
   ): Promise<void> {
-    const viewer = await this.viewers.current();
+    const viewer = await this.deps.viewers.current();
     if (viewer?.username !== username) return;
-    const label = (await this.runs.inProgress(viewer.id))
+    const label = (await this.deps.runs.inProgress(viewer.id))
       ? text.resumeFollowing
       : text.following;
-    this.add(toolbar, "following", label, () => this.commands.following.run());
+    this.add(toolbar, "following", label, () =>
+      this.deps.commands.following.run(),
+    );
   }
 }

@@ -2,9 +2,3 @@
 export interface Feature {
   scan(): void;
 }
-
-/** Where the page is, read at click time. */
-export interface PageView {
-  readonly document: Document;
-  pathname(): string;
-}

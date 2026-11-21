@@ -1,5 +1,5 @@
 import { ProfileToolbar } from "../../../src/content/features/profileToolbar";
-import { view } from "./view";
+import { buttons as widgets, routes, view } from "./view";
 
 function setup(
   path: string,
@@ -14,12 +14,14 @@ function setup(
     folder: { run: vi.fn(() => Promise.resolve()) },
   };
   const page = view(path, html);
-  const feature = new ProfileToolbar(
-    page,
+  const feature = new ProfileToolbar({
+    document,
     commands,
-    { current: () => Promise.resolve(viewer) },
-    { inProgress: () => Promise.resolve(inProgress) },
-  );
+    viewers: { current: () => Promise.resolve(viewer) },
+    runs: { inProgress: () => Promise.resolve(inProgress) },
+    profiles: routes(page).profiles,
+    buttons: widgets(),
+  });
   feature.scan();
   return { commands, feature, page };
 }

@@ -1,54 +1,47 @@
 import { TAGS } from "../../shared/dom";
 import type { StoryDownloads, StoryRoute } from "../actions/ports";
-import type { AssetFinder } from "../dom/ports";
-import { parseRoute } from "../dom/route";
+import type { AssetFinder, RouteReader } from "../dom/ports";
 import { bySelector, CLASS } from "../ui/classNames";
-import {
-  createTextButton,
-  textButtonClass,
-  type ButtonIcon,
-} from "../ui/buttons";
-import type { Feature, PageView } from "./feature";
+import { textButtonClass, type ButtonIcon } from "../ui/buttons";
+import type { ButtonFactory } from "../ui/ports";
+import type { Feature } from "./feature";
 
 const text = {
   download: "Download this story",
   downloadAll: "Download all",
 } as const;
 
-function storyRoute(pathname: string): StoryRoute | undefined {
-  const route = parseRoute(pathname);
-  return route.kind === "story" || route.kind === "highlight"
-    ? route
-    : undefined;
+export interface StoryToolbarDependencies {
+  readonly document: Document;
+  readonly downloader: StoryDownloads;
+  readonly assets: AssetFinder;
+  readonly stories: RouteReader<StoryRoute>;
+  readonly buttons: ButtonFactory;
 }
 
 // Download buttons floating over the story viewer, for stories and highlights.
 export class StoryToolbar implements Feature {
-  constructor(
-    private readonly view: PageView,
-    private readonly downloader: StoryDownloads,
-    private readonly assets: AssetFinder,
-  ) {}
+  constructor(private readonly deps: StoryToolbarDependencies) {}
 
   scan(): void {
-    const existing = this.view.document.querySelector(
-      bySelector(CLASS.storyToolbar),
-    );
-    if (storyRoute(this.view.pathname()) === undefined) {
+    const { document } = this.deps;
+    const existing = document.querySelector(bySelector(CLASS.storyToolbar));
+    if (this.deps.stories.read() === undefined) {
       existing?.remove();
       return;
     }
-    if (existing === null) this.view.document.body.append(this.toolbar());
+    if (existing === null) document.body.append(this.toolbar());
   }
 
   private toolbar(): HTMLElement {
-    const toolbar = this.view.document.createElement(TAGS.div);
+    const { document, downloader, assets } = this.deps;
+    const toolbar = document.createElement(TAGS.div);
     toolbar.className = CLASS.storyToolbar;
     this.add(toolbar, "download", text.download, (route) =>
-      this.downloader.current(route, this.assets.largest(this.view.document)),
+      downloader.current(route, assets.largest(document)),
     );
     this.add(toolbar, "download-all", text.downloadAll, (route) =>
-      this.downloader.all(route),
+      downloader.all(route),
     );
     return toolbar;
   }
@@ -60,11 +53,11 @@ export class StoryToolbar implements Feature {
     run: (route: StoryRoute) => Promise<void>,
   ): void {
     toolbar.append(
-      createTextButton(this.view.document, {
+      this.deps.buttons.textButton({
         label,
         className: textButtonClass(icon),
         onClick: () => {
-          const route = storyRoute(this.view.pathname());
+          const route = this.deps.stories.read();
           if (route !== undefined) void run(route);
         },
       }),

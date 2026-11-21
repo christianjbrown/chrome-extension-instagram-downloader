@@ -1,4 +1,6 @@
 // What kind of Instagram page a path is.
+import type { RouteParser } from "./ports";
+
 export type Route =
   | { readonly kind: "post"; readonly shortcode: string }
   | { readonly kind: "profile"; readonly username: string }
@@ -9,6 +11,9 @@ export type Route =
     }
   | { readonly kind: "highlight"; readonly highlightId: string }
   | { readonly kind: "other" };
+
+export type PostRoute = Extract<Route, { kind: "post" }>;
+export type ProfileRoute = Extract<Route, { kind: "profile" }>;
 
 const other: Route = { kind: "other" };
 
@@ -62,11 +67,17 @@ const profile: RouteMatcher = ([first, ...rest]) =>
 // Tried in order, and the first that recognises the path wins.
 const matchers: readonly RouteMatcher[] = [story, post, profile];
 
-export function parseRoute(pathname: string): Route {
+function parseRoute(pathname: string): Route {
   const segments = pathname.split("/").filter((segment) => segment !== "");
   for (const match of matchers) {
     const route = match(segments);
     if (route !== undefined) return route;
   }
   return other;
+}
+
+export class PathRouteParser implements RouteParser {
+  parse(pathname: string): Route {
+    return parseRoute(pathname);
+  }
 }

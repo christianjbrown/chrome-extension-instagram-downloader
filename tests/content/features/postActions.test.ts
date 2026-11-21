@@ -1,18 +1,28 @@
 import { PagePostLocator } from "../../../src/content/dom/postLocator";
 import { PostActions } from "../../../src/content/features/postActions";
 import { notifier } from "../helpers";
-import { assets, bookmark, click, view } from "./view";
+import {
+  assets,
+  bookmark,
+  buttons,
+  carousel,
+  click,
+  routes,
+  view,
+} from "./view";
 
 function setup(path: string, html: string) {
   const downloader = { download: vi.fn(() => Promise.resolve()) };
   const notes = notifier();
   const page = view(path, html);
-  const feature = new PostActions(
-    page,
+  const feature = new PostActions({
+    document,
     downloader,
-    notes,
-    new PagePostLocator(page, assets()),
-  );
+    notifier: notes,
+    locator: new PagePostLocator(routes(page).posts, assets(), carousel()),
+    carousel: carousel(),
+    buttons: buttons(),
+  });
   feature.scan();
   return { downloader, notes, feature };
 }
