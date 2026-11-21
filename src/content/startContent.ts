@@ -31,6 +31,7 @@ import { StoryToolbar } from "./features/storyToolbar";
 import { ApiGate } from "./pacing/apiGate";
 import { HourlyBudget } from "./pacing/hourlyBudget";
 import type { ContentConfig } from "./config";
+import { PagePostLocator } from "./dom/postLocator";
 import { VisibleAssetFinder } from "./dom/visibleAsset";
 import { TimerSleeper } from "./pacing/sleeper";
 import { DirectoryWriter } from "./saving/directoryWriter";
@@ -176,7 +177,7 @@ function features(wiring: Wiring): Feature[] {
   const viewers = new ViewerSource(bridge, Date.now, config.viewerRetryMs);
   const commands = profileCommands(wiring, parts, viewers, downloader);
   return [
-    new PostActions(view, posts, notifier, assets),
+    new PostActions(view, posts, notifier, new PagePostLocator(view, assets)),
     new GridButtons(view, posts, config.gridMinimumWidth),
     new ProfileToolbar(view, commands, viewers, parts.runs),
     new StoryToolbar(

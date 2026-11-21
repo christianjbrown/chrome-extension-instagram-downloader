@@ -1,3 +1,4 @@
+import { PagePostLocator } from "../../../src/content/dom/postLocator";
 import { PostActions } from "../../../src/content/features/postActions";
 import { notifier } from "../helpers";
 import { assets, bookmark, click, view } from "./view";
@@ -5,11 +6,12 @@ import { assets, bookmark, click, view } from "./view";
 function setup(path: string, html: string) {
   const downloader = { download: vi.fn(() => Promise.resolve()) };
   const notes = notifier();
+  const page = view(path, html);
   const feature = new PostActions(
-    view(path, html),
+    page,
     downloader,
     notes,
-    assets(),
+    new PagePostLocator(page, assets()),
   );
   feature.scan();
   return { downloader, notes, feature };
