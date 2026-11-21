@@ -94,3 +94,8 @@ export interface RunProgress {
   /** Whether a run for this account was stopped part way. */
   inProgress(viewerId: string): Promise<boolean>;
 }
+
+/** Tells whether the signed-in account has a following run to carry on. */
+export interface ResumableRun {
+  canResume(viewer: Viewer): Promise<boolean>;
+}

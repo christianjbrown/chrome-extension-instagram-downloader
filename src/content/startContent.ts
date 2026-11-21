@@ -11,6 +11,7 @@ import { TimeoutScheduler } from "./scheduler";
 import { ToastNotifier } from "./ui/notifier";
 import type { Bridge, Scheduler } from "./ports";
 import { DomButtons } from "./ui/buttons";
+import { SlideFiles } from "./mediaFiles";
 
 import { features } from "./featureWiring";
 import type { ContentEnvironment } from "./wiring";
@@ -49,7 +50,16 @@ export function startContent(
   );
   const bridge = pageBridge(env, config, scheduler);
   const buttons = new DomButtons(document);
-  const wiring = { env, config, scheduler, bridge, notifier, buttons };
+  const files = new SlideFiles();
+  const wiring = {
+    env,
+    config,
+    scheduler,
+    bridge,
+    notifier,
+    buttons,
+    files,
+  };
   new PageScanner(features(wiring), scheduler, config.scanDelayMs).start(
     document.body,
     (callback) => new env.window.MutationObserver(callback),

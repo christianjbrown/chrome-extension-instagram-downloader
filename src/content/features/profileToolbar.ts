@@ -1,66 +1,23 @@
 import { TAGS } from "../../shared/dom";
-import type { Command, UsernameCommand, CurrentViewer } from "../actions/ports";
-import type { RunProgress } from "../bulk/ports";
-import { PROFILE_HEADER } from "../dom/selectors";
-import { bySelector, CLASS } from "../ui/classNames";
-import { textButtonClass, type ButtonIcon } from "../ui/buttons";
-import type { ButtonFactory } from "../ui/ports";
 import type { RouteReader } from "../dom/ports";
 import type { ProfileRoute } from "../dom/route";
-import type { Feature } from "./feature";
+import { PROFILE_HEADER } from "../dom/selectors";
+import { textButtonClass } from "../ui/buttons";
+import { bySelector, CLASS } from "../ui/classNames";
+import type { ButtonFactory } from "../ui/ports";
+import type { ButtonLook, Feature, ProfileButton } from "./feature";
 
-const text = {
-  downloadAll: "Download all posts",
-  picture: "Download profile picture",
-  folder: "Change download folder",
-  resumeFollowing: "Resume downloading following",
-  following: "Download following",
-} as const;
-
-export interface ProfileCommands {
-  readonly account: UsernameCommand;
-  readonly following: Command;
-  readonly picture: UsernameCommand;
-  readonly folder: Command;
-}
-
-interface ToolbarButton {
-  readonly icon: ButtonIcon;
-  readonly label: string;
-  readonly run: (commands: ProfileCommands, username: string) => Promise<void>;
-}
-
-// The buttons every profile gets, in order. Download following is added
-// after them, on your own profile only.
-const toolbarButtons: readonly ToolbarButton[] = [
-  {
-    icon: "download-all",
-    label: text.downloadAll,
-    run: (commands, username) => commands.account.run(username),
-  },
-  {
-    icon: "picture",
-    label: text.picture,
-    run: (commands, username) => commands.picture.run(username),
-  },
-  {
-    icon: "folder",
-    label: text.folder,
-    run: (commands) => commands.folder.run(),
-  },
-];
-
-// The row of links under a profile's header. Download following only shows
-// on your own profile.
 export interface ProfileToolbarDependencies {
   readonly document: Document;
-  readonly commands: ProfileCommands;
-  readonly viewers: CurrentViewer;
-  readonly runs: RunProgress;
   readonly profiles: RouteReader<ProfileRoute>;
   readonly buttons: ButtonFactory;
+  /** The buttons, in the order they appear. */
+  readonly profileButtons: readonly ProfileButton[];
 }
 
+// The row of links under a profile's header. Each button decides whether it
+// belongs on the profile, some only once they have asked, so each takes its
+// own place in the row whenever it is offered.
 export class ProfileToolbar implements Feature {
   constructor(private readonly deps: ProfileToolbarDependencies) {}
 
@@ -80,38 +37,23 @@ export class ProfileToolbar implements Feature {
     const toolbar = this.deps.document.createElement(TAGS.div);
     toolbar.className = CLASS.profileToolbar;
     toolbar.dataset.username = username;
-    for (const { icon, label, run } of toolbarButtons)
-      this.add(toolbar, icon, label, () => run(this.deps.commands, username));
-    void this.addFollowing(toolbar, username);
+    const placed: (HTMLElement | undefined)[] = [];
+    this.deps.profileButtons.forEach((button, index) => {
+      button.offer(username, (look) => {
+        const element = this.element(look, () => button.run(username));
+        placed[index] = element;
+        const next = placed.slice(index + 1).find((el) => el !== undefined);
+        toolbar.insertBefore(element, next ?? null);
+      });
+    });
     return toolbar;
   }
 
-  private add(
-    toolbar: HTMLElement,
-    icon: ButtonIcon,
-    label: string,
-    run: () => Promise<void>,
-  ): void {
-    toolbar.append(
-      this.deps.buttons.textButton({
-        label,
-        className: textButtonClass(icon),
-        onClick: () => void run(),
-      }),
-    );
-  }
-
-  private async addFollowing(
-    toolbar: HTMLElement,
-    username: string,
-  ): Promise<void> {
-    const viewer = await this.deps.viewers.current();
-    if (viewer?.username !== username) return;
-    const label = (await this.deps.runs.inProgress(viewer.id))
-      ? text.resumeFollowing
-      : text.following;
-    this.add(toolbar, "following", label, () =>
-      this.deps.commands.following.run(),
-    );
+  private element(look: ButtonLook, run: () => Promise<void>): HTMLElement {
+    return this.deps.buttons.textButton({
+      label: look.label,
+      className: textButtonClass(look.icon),
+      onClick: () => void run(),
+    });
   }
 }

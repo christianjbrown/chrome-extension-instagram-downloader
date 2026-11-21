@@ -1,3 +1,4 @@
+import { SlideFiles } from "../../../src/content/mediaFiles";
 import { HighlightStories } from "../../../src/content/actions/highlightStories";
 import { StoryDownloader } from "../../../src/content/actions/storyDownloader";
 import { UserStories } from "../../../src/content/actions/userStories";
@@ -27,10 +28,13 @@ function setup() {
     bridge,
     downloader,
     notes,
-    stories: new StoryDownloader(bridge, downloader, notes, [
-      new UserStories(bridge),
-      new HighlightStories(bridge),
-    ]),
+    stories: new StoryDownloader({
+      bridge,
+      downloader,
+      notifier: notes,
+      files: new SlideFiles(),
+      kinds: [new UserStories(bridge), new HighlightStories(bridge)],
+    }),
   };
 }
 
@@ -71,7 +75,13 @@ describe("StoryDownloader", () => {
 
   it("says so when no kind of story page recognises the address", async () => {
     const { bridge, downloader, notes } = setup();
-    const stories = new StoryDownloader(bridge, downloader, notes, []);
+    const stories = new StoryDownloader({
+      bridge,
+      downloader,
+      notifier: notes,
+      files: new SlideFiles(),
+      kinds: [],
+    });
     await stories.all(highlight);
     expect(notes.error).toHaveBeenCalledWith(
       "Could not download this story: could not tell which story is showing",

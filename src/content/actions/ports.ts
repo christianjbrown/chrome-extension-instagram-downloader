@@ -45,3 +45,9 @@ export interface Command {
 export interface UsernameCommand {
   run(username: string): Promise<void>;
 }
+
+/** Tells whether a profile is the signed-in account's own. */
+export interface OwnProfile {
+  /** The signed-in account when the profile is its own, otherwise undefined. */
+  viewerOn(username: string): Promise<Viewer | undefined>;
+}

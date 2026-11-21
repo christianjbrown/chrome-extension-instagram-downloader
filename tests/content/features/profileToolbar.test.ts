@@ -1,3 +1,11 @@
+import { SignedInProfile } from "../../../src/content/actions/ownProfile";
+import { StoppedFollowingRun } from "../../../src/content/bulk/resumableRun";
+import {
+  CommandButton,
+  FollowingButton,
+  PROFILE_BUTTON_LOOKS,
+} from "../../../src/content/features/profileButtons";
+import type { ButtonLook } from "../../../src/content/features/feature";
 import { ProfileToolbar } from "../../../src/content/features/profileToolbar";
 import { buttons as widgets, routes, view } from "./view";
 
@@ -16,11 +24,20 @@ function setup(
   const page = view(path, html);
   const feature = new ProfileToolbar({
     document,
-    commands,
-    viewers: { current: () => Promise.resolve(viewer) },
-    runs: { inProgress: () => Promise.resolve(inProgress) },
     profiles: routes(page).profiles,
     buttons: widgets(),
+    profileButtons: [
+      new CommandButton(PROFILE_BUTTON_LOOKS.downloadAll, commands.account),
+      new CommandButton(PROFILE_BUTTON_LOOKS.picture, commands.picture),
+      new CommandButton(PROFILE_BUTTON_LOOKS.folder, commands.folder),
+      new FollowingButton(
+        commands.following,
+        new SignedInProfile({ current: () => Promise.resolve(viewer) }),
+        new StoppedFollowingRun({
+          inProgress: () => Promise.resolve(inProgress),
+        }),
+      ),
+    ],
   });
   feature.scan();
   return { commands, feature, page };
@@ -103,5 +120,32 @@ describe("ProfileToolbar", () => {
     expect(document.querySelector(".igdl-profile-toolbar")).toBeNull();
     setup("/alice/", "<main></main>");
     expect(document.querySelector(".igdl-profile-toolbar")).toBeNull();
+  });
+
+  it("keeps the registered order when an earlier button answers last", () => {
+    document.body.innerHTML = "<main><header></header></main>";
+    let showLater: (() => void) | undefined;
+    const late = {
+      offer: (_username: string, show: (look: ButtonLook) => void) => {
+        showLater = () => {
+          show({ icon: "folder", label: "First" });
+        };
+      },
+      run: vi.fn(() => Promise.resolve()),
+    };
+    const prompt = {
+      offer: (_username: string, show: (look: ButtonLook) => void) => {
+        show({ icon: "picture", label: "Second" });
+      },
+      run: vi.fn(() => Promise.resolve()),
+    };
+    new ProfileToolbar({
+      document,
+      profiles: routes(view("/alice/", document.body.innerHTML)).profiles,
+      buttons: widgets(),
+      profileButtons: [late, prompt],
+    }).scan();
+    showLater?.();
+    expect(buttons()).toEqual(["First", "Second"]);
   });
 });

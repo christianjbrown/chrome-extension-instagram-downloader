@@ -1,3 +1,4 @@
+import { SlideFiles } from "../../../src/content/mediaFiles";
 import { AccountArchiver } from "../../../src/content/bulk/accountArchiver";
 import { PinnedAwareCatchUp } from "../../../src/content/bulk/catchUp";
 import { CONTENT_CONFIG } from "../../../src/content/config";
@@ -48,6 +49,7 @@ function setup(
     pacer,
     totals,
     archiver: new AccountArchiver({
+      files: new SlideFiles(),
       bridge,
       writer,
       pacer: pacer as never,

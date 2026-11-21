@@ -1,5 +1,9 @@
 import { PagePostLocator } from "../../../src/content/dom/postLocator";
 import { PostActions } from "../../../src/content/features/postActions";
+import {
+  AllSlidesButton,
+  ShowingSlideButton,
+} from "../../../src/content/features/postButtons";
 import { notifier } from "../helpers";
 import {
   assets,
@@ -20,7 +24,7 @@ function setup(path: string, html: string) {
     downloader,
     notifier: notes,
     locator: new PagePostLocator(routes(page).posts, assets(), carousel()),
-    carousel: carousel(),
+    postButtons: [new ShowingSlideButton(), new AllSlidesButton(carousel())],
     buttons: buttons(),
   });
   feature.scan();

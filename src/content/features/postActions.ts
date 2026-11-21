@@ -1,10 +1,10 @@
 import { TAGS } from "../../shared/dom";
 import type { PostDownloads } from "../actions/ports";
-import type { CarouselReader, PostLocator } from "../dom/ports";
+import type { PostLocator } from "../dom/ports";
 import type { ButtonFactory, Notifier } from "../ui/ports";
 import { ARTICLE, MAIN } from "../dom/selectors";
-import { bySelector, CLASS, classes } from "../ui/classNames";
-import type { Feature } from "./feature";
+import { bySelector, CLASS } from "../ui/classNames";
+import type { Feature, PostButton } from "./feature";
 
 // Instagram's bookmark icon, saved or not, marks every post's action bar.
 const bookmarkIcon =
@@ -17,8 +17,6 @@ const loneChild = 1;
 const actionButton = '[role="button"], button';
 
 const text = {
-  download: "Download",
-  downloadAll: "Download all slides",
   unknownPost: "Could not tell which post this is.",
 } as const;
 
@@ -42,36 +40,13 @@ function place(group: Element, slot: Element): void {
   else slot.before(group);
 }
 
-interface PostButton {
-  readonly label: string;
-  readonly className: string;
-  /** Saves every slide rather than the one showing. */
-  readonly all: boolean;
-  readonly shows: (container: ParentNode, carousel: CarouselReader) => boolean;
-}
-
-// The buttons beside the bookmark, in order.
-const postButtons: readonly PostButton[] = [
-  {
-    label: text.download,
-    className: classes(CLASS.button, CLASS.download),
-    all: false,
-    shows: () => true,
-  },
-  {
-    label: text.downloadAll,
-    className: classes(CLASS.button, CLASS.downloadAll),
-    all: true,
-    shows: (container, carousel) => carousel.isCarousel(container),
-  },
-];
-
 export interface PostActionsDependencies {
   readonly document: Document;
   readonly downloader: PostDownloads;
   readonly notifier: Notifier;
   readonly locator: PostLocator;
-  readonly carousel: CarouselReader;
+  /** The buttons beside the bookmark, in order. */
+  readonly postButtons: readonly PostButton[];
   readonly buttons: ButtonFactory;
 }
 
@@ -98,8 +73,9 @@ export class PostActions implements Feature {
     const group = this.deps.document.createElement(TAGS.span);
     group.className = CLASS.postActions;
     const container = this.container(slot);
-    for (const { label, className, all, shows } of postButtons) {
-      if (!shows(container, this.deps.carousel)) continue;
+    for (const button of this.deps.postButtons) {
+      if (!button.shows(container)) continue;
+      const { label, className, all } = button;
       group.append(
         this.deps.buttons.button({
           label,
