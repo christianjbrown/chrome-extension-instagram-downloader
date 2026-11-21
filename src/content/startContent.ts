@@ -7,7 +7,9 @@ import {
   DownloadFollowingCommand,
   ProfilePictureCommand,
 } from "./actions/profileCommands";
+import { HighlightStories } from "./actions/highlightStories";
 import { StoryDownloader } from "./actions/storyDownloader";
+import { UserStories } from "./actions/userStories";
 import { ViewerSource } from "./actions/viewerSource";
 import { PageBridge } from "./bridgeClient";
 import { AccountArchiver } from "./bulk/accountArchiver";
@@ -182,7 +184,10 @@ function features(wiring: Wiring): Feature[] {
     new ProfileToolbar(view, commands, viewers, parts.runs),
     new StoryToolbar(
       view,
-      new StoryDownloader(bridge, downloader, notifier),
+      new StoryDownloader(bridge, downloader, notifier, [
+        new UserStories(bridge),
+        new HighlightStories(bridge),
+      ]),
       assets,
     ),
   ];
