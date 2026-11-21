@@ -1,8 +1,8 @@
 // Wires up the page script. Runs at document_start in Instagram's own world.
-import { EVENTS, LOADING_STATE } from "../shared/dom";
 import { pageOrigin } from "../shared/origin";
 import { BoundedMap } from "./boundedMap";
 import { BridgeServer } from "./bridgeServer";
+import { whenParsed } from "./documentReady";
 import { scanEmbeddedJson } from "./embeddedJson";
 import type { PageConfig } from "./config";
 import { ProcedureInputs } from "./procedureInputs";
@@ -39,12 +39,9 @@ export function startPage(target: PageWindow, config: PageConfig): void {
   const policy = new InstagramApiPolicy(pageOrigin);
   tapXhr(target.XMLHttpRequest.prototype, ingest, policy);
   tapFetch(target, ingest, policy);
-  const scan = (): void => {
+  whenParsed(target.document, () => {
     scanEmbeddedJson(target.document, ingest);
-  };
-  if (target.document.readyState === LOADING_STATE)
-    target.document.addEventListener(EVENTS.contentLoaded, scan);
-  else scan();
+  });
   const require = windowRequire(target);
   const procedures = createProcedures({
     media,
