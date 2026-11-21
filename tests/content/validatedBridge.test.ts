@@ -1,4 +1,8 @@
-import { PROCEDURE_OUTPUTS } from "../../src/content/procedureWiring";
+import { procedureOutputs } from "../../src/content/procedureWiring";
+import { MediaSchema } from "../../src/shared/mediaSchema";
+import { isMediaUrl } from "../../src/shared/mediaUrl";
+
+const PROCEDURE_OUTPUTS = procedureOutputs(new MediaSchema(isMediaUrl));
 import { ValidatedBridge } from "../../src/content/validatedBridge";
 import { fakeBridge } from "./helpers";
 

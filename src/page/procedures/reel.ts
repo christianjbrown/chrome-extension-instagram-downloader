@@ -5,10 +5,10 @@ import { REEL_PROCEDURE } from "../../shared/procedures/reel";
 import type { FieldCheck, PageProcedure, ReelLookup } from "../ports";
 import { loadedReel, settle } from "./lookup";
 
-type Name = typeof REEL_PROCEDURE.name;
+type Name = typeof REEL_PROCEDURE;
 
 export class ReelProcedure implements PageProcedure<Name> {
-  readonly name = REEL_PROCEDURE.name;
+  readonly name = REEL_PROCEDURE;
 
   constructor(
     private readonly reels: ReelLookup,

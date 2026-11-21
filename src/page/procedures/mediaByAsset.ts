@@ -7,12 +7,12 @@ import { MEDIA_BY_ASSET_PROCEDURE } from "../../shared/procedures/mediaByAsset";
 import type { FieldCheck, MediaByAssetLookup, PageProcedure } from "../ports";
 import { found, settle } from "./lookup";
 
-type Name = typeof MEDIA_BY_ASSET_PROCEDURE.name;
+type Name = typeof MEDIA_BY_ASSET_PROCEDURE;
 
 const pictureNotLoaded = "That picture has not loaded yet";
 
 export class MediaByAssetProcedure implements PageProcedure<Name> {
-  readonly name = MEDIA_BY_ASSET_PROCEDURE.name;
+  readonly name = MEDIA_BY_ASSET_PROCEDURE;
 
   constructor(
     private readonly media: MediaByAssetLookup,

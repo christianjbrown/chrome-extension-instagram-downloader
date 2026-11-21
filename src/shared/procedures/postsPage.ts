@@ -1,6 +1,9 @@
 // One page of an account's posts.
-import type { ProcedureOutput } from "../bridge";
-import { count, optional, readablePosts, record, text } from "../schemas";
+import type { PostsPage, ProcedureOutput } from "../bridge";
+import type { PostListCheck } from "../checks";
+import { count, optional, record, text } from "../schemas";
+
+export const POSTS_PAGE_PROCEDURE = "postsPage";
 
 declare module "../bridge" {
   interface Procedures {
@@ -11,11 +14,16 @@ declare module "../bridge" {
   }
 }
 
-export const POSTS_PAGE_PROCEDURE = {
-  name: "postsPage",
-  parse: (value) => {
+export class PostsPageOutput implements ProcedureOutput<
+  typeof POSTS_PAGE_PROCEDURE
+> {
+  readonly name = POSTS_PAGE_PROCEDURE;
+
+  constructor(private readonly posts: PostListCheck) {}
+
+  parse(value: unknown): PostsPage {
     const raw = record(value, "page of posts");
-    const { items, unreadable } = readablePosts(raw.items);
+    const { items, unreadable } = this.posts.readablePosts(raw.items);
     const total = optional(raw.total, (v) => count(v, "post count"));
     return {
       items,
@@ -23,5 +31,5 @@ export const POSTS_PAGE_PROCEDURE = {
       ...(unreadable === 0 ? {} : { unreadable }),
       ...(total === undefined ? {} : { total }),
     };
-  },
-} as const satisfies ProcedureOutput<"postsPage">;
+  }
+}

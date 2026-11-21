@@ -1,4 +1,8 @@
-import { PROCEDURE_OUTPUTS } from "../../src/content/procedureWiring";
+import { procedureOutputs } from "../../src/content/procedureWiring";
+import { MediaSchema } from "../../src/shared/mediaSchema";
+import { isMediaUrl } from "../../src/shared/mediaUrl";
+
+const PROCEDURE_OUTPUTS = procedureOutputs(new MediaSchema(isMediaUrl));
 import type { Output, ProcedureName } from "../../src/shared/bridge";
 
 const parseOutput = <N extends ProcedureName>(
@@ -140,5 +144,25 @@ describe("procedure answer checks", () => {
         image_versions2: { candidates: [{ url: 5, width: 1, height: 1 }] },
       }),
     ).toThrow("address");
+  });
+
+  it("holds every address to the policy it is given", () => {
+    const refuseAll = procedureOutputs(new MediaSchema(() => false));
+    expect(() => refuseAll.media.parse(photo("1"))).toThrow("address");
+    expect(
+      procedureOutputs(new MediaSchema(() => true)).media.parse({
+        pk: 1,
+        image_versions2: {
+          candidates: [
+            { url: "https://any.example/a.jpg", width: 1, height: 1 },
+          ],
+        },
+      }),
+    ).toEqual({
+      pk: 1,
+      image_versions2: {
+        candidates: [{ url: "https://any.example/a.jpg", width: 1, height: 1 }],
+      },
+    });
   });
 });

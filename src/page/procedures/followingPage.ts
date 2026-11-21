@@ -4,10 +4,10 @@ import { isRecord } from "../../shared/json";
 import { FOLLOWING_PAGE_PROCEDURE } from "../../shared/procedures/followingPage";
 import type { FieldCheck, FollowingPages, PageProcedure } from "../ports";
 
-type Name = typeof FOLLOWING_PAGE_PROCEDURE.name;
+type Name = typeof FOLLOWING_PAGE_PROCEDURE;
 
 export class FollowingPageProcedure implements PageProcedure<Name> {
-  readonly name = FOLLOWING_PAGE_PROCEDURE.name;
+  readonly name = FOLLOWING_PAGE_PROCEDURE;
 
   constructor(
     private readonly following: FollowingPages,

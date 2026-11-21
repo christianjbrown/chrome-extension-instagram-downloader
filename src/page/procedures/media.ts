@@ -11,10 +11,10 @@ import type {
   PageProcedure,
 } from "../ports";
 
-type Name = typeof MEDIA_PROCEDURE.name;
+type Name = typeof MEDIA_PROCEDURE;
 
 export class MediaProcedure implements PageProcedure<Name> {
-  readonly name = MEDIA_PROCEDURE.name;
+  readonly name = MEDIA_PROCEDURE;
 
   constructor(
     private readonly media: MediaByIdLookup,

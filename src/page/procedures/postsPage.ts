@@ -11,10 +11,10 @@ import type {
   PostsQuery,
 } from "../ports";
 
-type Name = typeof POSTS_PAGE_PROCEDURE.name;
+type Name = typeof POSTS_PAGE_PROCEDURE;
 
 export class PostsPageProcedure implements PageProcedure<Name> {
-  readonly name = POSTS_PAGE_PROCEDURE.name;
+  readonly name = POSTS_PAGE_PROCEDURE;
 
   constructor(
     private readonly users: PostCountLookup,

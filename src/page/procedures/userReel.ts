@@ -11,10 +11,10 @@ import type {
 } from "../ports";
 import { loadedReel, settle } from "./lookup";
 
-type Name = typeof USER_REEL_PROCEDURE.name;
+type Name = typeof USER_REEL_PROCEDURE;
 
 export class UserReelProcedure implements PageProcedure<Name> {
-  readonly name = USER_REEL_PROCEDURE.name;
+  readonly name = USER_REEL_PROCEDURE;
 
   constructor(
     private readonly reels: ReelLookup,
