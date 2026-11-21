@@ -1,4 +1,6 @@
 // Builds the features that add buttons to the page.
+import { FirstKeyFinder } from "./actions/mediaFinder";
+import { AssetLookup, MediaIdLookup } from "./actions/mediaLookups";
 import { PostDownloader } from "./actions/postDownloader";
 import {
   ChangeFolderCommand,
@@ -99,12 +101,18 @@ function shared(wiring: Wiring) {
     { viewportHeight: () => env.window.innerHeight },
     config.assetMinimumSide,
   );
+  // A post or story is found by its id first, then by the picture on screen.
+  const finder = new FirstKeyFinder([
+    new MediaIdLookup(bridge),
+    new AssetLookup(bridge),
+  ]);
   return {
     parts,
     downloader,
     assets,
+    finder,
     posts: new PostDownloader({
-      bridge,
+      finder,
       downloader,
       notifier,
       files: wiring.files,
@@ -142,7 +150,7 @@ function postFeatures(
 
 function accountFeatures(
   wiring: Wiring,
-  { parts, downloader, assets, viewers }: ReturnType<typeof shared>,
+  { parts, downloader, assets, viewers, finder }: ReturnType<typeof shared>,
   routes: Routes,
 ): Feature[] {
   const { env, bridge, notifier, buttons } = wiring;
@@ -157,7 +165,7 @@ function accountFeatures(
     new StoryToolbar({
       document,
       downloader: new StoryDownloader({
-        bridge,
+        finder,
         downloader,
         notifier,
         files: wiring.files,

@@ -1,11 +1,31 @@
 // What a button's action is, as the features see it.
 import type { Reel, Viewer } from "../../shared/bridge";
+import type { InstagramMedia } from "../../shared/media";
 import type { ROUTE_KINDS, Route } from "../dom/route";
 
 /** A post found by id, optionally one slide of it, or by the picture on screen. */
 export type PostTarget =
   | { readonly mediaId: string; readonly slide: number | undefined }
-  | { readonly asset: string };
+  | { readonly asset: string; readonly slide?: undefined };
+
+/** Every key a post or story can be found by. Each lookup reads its own. */
+export interface MediaKeys {
+  readonly mediaId?: string | undefined;
+  readonly asset?: string | undefined;
+}
+
+/** One way of finding a post or story, by the one key it reads. */
+export interface MediaLookup {
+  /** This lookup's own key, when the target carries it. */
+  key(target: MediaKeys): string | undefined;
+  find(key: string): Promise<InstagramMedia>;
+}
+
+/** Finds a post or story by the first key one of its lookups reads. */
+export interface MediaFinder {
+  /** Undefined when no lookup reads any key the target carries. */
+  find(target: MediaKeys): Promise<InstagramMedia> | undefined;
+}
 
 export interface PostDownloads {
   /** `owner` names the files when the post itself does not say whose it is. */

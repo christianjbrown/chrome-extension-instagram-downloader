@@ -1,5 +1,10 @@
 import { SlideFiles } from "../../../src/content/mediaFiles";
 import { LargestVersionChooser } from "../../../src/content/versionChooser";
+import { FirstKeyFinder } from "../../../src/content/actions/mediaFinder";
+import {
+  AssetLookup,
+  MediaIdLookup,
+} from "../../../src/content/actions/mediaLookups";
 import { HighlightStories } from "../../../src/content/actions/highlightStories";
 import { StoryDownloader } from "../../../src/content/actions/storyDownloader";
 import { UserStories } from "../../../src/content/actions/userStories";
@@ -30,7 +35,10 @@ function setup() {
     downloader,
     notes,
     stories: new StoryDownloader({
-      bridge,
+      finder: new FirstKeyFinder([
+        new MediaIdLookup(bridge),
+        new AssetLookup(bridge),
+      ]),
       downloader,
       notifier: notes,
       files: new SlideFiles(new LargestVersionChooser()),
@@ -78,7 +86,7 @@ describe("StoryDownloader", () => {
   it("says so when no kind of story page recognises the address", async () => {
     const { bridge, downloader, notes } = setup();
     const stories = new StoryDownloader({
-      bridge,
+      finder: new FirstKeyFinder([]),
       downloader,
       notifier: notes,
       files: new SlideFiles(new LargestVersionChooser()),
