@@ -35,10 +35,10 @@ export class PathRouteParser implements RouteParser {
 
   parse(pathname: string): Route {
     const segments = pathname.split("/").filter((segment) => segment !== "");
-    for (const matcher of this.matchers) {
-      const route = matcher.match(segments);
-      if (route !== undefined) return route;
-    }
-    return OTHER_ROUTE;
+    const matched = this.matchers.reduce<Route | undefined>(
+      (route, matcher) => route ?? matcher.match(segments),
+      undefined,
+    );
+    return matched ?? OTHER_ROUTE;
   }
 }

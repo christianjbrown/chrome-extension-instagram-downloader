@@ -2,7 +2,14 @@
 // the part of the response it uses.
 import type { PostsPage } from "../shared/bridge";
 import type { InstagramMedia } from "../shared/media";
-import { isJsonObject, type JsonObject } from "../shared/json";
+import {
+  hasUsername,
+  isJsonObject,
+  textOrUndefined,
+  type JsonObject,
+} from "../shared/json";
+import { optionalField, someCount } from "../shared/fields";
+import { isMediaRecord } from "./mediaShapes";
 import type { Relay, ProfileUser, Queries } from "./ports";
 import { MODULES, POST_BY_ID_MEMBER, RESPONSE_KEYS } from "./instagramApi";
 
@@ -43,10 +50,24 @@ const postsVariables = (
   __relay_internal__pv__PolarisImmersiveFeedrelayprovider: false,
 });
 
-function profilePicture(user: JsonObject): string | undefined {
+// The full size picture when Instagram sent one, and the small one if not.
+function pictureUrl(user: JsonObject): unknown {
   const hd = user.hd_profile_pic_url_info;
-  const url = isJsonObject(hd) ? hd.url : user.profile_pic_url;
-  return typeof url === "string" ? url : undefined;
+  return isJsonObject(hd) ? hd.url : user.profile_pic_url;
+}
+
+const profilePicture = (user: JsonObject): string | undefined =>
+  textOrUndefined(pictureUrl(user));
+
+const postCountOf = ({ media_count: count }: JsonObject): number =>
+  typeof count === "number" ? count : noPosts;
+
+// The cursor of the page after this one, when there is one.
+function nextCursor(pageInfo: unknown): string | undefined {
+  const more = field(pageInfo, RESPONSE_KEYS.hasNextPage) === true;
+  return more
+    ? textOrUndefined(field(pageInfo, RESPONSE_KEYS.endCursor))
+    : undefined;
 }
 
 export class InstagramQueries implements Queries {
@@ -60,8 +81,8 @@ export class InstagramQueries implements Queries {
     const data = await this.relay.run(query, { mediaId });
     const info = field(data, RESPONSE_KEYS.mediaInfo);
     const [media] = asArray(field(info, RESPONSE_KEYS.items));
-    if (!isJsonObject(media)) throw new Error(text.postNotFound);
-    return media as unknown as InstagramMedia;
+    if (!isMediaRecord(media)) throw new Error(text.postNotFound);
+    return media;
   }
 
   async postsPage(
@@ -74,15 +95,16 @@ export class InstagramQueries implements Queries {
       postsVariables(username, cursor, this.postsPageSize),
     );
     const connection = field(data, RESPONSE_KEYS.timeline);
-    const items = asArray(field(connection, RESPONSE_KEYS.edges)).map((edge) =>
+    const nodes = asArray(field(connection, RESPONSE_KEYS.edges)).map((edge) =>
       field(edge, RESPONSE_KEYS.node),
-    ) as InstagramMedia[];
-    const pageInfo = field(connection, RESPONSE_KEYS.pageInfo);
-    const more = field(pageInfo, RESPONSE_KEYS.hasNextPage) === true;
-    const end = field(pageInfo, RESPONSE_KEYS.endCursor);
+    );
+    const items = nodes.filter(isMediaRecord);
     return {
       items,
-      cursor: more && typeof end === "string" ? end : undefined,
+      cursor: nextCursor(field(connection, RESPONSE_KEYS.pageInfo)),
+      // Posts without even an id are left out and counted, so the run
+      // counts them as failed rather than losing them.
+      ...optionalField("unreadable", someCount(nodes.length - items.length)),
     };
   }
 
@@ -93,13 +115,11 @@ export class InstagramQueries implements Queries {
       enable_integrity_filters: true,
     });
     const user = field(data, RESPONSE_KEYS.user);
-    if (!isJsonObject(user) || typeof user.username !== "string")
-      throw new Error(text.accountNotFound);
+    if (!hasUsername(user)) throw new Error(text.accountNotFound);
     return {
       username: user.username,
       profilePicUrl: profilePicture(user),
-      totalPosts:
-        typeof user.media_count === "number" ? user.media_count : noPosts,
+      totalPosts: postCountOf(user),
     };
   }
 }

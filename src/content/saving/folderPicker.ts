@@ -29,9 +29,32 @@ export class FolderPicker implements FolderSource {
     private readonly showPicker: ShowDirectoryPicker,
   ) {}
 
-  async pick(chooseAgain = false): Promise<FileSystemDirectoryHandle> {
-    const stored = chooseAgain ? undefined : await this.store.get();
-    if (stored !== undefined && (await this.permitted(stored))) return stored;
+  async pick(chooseAgain?: boolean): Promise<FileSystemDirectoryHandle> {
+    return (await this.remembered(chooseAgain)) ?? this.choose();
+  }
+
+  private remembered(
+    chooseAgain: boolean | undefined,
+  ): Promise<FileSystemDirectoryHandle | undefined> {
+    return chooseAgain === true
+      ? Promise.resolve(undefined)
+      : this.permittedStored();
+  }
+
+  private async permittedStored(): Promise<
+    FileSystemDirectoryHandle | undefined
+  > {
+    const stored = await this.store.get();
+    return stored === undefined ? undefined : this.ifPermitted(stored);
+  }
+
+  private async ifPermitted(
+    stored: FileSystemDirectoryHandle,
+  ): Promise<FileSystemDirectoryHandle | undefined> {
+    return (await this.permitted(stored)) ? stored : undefined;
+  }
+
+  private async choose(): Promise<FileSystemDirectoryHandle> {
     const chosen = await this.showPicker({
       id: pickerId,
       ...readwrite,

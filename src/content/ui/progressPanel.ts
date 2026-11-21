@@ -1,7 +1,7 @@
 import { TAGS } from "../../shared/dom";
 import { describeWait } from "../pacing/waitText";
 import { bySelector, CLASS } from "./classNames";
-import type { ButtonFactory, Countdown, ProgressBars, RunPanel } from "./ports";
+import type { TextButtons, Countdown, ProgressBars, RunPanel } from "./ports";
 
 // Top to bottom. Bars stay hidden until something reports a fraction.
 const parts = [
@@ -32,13 +32,19 @@ export class ProgressPanel implements RunPanel {
   constructor(
     private readonly document: Document,
     private readonly countdown: Countdown,
-    private readonly buttons: ButtonFactory,
+    private readonly buttons: TextButtons,
     private readonly bars: ProgressBars,
   ) {}
 
   open(title: string, onStop: () => void): void {
     this.stopCountdown();
     this.element?.remove();
+    const panel = this.build(title, onStop);
+    this.document.body.append(panel);
+    this.element = panel;
+  }
+
+  private build(title: string, onStop: () => void): HTMLElement {
     const panel = this.document.createElement(TAGS.div);
     panel.className = CLASS.panel;
     for (const part of parts) panel.append(this.line(part));
@@ -51,8 +57,7 @@ export class ProgressPanel implements RunPanel {
         onClick: onStop,
       }),
     );
-    this.document.body.append(panel);
-    this.element = panel;
+    return panel;
   }
 
   private line(part: Part): HTMLElement {
@@ -62,19 +67,23 @@ export class ProgressPanel implements RunPanel {
     return line;
   }
 
-  private find(part: Part, panel = this.element): HTMLElement | null {
-    return (
-      panel?.querySelector<HTMLElement>(bySelector(partClass(part))) ?? null
-    );
+  private find(
+    part: Part,
+    panel: HTMLElement | undefined,
+  ): HTMLElement | null | undefined {
+    return panel?.querySelector<HTMLElement>(bySelector(partClass(part)));
   }
 
   private set(part: Part, text: string, panel = this.element): void {
-    const line = this.find(part, panel);
+    this.write(this.find(part, panel), text);
+  }
+
+  private write(line: HTMLElement | null | undefined, text: string): void {
     if (line) line.textContent = text;
   }
 
   private bar(part: Part, fraction: number | undefined): void {
-    const bar = this.find(part);
+    const bar = this.find(part, this.element);
     if (bar) this.bars.show(bar, fraction);
   }
 
@@ -107,7 +116,12 @@ export class ProgressPanel implements RunPanel {
   finish(message: string): void {
     this.detail(message);
     const panel = this.element;
-    panel?.querySelector(bySelector(CLASS.panelButton))?.replaceWith(
+    if (panel !== undefined) this.offerClose(panel);
+  }
+
+  // The Stop button becomes Close once the run is over.
+  private offerClose(panel: HTMLElement): void {
+    panel.querySelector(bySelector(CLASS.panelButton))?.replaceWith(
       this.buttons.textButton({
         label: text.close,
         className: CLASS.panelButton,

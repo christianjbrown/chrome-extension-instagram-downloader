@@ -1,6 +1,6 @@
 // The buttons beside a post's bookmark. The composition root lists them in
 // the order they appear.
-import type { CarouselReader } from "../dom/ports";
+import type { CarouselCheck } from "../dom/ports";
 import { CLASS, classes } from "../ui/classNames";
 import type { PostButton } from "./feature";
 
@@ -26,7 +26,7 @@ export class AllSlidesButton implements PostButton {
   readonly className = classes(CLASS.button, CLASS.downloadAll);
   readonly all = true;
 
-  constructor(private readonly carousel: CarouselReader) {}
+  constructor(private readonly carousel: CarouselCheck) {}
 
   shows(container: ParentNode): boolean {
     return this.carousel.isCarousel(container);

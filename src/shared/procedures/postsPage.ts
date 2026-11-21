@@ -1,9 +1,12 @@
 // One page of an account's posts.
 import type { PostsPage, ProcedureOutput } from "../bridge";
 import type { PostListCheck } from "../checks";
+import { optionalField, someCount } from "../fields";
 import { count, optional, record, text } from "../schemas";
 
 export const POSTS_PAGE_PROCEDURE = "postsPage";
+
+const postCount = (value: unknown): number => count(value, "post count");
 
 declare module "../bridge" {
   interface Procedures {
@@ -23,13 +26,18 @@ export class PostsPageOutput implements ProcedureOutput<
 
   parse(value: unknown): PostsPage {
     const raw = record(value, "page of posts");
-    const { items, unreadable } = this.posts.readablePosts(raw.items);
-    const total = optional(raw.total, (v) => count(v, "post count"));
+    const readable = this.posts.readablePosts(raw.items);
+    const unreadable = readable.unreadable + this.leftOut(raw.unreadable);
     return {
-      items,
+      items: readable.items,
       cursor: optional(raw.cursor, (v) => text(v, "cursor")),
-      ...(unreadable === 0 ? {} : { unreadable }),
-      ...(total === undefined ? {} : { total }),
+      ...optionalField("unreadable", someCount(unreadable)),
+      ...optionalField("total", optional(raw.total, postCount)),
     };
+  }
+
+  // The page leaves out posts with no id at all, and says how many.
+  private leftOut(value: unknown): number {
+    return optional(value, postCount) ?? 0;
   }
 }

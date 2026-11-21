@@ -15,8 +15,19 @@ export class ViewerSource implements CurrentViewer {
   ) {}
 
   async current(): Promise<Viewer | undefined> {
-    if (this.viewer !== undefined) return this.viewer;
-    if (this.now() - this.failedAt < this.retryAfterMs) return undefined;
+    return this.viewer ?? this.lookUp();
+  }
+
+  private lookUp(): Promise<Viewer | undefined> {
+    return this.waiting() ? Promise.resolve(undefined) : this.ask();
+  }
+
+  // A failed lookup is not tried again until the retry time has passed.
+  private waiting(): boolean {
+    return this.now() - this.failedAt < this.retryAfterMs;
+  }
+
+  private async ask(): Promise<Viewer | undefined> {
     try {
       this.viewer = await this.bridge.call("viewer", {});
       return this.viewer;

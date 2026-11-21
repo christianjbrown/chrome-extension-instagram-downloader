@@ -30,6 +30,15 @@ const fakeResume = (): ResumePolicy => ({
   remaining: vi.fn((state: RunState, following: string[]) =>
     following.filter((name) => !state.done.includes(name)),
   ),
+  archivedBefore: vi.fn(
+    (state: RunState, username: string) =>
+      state.completed[username] !== undefined,
+  ),
+  accountDone: vi.fn((state: RunState, username: string, at: number) => ({
+    ...state,
+    done: [...state.done, username],
+    completed: { ...state.completed, [username]: at },
+  })),
   finished: vi.fn((state: RunState) => ({
     ...state,
     following: null,
@@ -126,12 +135,15 @@ describe("FollowingDownloader", () => {
     ]);
   });
 
-  it("archives what the resume policy leaves and stores what it begins and finishes", async () => {
+  it("archives what the resume policy leaves and stores what it begins, marks and finishes", async () => {
     const begun: RunState = { following: ["x"], done: [], completed: {} };
+    const marked: RunState = { following: ["x"], done: ["c"], completed: {} };
     const ended: RunState = { following: null, done: [], completed: {} };
     const resume: ResumePolicy = {
       begin: vi.fn(() => begun),
       remaining: vi.fn(() => ["c"]),
+      archivedBefore: vi.fn(() => false),
+      accountDone: vi.fn(() => marked),
       finished: vi.fn(() => ended),
     };
     const stored = { following: ["a"], done: ["a"], completed: { a: 1 } };
@@ -139,7 +151,9 @@ describe("FollowingDownloader", () => {
     await run();
     expect(resume.begin).toHaveBeenCalledWith(stored, ["a", "b", "c"]);
     expect(resume.remaining).toHaveBeenCalledWith(begun, ["a", "b", "c"]);
-    expect(resume.finished).toHaveBeenCalledWith(begun);
+    expect(resume.archivedBefore).toHaveBeenCalledWith(begun, "c");
+    expect(resume.accountDone).toHaveBeenCalledWith(begun, "c", 1234);
+    expect(resume.finished).toHaveBeenCalledWith(marked);
     expect(
       archiver.archive.mock.calls.map(([request]) => request.username),
     ).toEqual(["c"]);

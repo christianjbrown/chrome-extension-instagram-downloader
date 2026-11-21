@@ -17,6 +17,18 @@ export class FollowedAccountsResume implements ResumePolicy {
     return following.filter((name) => !state.done.includes(name));
   }
 
+  archivedBefore(state: RunState, username: string): boolean {
+    return state.completed[username] !== undefined;
+  }
+
+  accountDone(state: RunState, username: string, at: number): RunState {
+    return {
+      ...state,
+      done: [...state.done, username],
+      completed: { ...state.completed, [username]: at },
+    };
+  }
+
   finished(state: RunState): RunState {
     return { ...state, following: null, done: [] };
   }

@@ -1,5 +1,6 @@
 // The parts of a bulk download, as the others see them.
 import type { PostsPage, Viewer } from "../../shared/bridge";
+import type { DownloadItem } from "../../shared/media";
 import type { WaitReporter } from "../pacing/pacing";
 import type {
   AccountProgress,
@@ -7,6 +8,7 @@ import type {
   HeadingReporter,
   RunReporter,
 } from "../ui/ports";
+import type { WriteOutcome } from "../saving/ports";
 import type { Counts } from "./counts";
 import type { RunState } from "./runState";
 
@@ -21,6 +23,49 @@ export interface ArchiveRequest {
 
 export interface Archiver {
   archive(request: ArchiveRequest): Promise<Counts>;
+}
+
+/** Takes in each page of posts as an account's pages are gone through. */
+export interface PageVisitor {
+  /** The account's total, once it has been looked up. */
+  total(total: number | undefined): void;
+  /** Writes one page of posts and says how many new files it saved. */
+  page(result: PostsPage): Promise<number>;
+}
+
+/** Goes through an account's pages of posts, stopping early once a rerun has caught up. */
+export interface AccountPages {
+  walk(request: ArchiveRequest, visitor: PageVisitor): Promise<void>;
+}
+
+/** Saves one file unless it is already there, keeping to the pace between files. */
+export interface ItemSaver {
+  save(
+    folder: FileSystemDirectoryHandle,
+    item: DownloadItem,
+    signal: AbortSignal,
+  ): Promise<WriteOutcome>;
+}
+
+/** One account's counts, and how far through it the panel shows. */
+export interface AccountTally {
+  /** Hides the bar until the account's total is known. */
+  begin(): void;
+  total(total: number | undefined): void;
+  /** Posts the page could not read, counted as failed. */
+  unreadable(count: number | undefined): void;
+  nextPost(): void;
+  /** One file was saved, skipped or failed. */
+  file(outcome: WriteOutcome): void;
+  /** How many new files have been saved so far. */
+  saved(): number;
+  /** Fills the bar when the account's total was known, and gives the counts. */
+  finish(): Counts;
+}
+
+/** Starts the tally for one account, reporting to that run's panel. */
+export interface TallyStarter {
+  start(reporter: DetailReporter & AccountProgress): AccountTally;
 }
 
 export interface BulkJob {
@@ -101,6 +146,10 @@ export interface ResumePolicy {
   begin(state: RunState, following: string[]): RunState;
   /** The accounts the run still has to archive, in order. */
   remaining(state: RunState, following: string[]): string[];
+  /** Whether the account was archived in full by an earlier run. */
+  archivedBefore(state: RunState, username: string): boolean;
+  /** The account has just been archived in full, at this time. */
+  accountDone(state: RunState, username: string, at: number): RunState;
   /** The run is over, but which accounts were archived in full is kept. */
   finished(state: RunState): RunState;
 }

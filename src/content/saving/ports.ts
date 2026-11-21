@@ -1,9 +1,16 @@
 // The ways files are saved, as the rest of the content script sees them.
 import type { DownloadItem } from "../../shared/media";
 
-export const WRITE_OUTCOMES = ["saved", "skipped", "failed"] as const;
+/** What came of writing one file, by name. */
+export const OUTCOME = {
+  saved: "saved",
+  skipped: "skipped",
+  failed: "failed",
+} as const;
 
-export type WriteOutcome = (typeof WRITE_OUTCOMES)[number];
+export type WriteOutcome = (typeof OUTCOME)[keyof typeof OUTCOME];
+
+export const WRITE_OUTCOMES: readonly WriteOutcome[] = Object.values(OUTCOME);
 
 export interface ItemWriter {
   exists(

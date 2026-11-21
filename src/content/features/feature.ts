@@ -1,3 +1,4 @@
+import type { StoryRoute } from "../actions/ports";
 import type { ButtonIcon } from "../ui/buttons";
 
 /** Something that adds its buttons to the page; run again whenever it changes. */
@@ -28,4 +29,10 @@ export interface ProfileButton {
    */
   offer(username: string, show: (look: ButtonLook) => void): void;
   run(username: string): Promise<void>;
+}
+
+/** One button over the story viewer. */
+export interface StoryButton {
+  readonly look: ButtonLook;
+  run(route: StoryRoute): Promise<void>;
 }

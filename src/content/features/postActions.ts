@@ -1,7 +1,7 @@
 import { TAGS } from "../../shared/dom";
 import type { PostDownloads } from "../actions/ports";
 import type { PostLocator } from "../dom/ports";
-import type { ButtonFactory, Notifier } from "../ui/ports";
+import type { IconButtons, Notifier } from "../ui/ports";
 import { ARTICLE, MAIN } from "../dom/selectors";
 import { bySelector, CLASS } from "../ui/classNames";
 import type { Feature, PostButton } from "./feature";
@@ -23,11 +23,29 @@ const text = {
 // The outermost element around the bookmark that holds nothing else, which is
 // the slot in the action bar our buttons go beside.
 function actionSlot(icon: Element): Element | undefined {
-  let slot = icon.closest(actionButton);
-  while (slot?.parentElement?.childElementCount === loneChild)
-    slot = slot.parentElement;
-  return slot ?? undefined;
+  const button = icon.closest(actionButton);
+  return button === null ? undefined : outermostAlone(button);
 }
+
+const isLone = (parent: Element | null): parent is Element =>
+  parent?.childElementCount === loneChild;
+
+function loneParent(element: Element): Element | undefined {
+  const parent = element.parentElement;
+  return isLone(parent) ? parent : undefined;
+}
+
+function outermostAlone(element: Element): Element {
+  const parent = loneParent(element);
+  return parent === undefined ? element : outermostAlone(parent);
+}
+
+// A slot already holding our buttons beside it is left alone.
+const hasActions = (slot: Element): boolean =>
+  Boolean(slot.parentElement?.querySelector(bySelector(CLASS.postActions)));
+
+const isGroup = (element: Element | null): element is Element =>
+  element !== null && element.childElementCount > loneChild;
 
 // The feed keeps like, comment and share in one group and gives the bookmark
 // the other half of a two-column grid, where anything put beside the bookmark
@@ -35,8 +53,7 @@ function actionSlot(icon: Element): Element | undefined {
 // end of that group; a bar that is one plain row takes them before the bookmark.
 function place(group: Element, slot: Element): void {
   const neighbour = slot.previousElementSibling;
-  if (neighbour !== null && neighbour.childElementCount > loneChild)
-    neighbour.append(group);
+  if (isGroup(neighbour)) neighbour.append(group);
   else slot.before(group);
 }
 
@@ -47,44 +64,54 @@ export interface PostActionsDependencies {
   readonly locator: PostLocator;
   /** The buttons beside the bookmark, in order. */
   readonly postButtons: readonly PostButton[];
-  readonly buttons: ButtonFactory;
+  readonly buttons: IconButtons;
 }
 
 export class PostActions implements Feature {
   constructor(private readonly deps: PostActionsDependencies) {}
 
   scan(): void {
-    for (const icon of this.deps.document.querySelectorAll(bookmarkIcon)) {
-      const slot = actionSlot(icon);
-      if (slot === undefined) continue;
-      if (slot.parentElement?.querySelector(bySelector(CLASS.postActions)))
-        continue;
-      place(this.group(slot), slot);
-    }
+    for (const icon of this.deps.document.querySelectorAll(bookmarkIcon))
+      this.addBeside(icon);
+  }
+
+  private addBeside(icon: Element): void {
+    const slot = actionSlot(icon);
+    if (slot !== undefined) this.fill(slot);
+  }
+
+  private fill(slot: Element): void {
+    if (!hasActions(slot)) place(this.group(slot), slot);
   }
 
   private container(element: Element): ParentNode {
-    return (
-      element.closest(ARTICLE) ?? element.closest(MAIN) ?? this.deps.document
-    );
+    return element.closest(ARTICLE) ?? this.mainOrPage(element);
+  }
+
+  private mainOrPage(element: Element): ParentNode {
+    return element.closest(MAIN) ?? this.deps.document;
   }
 
   private group(slot: Element): HTMLElement {
     const group = this.deps.document.createElement(TAGS.span);
     group.className = CLASS.postActions;
     const container = this.container(slot);
-    for (const button of this.deps.postButtons) {
-      if (!button.shows(container)) continue;
-      const { label, className, all } = button;
-      group.append(
-        this.deps.buttons.button({
-          label,
-          className,
-          onClick: () => void this.download(container, all),
-        }),
-      );
-    }
+    const shown = this.deps.postButtons.filter((button) =>
+      button.shows(container),
+    );
+    for (const button of shown) group.append(this.element(button, container));
     return group;
+  }
+
+  private element(
+    { label, className, all }: PostButton,
+    container: ParentNode,
+  ): HTMLElement {
+    return this.deps.buttons.button({
+      label,
+      className,
+      onClick: () => void this.download(container, all),
+    });
   }
 
   private async download(container: ParentNode, all: boolean): Promise<void> {

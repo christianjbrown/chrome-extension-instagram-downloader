@@ -1,5 +1,6 @@
 // The protocol between the content script and the script running inside the
 // page. Only the page can reach Instagram's own modules and responses.
+import { isJsonObject, type JsonObject } from "./json";
 import type { InstagramMedia } from "./media";
 
 export interface Viewer {
@@ -66,24 +67,22 @@ export type BridgeResponse =
   | { readonly ok: false; readonly error: string; readonly refused?: true };
 
 export function isBridgeRequest(data: unknown): data is BridgeRequest {
-  return (
-    typeof data === "object" &&
-    data !== null &&
-    typeof (data as { igdlProcedure?: unknown }).igdlProcedure === "string"
-  );
+  return isJsonObject(data) && typeof data.igdlProcedure === "string";
 }
 
+// A refusal is only ever marked true, or not marked at all.
+const isRefusalMark = (refused: unknown): boolean =>
+  refused === undefined || refused === true;
+
+const isFailureDetail = ({ error, refused }: JsonObject): boolean =>
+  typeof error === "string" && isRefusalMark(refused);
+
+const isFailure = (data: JsonObject): boolean =>
+  data.ok === false && isFailureDetail(data);
+
+const isAnswer = (data: JsonObject): boolean =>
+  data.ok === true || isFailure(data);
+
 export function isBridgeResponse(data: unknown): data is BridgeResponse {
-  if (typeof data !== "object" || data === null) return false;
-  const { ok, error, refused } = data as {
-    ok?: unknown;
-    error?: unknown;
-    refused?: unknown;
-  };
-  return (
-    ok === true ||
-    (ok === false &&
-      typeof error === "string" &&
-      (refused === undefined || refused === true))
-  );
+  return isJsonObject(data) && isAnswer(data);
 }

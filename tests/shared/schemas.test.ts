@@ -119,6 +119,15 @@ describe("procedure answer checks", () => {
     ).toEqual({ items: [photo("1")], cursor: undefined, unreadable: 2 });
   });
 
+  it("adds the posts the page already left out to those it counts", () => {
+    expect(
+      parseOutput("postsPage", { items: [photo("1"), 7], unreadable: 3 }),
+    ).toEqual({ items: [photo("1")], cursor: undefined, unreadable: 4 });
+    expect(() =>
+      parseOutput("postsPage", { items: [], unreadable: "many" }),
+    ).toThrow("post count");
+  });
+
   it("rejects media addresses outside Instagram's CDN", () => {
     const evil = {
       pk: 1,

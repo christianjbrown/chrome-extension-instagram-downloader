@@ -2,18 +2,17 @@
 import {
   isBridgeRequest,
   type BridgeResponse,
+  type Input,
   type ProcedureName,
 } from "../shared/bridge";
 import { EVENTS } from "../shared/dom";
+import { errorMessage } from "../shared/errorMessage";
 import type { PageProcedure, ProcedureTable, RefusalDetector } from "./ports";
 
-const text = {
-  unknown: "Unknown request",
-  invalid: "Invalid request",
-} as const;
+const unknownRequest: BridgeResponse = { ok: false, error: "Unknown request" };
+const invalidRequest: BridgeResponse = { ok: false, error: "Invalid request" };
 
-const message = (error: unknown): string =>
-  error instanceof Error ? error.message : String(error);
+type AnyProcedure = PageProcedure<ProcedureName>;
 
 /** Who may ask: the page's own window, from the page's own origin. */
 export interface TrustedSender {
@@ -35,29 +34,58 @@ export class BridgeServer {
   }
 
   async handle(event: MessageEvent): Promise<void> {
-    const [port] = event.ports;
-    const { origin, source } = this.sender;
-    if (event.origin !== origin || event.source !== source) return;
-    if (port === undefined || !isBridgeRequest(event.data)) return;
-    const { igdlProcedure, input } = event.data;
-    port.postMessage(await this.respond(igdlProcedure, input));
+    if (this.isTrusted(event)) await this.answer(event);
   }
 
-  private async respond(name: string, input: unknown): Promise<BridgeResponse> {
+  private isTrusted({ origin, source }: MessageEvent): boolean {
+    return origin === this.sender.origin && source === this.sender.source;
+  }
+
+  // Each request brings the port its answer goes back on.
+  private async answer({ ports: [port], data }: MessageEvent): Promise<void> {
+    if (port !== undefined) await this.reply(port, data);
+  }
+
+  private async reply(port: MessagePort, data: unknown): Promise<void> {
+    if (isBridgeRequest(data))
+      port.postMessage(await this.respond(data.igdlProcedure, data.input));
+  }
+
+  private respond(name: string, input: unknown): Promise<BridgeResponse> {
     const procedure = this.procedure(name);
-    if (procedure === undefined) return { ok: false, error: text.unknown };
-    if (!procedure.isInput(input)) return { ok: false, error: text.invalid };
+    return procedure === undefined
+      ? Promise.resolve(unknownRequest)
+      : this.run(procedure, input);
+  }
+
+  private run(
+    procedure: AnyProcedure,
+    input: unknown,
+  ): Promise<BridgeResponse> {
+    return procedure.isInput(input)
+      ? this.attempt(procedure, input)
+      : Promise.resolve(invalidRequest);
+  }
+
+  private async attempt(
+    procedure: AnyProcedure,
+    input: Input<ProcedureName>,
+  ): Promise<BridgeResponse> {
     try {
       return { ok: true, value: await procedure.handle(input) };
     } catch (error) {
-      return this.refusals.isRefusal(error)
-        ? { ok: false, error: message(error), refused: true }
-        : { ok: false, error: message(error) };
+      return this.failure(error);
     }
   }
 
+  private failure(error: unknown): BridgeResponse {
+    return this.refusals.isRefusal(error)
+      ? { ok: false, error: errorMessage(error), refused: true }
+      : { ok: false, error: errorMessage(error) };
+  }
+
   // Own properties only: "constructor" and "toString" are not procedures.
-  private procedure(name: string): PageProcedure<ProcedureName> | undefined {
+  private procedure(name: string): AnyProcedure | undefined {
     return Object.hasOwn(this.procedures, name)
       ? this.procedures[name as ProcedureName]
       : undefined;

@@ -17,20 +17,25 @@ export class GridThumbnails implements ThumbnailSource {
   unmarked(): Thumbnail[] {
     return Array.from(
       this.document.querySelectorAll<HTMLAnchorElement>(thumbnail),
-    ).flatMap((link) => {
-      if (!this.wanted(link)) return [];
-      const shortcode = shortcodeFromPath(link.pathname);
-      return shortcode === undefined ? [] : [{ link, shortcode }];
-    });
+    ).flatMap((link) => (this.wanted(link) ? this.thumbnailOf(link) : []));
   }
 
   mark({ link }: Thumbnail): void {
     link.classList.add(CLASS.gridLink);
   }
 
+  // A link that names no post is left out.
+  private thumbnailOf(link: HTMLAnchorElement): Thumbnail[] {
+    const shortcode = shortcodeFromPath(link.pathname);
+    return shortcode === undefined ? [] : [{ link, shortcode }];
+  }
+
   private wanted(link: HTMLAnchorElement): boolean {
+    return !link.classList.contains(CLASS.gridLink) && this.fitsGrid(link);
+  }
+
+  private fitsGrid(link: HTMLAnchorElement): boolean {
     return (
-      !link.classList.contains(CLASS.gridLink) &&
       link.closest(ARTICLE) === null &&
       link.getBoundingClientRect().width >= this.minimumWidth
     );

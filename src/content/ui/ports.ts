@@ -50,11 +50,13 @@ export interface ButtonSpec {
   readonly onClick: () => void;
 }
 
-/** Makes the buttons the features and the panel put on the page. */
-export interface ButtonFactory {
-  /** An icon button, labelled for screen readers and on hover. */
+/** Makes the icon buttons, labelled for screen readers and on hover. */
+export interface IconButtons {
   button(spec: ButtonSpec): HTMLButtonElement;
-  /** A button that shows its label as text. */
+}
+
+/** Makes the buttons that show their label as text. */
+export interface TextButtons {
   textButton(spec: ButtonSpec): HTMLButtonElement;
 }
 

@@ -1,3 +1,4 @@
+import { errorMessage } from "../shared/errorMessage";
 // Turns any error into the words shown to the user.
 import { isAbortError, isContextInvalidated } from "./errors";
 import type { ErrorDescriber, ErrorWording } from "./ports";
@@ -26,7 +27,7 @@ export class WordedErrors implements ErrorDescriber {
 // Shows an error's own message, or the value itself when it is not an error.
 export class OwnMessage implements ErrorDescriber {
   describe(error: unknown): string {
-    return error instanceof Error ? error.message : String(error);
+    return errorMessage(error);
   }
 }
 

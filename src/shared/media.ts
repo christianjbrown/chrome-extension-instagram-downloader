@@ -36,10 +36,20 @@ export function assetName(url: string): string {
   return path.slice(path.lastIndexOf("/") + 1);
 }
 
+type Pictures = Partial<NonNullable<InstagramMedia["image_versions2"]>>;
+
+// Media from the page itself can have its lists missing or set to null.
+const pictures = (media: InstagramMedia): Pictures =>
+  media.image_versions2 ?? {};
+
+/** The sizes of a media's picture, or none when it has no picture. */
+export const imageVersions = (media: InstagramMedia): readonly MediaVersion[] =>
+  pictures(media).candidates ?? [];
+
+const videoVersions = (media: InstagramMedia): readonly MediaVersion[] =>
+  media.video_versions ?? [];
+
 export function assetNames(media: InstagramMedia): string[] {
-  const versions = [
-    ...(media.image_versions2?.candidates ?? []),
-    ...(media.video_versions ?? []),
-  ];
+  const versions = [...imageVersions(media), ...videoVersions(media)];
   return versions.map((version) => assetName(version.url));
 }

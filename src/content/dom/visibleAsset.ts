@@ -1,5 +1,6 @@
 import { assetName } from "../../shared/media";
-import { IMAGE_TAG, MEDIA_ELEMENTS, VIDEO_TAG } from "./selectors";
+import { sourceOf } from "./mediaSource";
+import { MEDIA_ELEMENTS } from "./selectors";
 import type { AssetFinder } from "./ports";
 
 /** How much of the page is on screen, read at click time. */
@@ -7,17 +8,31 @@ export interface Viewport {
   viewportHeight(): number;
 }
 
-// Told apart by tag, so nothing here reaches for the window's classes.
-const isImage = (element: Element): element is HTMLImageElement =>
-  element.localName === IMAGE_TAG;
-const isVideo = (element: Element): element is HTMLVideoElement =>
-  element.localName === VIDEO_TAG;
+// No part of the element is on screen at a size worth counting.
+const notShown = 0;
 
-function sourceOf(element: Element): string | undefined {
-  if (isImage(element)) return element.currentSrc || element.src;
-  if (isVideo(element) && element.poster !== "") return element.poster;
-  return undefined;
+interface Candidate {
+  readonly source: string;
+  readonly area: number;
 }
+
+const shown = (source: string, area: number): Candidate[] =>
+  area === notShown ? [] : [{ source, area }];
+
+const candidateOf = (source: string | undefined, area: number): Candidate[] =>
+  source === undefined ? [] : shown(source, area);
+
+// The first of two the same size stays the largest.
+const isLarger = (candidate: Candidate, best: Candidate | undefined): boolean =>
+  best === undefined || candidate.area > best.area;
+
+const larger = (
+  best: Candidate | undefined,
+  candidate: Candidate,
+): Candidate | undefined => (isLarger(candidate, best) ? candidate : best);
+
+const isOnScreen = (box: DOMRect, viewportHeight: number): boolean =>
+  box.bottom > 0 && box.top < viewportHeight;
 
 // The CDN file name of the largest picture or video poster on screen inside
 // a container, which identifies the post, slide or story being shown. Small
@@ -30,22 +45,29 @@ export class VisibleAssetFinder implements AssetFinder {
 
   largest(container: ParentNode): string | undefined {
     const viewportHeight = this.viewport.viewportHeight();
-    let best: { asset: string; area: number } | undefined;
-    for (const element of container.querySelectorAll(MEDIA_ELEMENTS)) {
-      const source = sourceOf(element);
-      const area = this.visibleArea(element, viewportHeight);
-      if (source === undefined || area === 0) continue;
-      if (best === undefined || area > best.area)
-        best = { asset: assetName(source), area };
-    }
-    return best?.asset;
+    const best = Array.from(container.querySelectorAll(MEDIA_ELEMENTS))
+      .flatMap((element) => this.candidate(element, viewportHeight))
+      .reduce<Candidate | undefined>(larger, undefined);
+    return best === undefined ? undefined : assetName(best.source);
+  }
+
+  private candidate(element: Element, viewportHeight: number): Candidate[] {
+    return candidateOf(
+      sourceOf(element),
+      this.visibleArea(element, viewportHeight),
+    );
   }
 
   private visibleArea(element: Element, viewportHeight: number): number {
     const box = element.getBoundingClientRect();
-    const onScreen = box.bottom > 0 && box.top < viewportHeight;
-    const bigEnough =
-      box.width >= this.minimumSide && box.height >= this.minimumSide;
-    return onScreen && bigEnough ? box.width * box.height : 0;
+    return this.counts(box, viewportHeight) ? box.width * box.height : notShown;
+  }
+
+  private counts(box: DOMRect, viewportHeight: number): boolean {
+    return isOnScreen(box, viewportHeight) && this.isBigEnough(box);
+  }
+
+  private isBigEnough(box: DOMRect): boolean {
+    return box.width >= this.minimumSide && box.height >= this.minimumSide;
   }
 }

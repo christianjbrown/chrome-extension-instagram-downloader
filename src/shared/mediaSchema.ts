@@ -10,7 +10,8 @@ import type {
   ReadablePosts,
   ReelCheck,
 } from "./checks";
-import { isJsonObject } from "./json";
+import { optionalField } from "./fields";
+import { hasUsername, type JsonObject } from "./json";
 import type { InstagramMedia, MediaVersion } from "./media";
 import { count, list, optional, record, reject, text } from "./schemas";
 
@@ -23,13 +24,13 @@ const identifier = (value: unknown): string | number =>
 // The owner only names the file. Instagram's nested owner records can leave
 // the username out, so one that cannot name anybody is dropped rather than
 // failing the whole post.
+const ownerId = ({ pk }: JsonObject): { pk?: string | number } =>
+  isIdentifier(pk) ? { pk } : {};
+
 function user(value: unknown): InstagramMedia["user"] {
-  if (!isJsonObject(value) || typeof value.username !== "string")
-    return undefined;
-  return {
-    username: value.username,
-    ...(isIdentifier(value.pk) ? { pk: value.pk } : {}),
-  };
+  return hasUsername(value)
+    ? { username: value.username, ...ownerId(value) }
+    : undefined;
 }
 
 export class MediaSchema
@@ -56,30 +57,34 @@ export class MediaSchema
     const owner = optional(raw.user, user);
     return {
       pk: identifier(raw.pk),
-      ...(id === undefined ? {} : { id }),
-      ...(takenAt === undefined ? {} : { taken_at: takenAt }),
-      ...(images === undefined ? {} : { image_versions2: images }),
-      ...(videos === undefined ? {} : { video_versions: videos }),
-      ...(slides === undefined ? {} : { carousel_media: slides }),
-      ...(owner === undefined ? {} : { user: owner }),
+      ...optionalField("id", id),
+      ...optionalField("taken_at", takenAt),
+      ...optionalField("image_versions2", images),
+      ...optionalField("video_versions", videos),
+      ...optionalField("carousel_media", slides),
+      ...optionalField("user", owner),
     };
   }
 
   // One odd post should not cost the rest of its page, so a post that fails
   // its check is counted and left out instead of rejecting the lot.
   readablePosts(value: unknown): ReadablePosts {
-    const raw: unknown[] = Array.isArray(value)
-      ? (value as unknown[])
-      : reject("list of posts");
-    const items: InstagramMedia[] = [];
-    for (const entry of raw) {
-      try {
-        items.push(this.media(entry));
-      } catch {
-        // Counted below.
-      }
+    const checked = list(
+      value,
+      (entry) => this.readable(entry),
+      "list of posts",
+    );
+    const items = checked.flat();
+    return { items, unreadable: checked.length - items.length };
+  }
+
+  // The post on its own, or nothing when it fails its check.
+  private readable(entry: unknown): InstagramMedia[] {
+    try {
+      return [this.media(entry)];
+    } catch {
+      return [];
     }
-    return { items, unreadable: raw.length - items.length };
   }
 
   // Stories, whether asked for by reel or by account.

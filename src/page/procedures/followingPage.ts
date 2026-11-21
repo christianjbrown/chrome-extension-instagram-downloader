@@ -1,6 +1,6 @@
 // One page of who an account follows.
 import type { FollowingPage, Input } from "../../shared/bridge";
-import { isRecord } from "../../shared/json";
+import { isRecord, type JsonObject } from "../../shared/json";
 import { FOLLOWING_PAGE_PROCEDURE } from "../../shared/procedures/followingPage";
 import type { FieldCheck, FollowingPages, PageProcedure } from "../ports";
 
@@ -16,11 +16,11 @@ export class FollowingPageProcedure implements PageProcedure<Name> {
   ) {}
 
   isInput(input: unknown): input is Input<Name> {
-    return (
-      isRecord(input) &&
-      this.userId.accepts(input.userId) &&
-      this.next.accepts(input.next)
-    );
+    return isRecord(input) && this.accepts(input);
+  }
+
+  private accepts(input: JsonObject): boolean {
+    return this.userId.accepts(input.userId) && this.next.accepts(input.next);
   }
 
   handle({ userId, next }: Input<Name>): Promise<FollowingPage> {

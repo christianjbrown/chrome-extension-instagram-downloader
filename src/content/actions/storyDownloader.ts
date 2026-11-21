@@ -57,10 +57,13 @@ export class StoryDownloader implements StoryDownloads {
     return kind;
   }
 
+  private async downloadAll(items: DownloadItem[]): Promise<void> {
+    for (const item of items) await this.deps.downloader.download(item);
+  }
+
   private async attempt(items: () => Promise<DownloadItem[]>): Promise<void> {
     try {
-      for (const item of await items())
-        await this.deps.downloader.download(item);
+      await this.downloadAll(await items());
     } catch (error) {
       this.deps.notifier.error(
         `${text.failed}: ${this.deps.errors.describe(error)}`,

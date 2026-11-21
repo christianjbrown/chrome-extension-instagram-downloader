@@ -7,7 +7,10 @@ export function scanEmbeddedJson(
   document: Document,
   sink: (value: unknown) => void,
 ): void {
-  for (const script of document.querySelectorAll(embeddedJson)) {
-    for (const value of parseResponse(script.textContent)) sink(value);
-  }
+  for (const script of document.querySelectorAll(embeddedJson))
+    scanScript(script, sink);
+}
+
+function scanScript(script: Element, sink: (value: unknown) => void): void {
+  for (const value of parseResponse(script.textContent)) sink(value);
 }

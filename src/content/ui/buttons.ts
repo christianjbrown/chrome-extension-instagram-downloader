@@ -1,9 +1,9 @@
 import { ATTRIBUTES, EVENTS, TAGS } from "../../shared/dom";
 import { CLASS, classes } from "./classNames";
-import type { ButtonFactory, ButtonSpec } from "./ports";
+import type { ButtonSpec, IconButtons, TextButtons } from "./ports";
 
 // Buttons sit inside Instagram's own links, so a click must not reach them.
-export class DomButtons implements ButtonFactory {
+export class DomButtons implements IconButtons, TextButtons {
   constructor(private readonly document: Document) {}
 
   button(spec: ButtonSpec): HTMLButtonElement {

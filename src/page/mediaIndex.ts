@@ -3,26 +3,27 @@ import { assetNames, type InstagramMedia } from "../shared/media";
 import { isMedia } from "./mediaShapes";
 import type { IterableStore, MediaLookup, Rememberer } from "./ports";
 
+const slidesOf = (media: InstagramMedia): readonly InstagramMedia[] => [
+  media,
+  ...(media.carousel_media ?? []),
+];
+
 // Every post and slide Instagram has sent, by id.
 export class MediaIndex implements Rememberer, MediaLookup {
   constructor(private readonly media: IterableStore<InstagramMedia>) {}
 
   remember(value: JsonObject): void {
-    if (!isMedia(value)) return;
-    const media = value as unknown as InstagramMedia;
-    this.media.set(String(media.pk), media);
+    if (isMedia(value)) this.media.set(String(value.pk), value);
   }
 
   mediaById(pk: string): InstagramMedia | undefined {
     return this.media.get(pk);
   }
 
+  // Each post is tried before its slides, and older posts before newer.
   mediaByAsset(asset: string): InstagramMedia | undefined {
-    for (const media of this.media.values()) {
-      const slides = [media, ...(media.carousel_media ?? [])];
-      const match = slides.find((slide) => assetNames(slide).includes(asset));
-      if (match !== undefined) return match;
-    }
-    return undefined;
+    return Array.from(this.media.values(), slidesOf)
+      .flat()
+      .find((slide) => assetNames(slide).includes(asset));
   }
 }

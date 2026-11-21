@@ -31,20 +31,37 @@ export class ApiGate implements Gate {
     signal: AbortSignal,
     reporter: WaitReporter,
   ): Promise<T> {
-    for (;;) {
-      await this.budget.take(signal, (ms) => {
-        reporter.waiting(text.hourlyLimit, ms);
-      });
-      await this.sleeper.between(this.pacing.apiDelayMs, signal);
-      try {
-        const result = await request();
-        this.refusals = 0;
-        return result;
-      } catch (error) {
-        if (!(error instanceof RefusedError)) throw error;
-        await this.backOff(signal, reporter);
-      }
+    await this.budget.take(signal, (ms) => {
+      reporter.waiting(text.hourlyLimit, ms);
+    });
+    await this.sleeper.between(this.pacing.apiDelayMs, signal);
+    return this.attempt(request, signal, reporter);
+  }
+
+  private async attempt<T>(
+    request: () => Promise<T>,
+    signal: AbortSignal,
+    reporter: WaitReporter,
+  ): Promise<T> {
+    try {
+      const result = await request();
+      this.refusals = 0;
+      return result;
+    } catch (error) {
+      return this.retry(error, request, signal, reporter);
     }
+  }
+
+  // Only a refusal is waited out and tried again; anything else is thrown.
+  private async retry<T>(
+    error: unknown,
+    request: () => Promise<T>,
+    signal: AbortSignal,
+    reporter: WaitReporter,
+  ): Promise<T> {
+    if (!(error instanceof RefusedError)) throw error;
+    await this.backOff(signal, reporter);
+    return this.call(request, signal, reporter);
   }
 
   private async backOff(

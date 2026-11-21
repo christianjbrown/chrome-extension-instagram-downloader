@@ -19,6 +19,23 @@ interface TappedRequest extends XMLHttpRequest {
   igdlUrl?: string;
 }
 
+// A request sent before open named an address has none to watch.
+const noUrl = "";
+
+const requestUrl = (request: TappedRequest): string => request.igdlUrl ?? noUrl;
+
+function feedText(request: TappedRequest, sink: Sink): void {
+  if (textResponseTypes.has(request.responseType))
+    feed(request.responseText, sink);
+}
+
+function watch(request: TappedRequest, sink: Sink, policy: UrlPolicy): void {
+  if (policy.isWatched(requestUrl(request)))
+    request.addEventListener(EVENTS.load, () => {
+      feedText(request, sink);
+    });
+}
+
 export function tapXhr(
   prototype: XMLHttpRequest,
   sink: Sink,
@@ -32,12 +49,7 @@ export function tapXhr(
     Reflect.apply(originalOpen, this, args);
   };
   prototype.send = function (this: TappedRequest, ...args: unknown[]) {
-    if (policy.isWatched(this.igdlUrl ?? "")) {
-      this.addEventListener(EVENTS.load, () => {
-        if (textResponseTypes.has(this.responseType))
-          feed(this.responseText, sink);
-      });
-    }
+    watch(this, sink, policy);
     Reflect.apply(originalSend, this, args);
   };
 }
@@ -45,6 +57,25 @@ export function tapXhr(
 // A Request carries its own url; a string or URL is the url.
 const isRequest = (input: RequestInfo | URL): input is Request =>
   typeof input === "object" && "url" in input;
+
+const urlOf = (input: RequestInfo | URL): string =>
+  isRequest(input) ? input.url : String(input);
+
+function readIfWatched(
+  response: Response,
+  url: string,
+  sink: Sink,
+  policy: UrlPolicy,
+): void {
+  if (policy.isWatched(url))
+    void response
+      .clone()
+      .text()
+      .then((text) => {
+        feed(text, sink);
+      })
+      .catch(() => undefined);
+}
 
 export function tapFetch(
   target: { fetch: typeof fetch },
@@ -54,16 +85,7 @@ export function tapFetch(
   const original = target.fetch.bind(target);
   target.fetch = async (input, init) => {
     const response = await original(input, init);
-    const url = isRequest(input) ? input.url : String(input);
-    if (policy.isWatched(url)) {
-      void response
-        .clone()
-        .text()
-        .then((text) => {
-          feed(text, sink);
-        })
-        .catch(() => undefined);
-    }
+    readIfWatched(response, urlOf(input), sink, policy);
     return response;
   };
 }

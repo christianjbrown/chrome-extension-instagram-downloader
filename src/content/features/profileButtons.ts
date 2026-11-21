@@ -1,6 +1,7 @@
 // The buttons under a profile's header. The composition root lists them in
 // the order they appear.
 import type { Command, OwnProfile, UsernameCommand } from "../actions/ports";
+import type { Viewer } from "../../shared/bridge";
 import type { ResumableRun } from "../bulk/ports";
 import type { ButtonLook, ProfileButton } from "./feature";
 
@@ -48,7 +49,11 @@ export class FollowingButton implements ProfileButton {
 
   private async look(username: string): Promise<ButtonLook | undefined> {
     const viewer = await this.ownProfile.viewerOn(username);
-    if (viewer === undefined) return undefined;
+    return viewer === undefined ? undefined : this.lookFor(viewer);
+  }
+
+  // A run stopped part way is offered to carry on.
+  private async lookFor(viewer: Viewer): Promise<ButtonLook> {
     return (await this.resumable.canResume(viewer))
       ? following.resume
       : following.start;

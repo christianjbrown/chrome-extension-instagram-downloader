@@ -14,9 +14,18 @@ const count = (n: number, unit: string): string =>
 // 61 second wait; past ten minutes they are only noise.
 function duration(ms: number): string {
   const seconds = Math.ceil(ms / SECOND_MS);
-  if (seconds < SECONDS_PER_MINUTE) return count(seconds, units.second);
-  if (ms >= minutesOnlyFromMs)
-    return count(Math.ceil(ms / MINUTE_MS), units.minute);
+  return seconds < SECONDS_PER_MINUTE
+    ? count(seconds, units.second)
+    : longWait(ms, seconds);
+}
+
+function longWait(ms: number, seconds: number): string {
+  return ms >= minutesOnlyFromMs
+    ? count(Math.ceil(ms / MINUTE_MS), units.minute)
+    : minutesAndSeconds(seconds);
+}
+
+function minutesAndSeconds(seconds: number): string {
   const minutes = count(Math.floor(seconds / SECONDS_PER_MINUTE), units.minute);
   const remainder = seconds % SECONDS_PER_MINUTE;
   return remainder === 0

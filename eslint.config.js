@@ -43,6 +43,14 @@ export default tseslint.config(
     },
   },
   {
+    files: ["src/**/*.ts"],
+    rules: {
+      // With at most one decision per function, 100% branch coverage is also
+      // 100% path coverage.
+      complexity: ["error", 2],
+    },
+  },
+  {
     // The page script runs inside Instagram and must not pull in extension code.
     files: ["src/page/**/*.ts"],
     rules: {
