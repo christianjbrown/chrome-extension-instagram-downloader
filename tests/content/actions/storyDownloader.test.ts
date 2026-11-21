@@ -1,4 +1,6 @@
+import { HighlightStories } from "../../../src/content/actions/highlightStories";
 import { StoryDownloader } from "../../../src/content/actions/storyDownloader";
+import { UserStories } from "../../../src/content/actions/userStories";
 import { photo } from "../../fixtures";
 import { fakeBridge, notifier } from "../helpers";
 
@@ -25,7 +27,10 @@ function setup() {
     bridge,
     downloader,
     notes,
-    stories: new StoryDownloader(bridge, downloader, notes),
+    stories: new StoryDownloader(bridge, downloader, notes, [
+      new UserStories(bridge),
+      new HighlightStories(bridge),
+    ]),
   };
 }
 
@@ -62,5 +67,15 @@ describe("StoryDownloader", () => {
     expect(downloader.download).toHaveBeenLastCalledWith(
       expect.objectContaining({ username: "unknown" }),
     );
+  });
+
+  it("says so when no kind of story page recognises the address", async () => {
+    const { bridge, downloader, notes } = setup();
+    const stories = new StoryDownloader(bridge, downloader, notes, []);
+    await stories.all(highlight);
+    expect(notes.error).toHaveBeenCalledWith(
+      "Could not download this story: could not tell which story is showing",
+    );
+    expect(bridge.call).not.toHaveBeenCalled();
   });
 });

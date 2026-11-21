@@ -1,9 +1,8 @@
-import type { Reel } from "../../shared/bridge";
 import { downloadItems, type InstagramMedia } from "../../shared/media";
 import type { Bridge } from "../ports";
 import type { ItemDownloader } from "../saving/ports";
 import type { Notifier } from "../ui/ports";
-import type { StoryRoute, StoryDownloads } from "./ports";
+import type { StoryDownloads, StoryKind, StoryRoute } from "./ports";
 import { errorMessage } from "../errorText";
 
 const text = {
@@ -16,37 +15,39 @@ export class StoryDownloader implements StoryDownloads {
     private readonly bridge: Bridge,
     private readonly downloader: ItemDownloader,
     private readonly notifier: Notifier,
+    private readonly kinds: readonly StoryKind<StoryRoute>[],
   ) {}
 
   async current(route: StoryRoute, asset: string | undefined): Promise<void> {
     await this.attempt(async () => {
-      const media = await this.findCurrent(route, asset);
-      const owner = route.kind === "story" ? route.username : undefined;
-      return downloadItems(media, owner);
+      const kind = this.kind(route);
+      const media = await this.findCurrent(kind.mediaId(route), asset);
+      return downloadItems(media, kind.owner(route));
     });
   }
 
   async all(route: StoryRoute): Promise<void> {
     await this.attempt(async () => {
-      const reel = await this.reel(route);
+      const reel = await this.kind(route).reel(route);
       return reel.items.flatMap((media) => downloadItems(media, reel.owner));
     });
   }
 
-  private findCurrent(
-    route: StoryRoute,
-    asset: string | undefined,
-  ): Promise<InstagramMedia> {
-    if (route.kind === "story" && route.mediaId !== undefined)
-      return this.bridge.call("media", { mediaId: route.mediaId });
-    if (asset !== undefined) return this.bridge.call("mediaByAsset", { asset });
-    return Promise.reject(new Error(text.unknownStory));
+  // Each kind of story page is read by its own strategy; the first that
+  // recognises the route wins.
+  private kind(route: StoryRoute): StoryKind<StoryRoute> {
+    const kind = this.kinds.find((candidate) => candidate.matches(route));
+    if (kind === undefined) throw new Error(text.unknownStory);
+    return kind;
   }
 
-  private reel(route: StoryRoute): Promise<Reel> {
-    return route.kind === "story"
-      ? this.bridge.call("userReel", { username: route.username })
-      : this.bridge.call("reel", { reelId: route.highlightId });
+  private findCurrent(
+    mediaId: string | undefined,
+    asset: string | undefined,
+  ): Promise<InstagramMedia> {
+    if (mediaId !== undefined) return this.bridge.call("media", { mediaId });
+    if (asset !== undefined) return this.bridge.call("mediaByAsset", { asset });
+    return Promise.reject(new Error(text.unknownStory));
   }
 
   private async attempt(
