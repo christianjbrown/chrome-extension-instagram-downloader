@@ -1,23 +1,9 @@
+import { TAGS } from "../../shared/dom";
 import { describeWait } from "../pacing/waitText";
 import { createTextButton } from "./buttons";
 import { bySelector, CLASS } from "./classNames";
 import { createProgressBar, showProgress } from "./progressBar";
-import type { Countdown } from "./countdown";
-
-export interface RunReporter {
-  heading(text: string): void;
-  detail(text: string): void;
-  waiting(reason: string, ms: number): void;
-  /** Where a run over many accounts has got to, as words and a fraction done. */
-  overall(text: string, fraction: number): void;
-  /** How far through the current account, or undefined to hide the bar. */
-  accountBar(fraction: number | undefined): void;
-}
-
-export interface RunPanel extends RunReporter {
-  open(title: string, onStop: () => void): void;
-  finish(message: string): void;
-}
+import type { Countdown, RunPanel } from "./ports";
 
 // Top to bottom. Bars stay hidden until something reports a fraction.
 const parts = [
@@ -53,7 +39,7 @@ export class ProgressPanel implements RunPanel {
   open(title: string, onStop: () => void): void {
     this.stopCountdown();
     this.element?.remove();
-    const panel = this.document.createElement("div");
+    const panel = this.document.createElement(TAGS.div);
     panel.className = CLASS.panel;
     for (const part of parts) panel.append(this.line(part));
     this.set("title", title, panel);
@@ -71,7 +57,7 @@ export class ProgressPanel implements RunPanel {
 
   private line(part: Part): HTMLElement {
     if (isBar(part)) return createProgressBar(this.document, partClass(part));
-    const line = this.document.createElement("div");
+    const line = this.document.createElement(TAGS.div);
     line.className = partClass(part);
     return line;
   }

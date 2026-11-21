@@ -1,10 +1,6 @@
-import type { Scheduler } from "../scheduler";
+import type { Scheduler } from "../ports";
+import type { Countdown } from "./ports";
 import { SECOND_MS } from "../time";
-
-export interface Countdown {
-  /** Calls show with the time left now and as each second passes, down to zero. The returned function stops it. */
-  start(ms: number, show: (remainingMs: number) => void): () => void;
-}
 
 // Ticks on the second boundaries of the time left, so a display that rounds
 // up to whole seconds changes on every tick and never skips one.

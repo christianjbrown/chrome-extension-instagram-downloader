@@ -1,9 +1,7 @@
-import type { Scheduler } from "../scheduler";
+import { ATTRIBUTES, TAGS } from "../../shared/dom";
+import type { Scheduler } from "../ports";
+import type { Notifier } from "./ports";
 import { CLASS } from "./classNames";
-
-export interface Notifier {
-  error(message: string): void;
-}
 
 const alertRole = "alert";
 
@@ -16,9 +14,9 @@ export class ToastNotifier implements Notifier {
   ) {}
 
   error(message: string): void {
-    const toast = this.document.createElement("div");
+    const toast = this.document.createElement(TAGS.div);
     toast.className = CLASS.toast;
-    toast.setAttribute("role", alertRole);
+    toast.setAttribute(ATTRIBUTES.role, alertRole);
     toast.textContent = message;
     this.document.body.append(toast);
     this.scheduler.after(this.lifetimeMs, () => {

@@ -1,12 +1,6 @@
 // The words the progress panel shows while a bulk download runs.
-import { WRITE_OUTCOMES, type WriteOutcome } from "../saving/directoryWriter";
 import { FULL_PERCENT, percentText } from "../ui/percent";
-
-export type Counts = Record<WriteOutcome, number>;
-
-/** Nothing saved, skipped or failed yet. */
-export const noCounts = (): Counts =>
-  Object.fromEntries(WRITE_OUTCOMES.map((outcome) => [outcome, 0])) as Counts;
+import type { Counts } from "./counts";
 
 const plural = (n: number, one: string, many: string): string =>
   `${String(n)} ${n === 1 ? one : many}`;

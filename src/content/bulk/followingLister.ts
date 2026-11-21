@@ -1,22 +1,11 @@
-import type { Bridge } from "../bridgeClient";
-import type { Gate } from "../pacing/apiGate";
-import type { RunReporter } from "../ui/progressPanel";
-import type { Viewer } from "../../shared/bridge";
+import type { Bridge } from "../ports";
+import type { Gate } from "../pacing/ports";
+import type { ListRequest, FollowingSource } from "./ports";
 
 const text = {
   heading: "Listing accounts you follow",
   soFar: "so far",
 } as const;
-
-export interface ListRequest {
-  readonly viewer: Viewer;
-  readonly signal: AbortSignal;
-  readonly reporter: RunReporter;
-}
-
-export interface FollowingSource {
-  list(request: ListRequest): Promise<string[]>;
-}
 
 // Lists every account the viewer follows, a page at a time, at the pace the
 // gate allows.

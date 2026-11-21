@@ -8,8 +8,8 @@ import {
   ProfilePictureCommand,
 } from "./actions/profileCommands";
 import { StoryDownloader } from "./actions/storyDownloader";
-import { ViewerSource, type CurrentViewer } from "./actions/viewerSource";
-import { type Bridge, PageBridge } from "./bridgeClient";
+import { ViewerSource } from "./actions/viewerSource";
+import { PageBridge } from "./bridgeClient";
 import { AccountArchiver } from "./bulk/accountArchiver";
 import { BulkRunner } from "./bulk/bulkRunner";
 import { PinnedAwareCatchUp } from "./bulk/catchUp";
@@ -31,22 +31,27 @@ import { StoryToolbar } from "./features/storyToolbar";
 import { ApiGate } from "./pacing/apiGate";
 import { HourlyBudget } from "./pacing/hourlyBudget";
 import type { ContentConfig } from "./config";
+import { PagePostLocator } from "./dom/postLocator";
 import { VisibleAssetFinder } from "./dom/visibleAsset";
 import { TimerSleeper } from "./pacing/sleeper";
 import { DirectoryWriter } from "./saving/directoryWriter";
 import { blobFetcher } from "./saving/fetchBlob";
 import { SafeFileNamer } from "./saving/fileNamer";
-import { FileDownloader, type ItemDownloader } from "./saving/fileDownloader";
+import { FileDownloader } from "./saving/fileDownloader";
 import { FolderPicker, type ShowDirectoryPicker } from "./saving/folderPicker";
 import { MemoryFolderStore } from "./saving/folderStore";
 import { LegacyFolderDatabase } from "./saving/legacyFolderDatabase";
 import { pageOrigin } from "../shared/origin";
 import { isMediaUrl } from "../shared/mediaUrl";
 import { ValidatedBridge } from "./validatedBridge";
-import { TimeoutScheduler, type Scheduler } from "./scheduler";
-import { ToastNotifier, type Notifier } from "./ui/notifier";
+import { TimeoutScheduler } from "./scheduler";
+import { ToastNotifier } from "./ui/notifier";
 import { SecondCountdown } from "./ui/countdown";
 import { ProgressPanel } from "./ui/progressPanel";
+import type { CurrentViewer } from "./actions/ports";
+import type { Bridge, Scheduler } from "./ports";
+import type { ItemDownloader } from "./saving/ports";
+import type { Notifier } from "./ui/ports";
 
 export interface ContentEnvironment {
   readonly window: Window &
@@ -172,7 +177,7 @@ function features(wiring: Wiring): Feature[] {
   const viewers = new ViewerSource(bridge, Date.now, config.viewerRetryMs);
   const commands = profileCommands(wiring, parts, viewers, downloader);
   return [
-    new PostActions(view, posts, notifier, assets),
+    new PostActions(view, posts, notifier, new PagePostLocator(view, assets)),
     new GridButtons(view, posts, config.gridMinimumWidth),
     new ProfileToolbar(view, commands, viewers, parts.runs),
     new StoryToolbar(

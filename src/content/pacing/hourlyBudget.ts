@@ -1,10 +1,5 @@
 import { HOUR_MS } from "../time";
-import type { Sleeper } from "./sleeper";
-
-/** Waits, when it has to, until another API call fits in the budget. */
-export interface Budget {
-  take(signal: AbortSignal, onWait: (ms: number) => void): Promise<void>;
-}
+import type { Sleeper, Budget } from "./ports";
 
 // Keeps API calls under a ceiling in any rolling hour, waiting when it is hit.
 export class HourlyBudget implements Budget {

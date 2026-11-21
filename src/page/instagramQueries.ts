@@ -2,19 +2,9 @@
 // the part of the response it uses.
 import type { PostsPage } from "../shared/bridge";
 import type { InstagramMedia } from "../shared/media";
-import {
-  isJsonObject,
-  type JsonObject,
-  type ModuleRequire,
-  type Relay,
-} from "./relayClient";
+import { isJsonObject, type JsonObject } from "../shared/json";
+import type { Relay, ProfileUser, Queries } from "./ports";
 import { MODULES, POST_BY_ID_MEMBER, RESPONSE_KEYS } from "./instagramApi";
-
-export interface ProfileUser {
-  readonly username: string;
-  readonly profilePicUrl: string | undefined;
-  readonly totalPosts: number;
-}
 
 const text = {
   unexpected: "Unexpected response",
@@ -59,26 +49,11 @@ function profilePicture(user: JsonObject): string | undefined {
   return typeof url === "string" ? url : undefined;
 }
 
-export interface Queries {
-  viewerId(): string;
-  mediaById(mediaId: string): Promise<InstagramMedia>;
-  postsPage(username: string, cursor: string | undefined): Promise<PostsPage>;
-  profile(userId: string): Promise<ProfileUser>;
-}
-
 export class InstagramQueries implements Queries {
   constructor(
     private readonly relay: Relay,
-    private readonly require: ModuleRequire,
     private readonly postsPageSize: number,
   ) {}
-
-  viewerId(): string {
-    const config = this.require(MODULES.config) as {
-      getViewerId(): string | number;
-    };
-    return String(config.getViewerId());
-  }
 
   async mediaById(mediaId: string): Promise<InstagramMedia> {
     const query = this.relay.query(MODULES.postQuery, POST_BY_ID_MEMBER);

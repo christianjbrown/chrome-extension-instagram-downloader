@@ -1,6 +1,7 @@
-import type { StoryDownloads, StoryRoute } from "../actions/storyDownloader";
+import { TAGS } from "../../shared/dom";
+import type { StoryDownloads, StoryRoute } from "../actions/ports";
+import type { AssetFinder } from "../dom/ports";
 import { parseRoute } from "../dom/route";
-import type { AssetFinder } from "../dom/visibleAsset";
 import { bySelector, CLASS } from "../ui/classNames";
 import {
   createTextButton,
@@ -41,7 +42,7 @@ export class StoryToolbar implements Feature {
   }
 
   private toolbar(): HTMLElement {
-    const toolbar = this.view.document.createElement("div");
+    const toolbar = this.view.document.createElement(TAGS.div);
     toolbar.className = CLASS.storyToolbar;
     this.add(toolbar, "download", text.download, (route) =>
       this.downloader.current(route, this.assets.largest(this.view.document)),

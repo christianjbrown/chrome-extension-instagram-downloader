@@ -1,23 +1,8 @@
 import type { DownloadItem } from "../../shared/media";
-import type { FetchBlob } from "./fetchBlob";
-import type { FileNamer } from "./fileNamer";
-
-export const WRITE_OUTCOMES = ["saved", "skipped", "failed"] as const;
-export type WriteOutcome = (typeof WRITE_OUTCOMES)[number];
+import type { FetchBlob, FileNamer, WriteOutcome, ItemWriter } from "./ports";
 
 // What the File System Access API throws for a file that is not there.
 const notFoundErrorName = "NotFoundError";
-
-export interface ItemWriter {
-  exists(
-    folder: FileSystemDirectoryHandle,
-    item: DownloadItem,
-  ): Promise<boolean>;
-  write(
-    folder: FileSystemDirectoryHandle,
-    item: DownloadItem,
-  ): Promise<WriteOutcome>;
-}
 
 // Writes files into a folder the user chose. A file that fails is not
 // kept, so the next run tries it again.

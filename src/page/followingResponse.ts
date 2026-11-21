@@ -2,7 +2,7 @@
 import type { FollowingPage } from "../shared/bridge";
 import { RefusedError, TOO_MANY_REQUESTS } from "../shared/refusal";
 import { FAILED_STATUS } from "./instagramApi";
-import { isJsonObject } from "./relayClient";
+import { isJsonObject } from "../shared/json";
 
 const text = {
   slowDown: "Instagram asked us to slow down",

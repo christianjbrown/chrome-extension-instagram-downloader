@@ -1,5 +1,4 @@
-export type FetchBlob = (url: string) => Promise<Blob>;
-
+import type { FetchBlob } from "./ports";
 const text = {
   refused: "Refusing to download that address",
   failed: "Download failed",

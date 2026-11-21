@@ -1,7 +1,7 @@
 import { AccountArchiver } from "../../../src/content/bulk/accountArchiver";
 import { PinnedAwareCatchUp } from "../../../src/content/bulk/catchUp";
 import { CONTENT_CONFIG } from "../../../src/content/config";
-import type { ItemWriter } from "../../../src/content/saving/directoryWriter";
+import type { ItemWriter } from "../../../src/content/saving/ports";
 import { photo } from "../../fixtures";
 import {
   MemoryFolder,

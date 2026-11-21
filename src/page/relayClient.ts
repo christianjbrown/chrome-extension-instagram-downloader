@@ -1,8 +1,8 @@
 // Runs Instagram's own Relay queries through its network layer, which hands
 // back plain JSON rather than the masked fragments its components see.
+import { isJsonObject, type JsonObject } from "../shared/json";
 import { MODULES } from "./instagramApi";
-
-export type ModuleRequire = (name: string) => unknown;
+import type { ModuleRequire, RelayQuery, Relay } from "./ports";
 
 const text = {
   notLoaded: "Instagram has not finished loading",
@@ -15,10 +15,6 @@ export function windowRequire(target: { require?: unknown }): ModuleRequire {
     if (typeof target.require !== "function") throw new Error(text.notLoaded);
     return (target.require as ModuleRequire)(name);
   };
-}
-
-export interface RelayQuery {
-  readonly params: unknown;
 }
 
 interface RelayObserver {
@@ -37,22 +33,11 @@ interface RelayEnvironment {
   };
 }
 
-export type JsonObject = Record<string, unknown>;
-
-export const isJsonObject = (value: unknown): value is JsonObject =>
-  typeof value === "object" && value !== null;
-
 // Skips Relay's own store, so every query asks Instagram afresh.
 const fetchFresh = { force: true } as const;
 
 const isQuery = (value: unknown): value is RelayQuery =>
   isJsonObject(value) && value.params !== undefined;
-
-export interface Relay {
-  /** Loads a query from Instagram's modules, or one member of the module. */
-  query(moduleName: string, member?: string): RelayQuery;
-  run(query: RelayQuery, variables: JsonObject): Promise<JsonObject>;
-}
 
 export class RelayClient implements Relay {
   constructor(private readonly require: ModuleRequire) {}

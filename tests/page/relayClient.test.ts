@@ -1,8 +1,4 @@
-import {
-  RelayClient,
-  isJsonObject,
-  windowRequire,
-} from "../../src/page/relayClient";
+import { RelayClient, windowRequire } from "../../src/page/relayClient";
 
 describe("windowRequire", () => {
   it("fails until Instagram's loader exists", () => {
@@ -16,11 +12,6 @@ describe("windowRequire", () => {
     expect(windowRequire({ require })("X")).toBe("module");
     expect(require).toHaveBeenCalledWith("X");
   });
-});
-
-it("isJsonObject accepts objects only", () => {
-  expect(isJsonObject({})).toBe(true);
-  expect(isJsonObject(null)).toBe(false);
 });
 
 function environment(responses: { data?: unknown }[], error?: unknown) {

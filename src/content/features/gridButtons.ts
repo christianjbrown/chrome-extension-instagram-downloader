@@ -1,5 +1,5 @@
 import { shortcodeFromPath, shortcodeToMediaId } from "../../shared/shortcode";
-import type { PostDownloads } from "../actions/postDownloader";
+import type { PostDownloads } from "../actions/ports";
 import { parseRoute } from "../dom/route";
 import { ARTICLE } from "../dom/selectors";
 import { createButton } from "../ui/buttons";

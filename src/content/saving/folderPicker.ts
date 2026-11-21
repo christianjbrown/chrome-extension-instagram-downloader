@@ -1,4 +1,4 @@
-import type { FolderStore } from "./folderStore";
+import type { FolderStore, FolderSource } from "./ports";
 
 type Permission = "granted" | "denied" | "prompt";
 
@@ -13,12 +13,10 @@ export type ShowDirectoryPicker = (options: {
   startIn: "downloads";
 }) => Promise<FileSystemDirectoryHandle>;
 
-export interface FolderSource {
-  pick(chooseAgain?: boolean): Promise<FileSystemDirectoryHandle>;
-}
-
 const readwrite = { mode: "readwrite" } as const;
 const granted: Permission = "granted";
+// Where the picker opens the first time, before Chrome remembers a folder.
+const startIn = "downloads";
 
 // Chrome remembers where this picker was last opened, separately from others.
 const pickerId = "instagram-downloader";
@@ -37,7 +35,7 @@ export class FolderPicker implements FolderSource {
     const chosen = await this.showPicker({
       id: pickerId,
       ...readwrite,
-      startIn: "downloads",
+      startIn,
     });
     await this.store.set(chosen);
     return chosen;

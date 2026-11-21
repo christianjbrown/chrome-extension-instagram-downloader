@@ -1,6 +1,6 @@
-import type { Command, UsernameCommand } from "../actions/profileCommands";
-import type { CurrentViewer } from "../actions/viewerSource";
-import type { RunProgress } from "../bulk/runStore";
+import { TAGS } from "../../shared/dom";
+import type { Command, UsernameCommand, CurrentViewer } from "../actions/ports";
+import type { RunProgress } from "../bulk/ports";
 import { parseRoute } from "../dom/route";
 import { PROFILE_HEADER } from "../dom/selectors";
 import { bySelector, CLASS } from "../ui/classNames";
@@ -75,7 +75,7 @@ export class ProfileToolbar implements Feature {
   }
 
   private toolbar(username: string): HTMLElement {
-    const toolbar = this.view.document.createElement("div");
+    const toolbar = this.view.document.createElement(TAGS.div);
     toolbar.className = CLASS.profileToolbar;
     toolbar.dataset.username = username;
     for (const { icon, label, run } of toolbarButtons)

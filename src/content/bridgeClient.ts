@@ -6,16 +6,12 @@ import {
   type ProcedureName,
 } from "../shared/bridge";
 import { RefusedError } from "../shared/refusal";
-import type { Scheduler } from "./scheduler";
+import type { Scheduler, Bridge } from "./ports";
 
 const text = {
   noAnswer: "The page did not answer",
   unreadable: "The page sent an unreadable answer",
 } as const;
-
-export interface Bridge {
-  call<N extends ProcedureName>(name: N, input: Input<N>): Promise<Output<N>>;
-}
 
 type PostMessage = (
   message: unknown,

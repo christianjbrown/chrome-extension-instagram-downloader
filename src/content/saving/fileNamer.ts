@@ -1,8 +1,5 @@
 import type { DownloadItem } from "../../shared/media";
-
-export interface FileNamer {
-  nameFor(item: DownloadItem): string;
-}
+import type { FileNamer } from "./ports";
 
 const extensionPattern = /\.([0-9a-z]+)(?:[?#]|$)/i;
 const knownExtensions: ReadonlySet<string> = new Set([

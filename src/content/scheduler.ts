@@ -1,8 +1,4 @@
-// Runs something later. The returned function cancels it.
-export interface Scheduler {
-  after(ms: number, callback: () => void): () => void;
-}
-
+import type { Scheduler } from "./ports";
 /** The window's own timers, which the scheduler is the only user of. */
 export type Timers = Pick<
   WindowOrWorkerGlobalScope,

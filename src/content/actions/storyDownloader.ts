@@ -1,24 +1,15 @@
 import type { Reel } from "../../shared/bridge";
 import { downloadItems, type InstagramMedia } from "../../shared/media";
-import type { Bridge } from "../bridgeClient";
-import type { Route } from "../dom/route";
+import type { Bridge } from "../ports";
+import type { ItemDownloader } from "../saving/ports";
+import type { Notifier } from "../ui/ports";
+import type { StoryRoute, StoryDownloads } from "./ports";
 import { errorMessage } from "../errorText";
-import type { ItemDownloader } from "../saving/fileDownloader";
-import type { Notifier } from "../ui/notifier";
 
 const text = {
   unknownStory: "could not tell which story is showing",
   failed: "Could not download this story",
 } as const;
-
-export type StoryRoute = Extract<Route, { kind: "story" | "highlight" }>;
-
-export interface StoryDownloads {
-  /** The story showing, found by its id or by the picture on screen. */
-  current(route: StoryRoute, asset: string | undefined): Promise<void>;
-  /** Every story in the reel or highlight. */
-  all(route: StoryRoute): Promise<void>;
-}
 
 export class StoryDownloader implements StoryDownloads {
   constructor(

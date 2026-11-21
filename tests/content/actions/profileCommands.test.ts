@@ -4,8 +4,9 @@ import {
   DownloadFollowingCommand,
   ProfilePictureCommand,
 } from "../../../src/content/actions/profileCommands";
-import type { BulkJob, BulkRunner } from "../../../src/content/bulk/bulkRunner";
+import type { BulkRunner } from "../../../src/content/bulk/bulkRunner";
 import { fakeBridge, notifier, reporter, signal } from "../helpers";
+import type { BulkJob } from "../../../src/content/bulk/ports";
 
 const folder = {} as FileSystemDirectoryHandle;
 
