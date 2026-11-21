@@ -7,10 +7,17 @@ export class FirstKeyFinder implements MediaFinder {
   constructor(private readonly lookups: readonly MediaLookup[]) {}
 
   find(target: MediaKeys): Promise<InstagramMedia> | undefined {
-    for (const lookup of this.lookups) {
-      const key = lookup.key(target);
-      if (key !== undefined) return lookup.find(key);
-    }
-    return undefined;
+    return this.lookups.reduce<Promise<InstagramMedia> | undefined>(
+      (found, lookup) => found ?? this.tryLookup(lookup, target),
+      undefined,
+    );
+  }
+
+  private tryLookup(
+    lookup: MediaLookup,
+    target: MediaKeys,
+  ): Promise<InstagramMedia> | undefined {
+    const key = lookup.key(target);
+    return key === undefined ? undefined : lookup.find(key);
   }
 }

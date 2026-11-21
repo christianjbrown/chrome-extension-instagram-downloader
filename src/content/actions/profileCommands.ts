@@ -10,6 +10,7 @@ import type { FolderSource, ItemDownloader } from "../saving/ports";
 import type { Notifier } from "../ui/ports";
 import type { CurrentViewer, Command, UsernameCommand } from "./ports";
 import { describeCounts } from "../bulk/progressText";
+import type { Account } from "../../shared/bridge";
 import { UNKNOWN_TAKEN_AT } from "../../shared/media";
 
 const text = {
@@ -69,6 +70,11 @@ export class DownloadFollowingCommand implements Command {
   }
 }
 
+function pictureOf(account: Account): string {
+  if (account.profilePicUrl === undefined) throw new Error(text.noPicture);
+  return account.profilePicUrl;
+}
+
 export class ProfilePictureCommand implements UsernameCommand {
   constructor(
     private readonly bridge: Bridge,
@@ -79,19 +85,22 @@ export class ProfilePictureCommand implements UsernameCommand {
 
   async run(username: string): Promise<void> {
     try {
-      const account = await this.bridge.call("account", { username });
-      if (account.profilePicUrl === undefined) throw new Error(text.noPicture);
-      await this.downloader.download({
-        id: `${account.id}${profilePictureSuffix}`,
-        username,
-        takenAt: UNKNOWN_TAKEN_AT,
-        url: account.profilePicUrl,
-      });
+      await this.save(username);
     } catch (error) {
       this.notifier.error(
         `${text.pictureFailed}: ${this.errors.describe(error)}`,
       );
     }
+  }
+
+  private async save(username: string): Promise<void> {
+    const account = await this.bridge.call("account", { username });
+    await this.downloader.download({
+      id: `${account.id}${profilePictureSuffix}`,
+      username,
+      takenAt: UNKNOWN_TAKEN_AT,
+      url: pictureOf(account),
+    });
   }
 }
 
