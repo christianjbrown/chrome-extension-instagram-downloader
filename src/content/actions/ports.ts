@@ -1,6 +1,6 @@
 // What a button's action is, as the features see it.
 import type { Reel, Viewer } from "../../shared/bridge";
-import type { Route } from "../dom/route";
+import type { ROUTE_KINDS, Route } from "../dom/route";
 
 /** A post found by id, optionally one slide of it, or by the picture on screen. */
 export type PostTarget =
@@ -12,7 +12,10 @@ export interface PostDownloads {
   download(target: PostTarget, owner?: string): Promise<void>;
 }
 
-export type StoryRoute = Extract<Route, { kind: "story" | "highlight" }>;
+export type StoryRoute = Extract<
+  Route,
+  { kind: typeof ROUTE_KINDS.story | typeof ROUTE_KINDS.highlight }
+>;
 
 /** One kind of story page, and how to read the stories it shows. */
 export interface StoryKind<R extends StoryRoute> {

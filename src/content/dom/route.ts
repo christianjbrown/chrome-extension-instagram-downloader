@@ -1,21 +1,32 @@
 // What kind of Instagram page a path is.
 import type { RouteParser } from "./ports";
 
+// The kinds of page a route can be, by the name each route carries.
+export const ROUTE_KINDS = {
+  post: "post",
+  profile: "profile",
+  story: "story",
+  highlight: "highlight",
+  other: "other",
+} as const;
+
+type Kinds = typeof ROUTE_KINDS;
+
 export type Route =
-  | { readonly kind: "post"; readonly shortcode: string }
-  | { readonly kind: "profile"; readonly username: string }
+  | { readonly kind: Kinds["post"]; readonly shortcode: string }
+  | { readonly kind: Kinds["profile"]; readonly username: string }
   | {
-      readonly kind: "story";
+      readonly kind: Kinds["story"];
       readonly username: string;
       readonly mediaId: string | undefined;
     }
-  | { readonly kind: "highlight"; readonly highlightId: string }
-  | { readonly kind: "other" };
+  | { readonly kind: Kinds["highlight"]; readonly highlightId: string }
+  | { readonly kind: Kinds["other"] };
 
-export type PostRoute = Extract<Route, { kind: "post" }>;
-export type ProfileRoute = Extract<Route, { kind: "profile" }>;
+export type PostRoute = Extract<Route, { kind: Kinds["post"] }>;
+export type ProfileRoute = Extract<Route, { kind: Kinds["profile"] }>;
 
-const other: Route = { kind: "other" };
+const other: Route = { kind: ROUTE_KINDS.other };
 
 const storiesSegment = "stories";
 const highlightsSegment = "highlights";
@@ -36,10 +47,10 @@ type RouteMatcher = (segments: readonly string[]) => Route | undefined;
 function storyRoute([owner, media]: readonly string[]): Route {
   if (owner === undefined) return other;
   if (owner !== highlightsSegment)
-    return { kind: "story", username: owner, mediaId: media };
+    return { kind: ROUTE_KINDS.story, username: owner, mediaId: media };
   return media === undefined
     ? other
-    : { kind: "highlight", highlightId: media };
+    : { kind: ROUTE_KINDS.highlight, highlightId: media };
 }
 
 // /stories/name/id/, or /stories/highlights/id/ for a highlight.
@@ -54,14 +65,14 @@ const post: RouteMatcher = (segments) => {
   const prefix = segments[start];
   const shortcode = segments[start + 1];
   return prefix !== undefined && postPrefixes.has(prefix) && shortcode
-    ? { kind: "post", shortcode }
+    ? { kind: ROUTE_KINDS.post, shortcode }
     : undefined;
 };
 
 // /name/, as long as the name is not one of Instagram's own pages.
 const profile: RouteMatcher = ([first, ...rest]) =>
   first !== undefined && rest.length === 0 && !reservedFirstSegments.has(first)
-    ? { kind: "profile", username: first }
+    ? { kind: ROUTE_KINDS.profile, username: first }
     : undefined;
 
 // Tried in order, and the first that recognises the path wins.
