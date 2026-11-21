@@ -3,16 +3,24 @@ import { SecondCountdown } from "../../../src/content/ui/countdown";
 import { ToastNotifier } from "../../../src/content/ui/notifier";
 import type { Countdown } from "../../../src/content/ui/ports";
 import { DomProgressBars } from "../../../src/content/ui/progressBar";
+import { CountdownLine } from "../../../src/content/ui/countdownLine";
+import { DomPanelView } from "../../../src/content/ui/domPanelView";
+import { EnglishPanelWording } from "../../../src/content/ui/panelWording";
 import { ProgressPanel } from "../../../src/content/ui/progressPanel";
 import { ManualScheduler } from "../helpers";
 
-const newPanel = (countdown: Countdown): ProgressPanel =>
-  new ProgressPanel(
-    document,
-    countdown,
-    new DomButtons(document),
-    new DomProgressBars(document),
+const newPanel = (countdown: Countdown): ProgressPanel => {
+  const wording = new EnglishPanelWording();
+  return new ProgressPanel(
+    new DomPanelView(
+      document,
+      new DomButtons(document),
+      new DomProgressBars(document),
+    ),
+    new CountdownLine(countdown, wording),
+    wording,
   );
+};
 
 describe("buttons", () => {
   it("runs its action without letting the click reach the page", () => {

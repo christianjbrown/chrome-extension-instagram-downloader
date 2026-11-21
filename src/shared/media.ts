@@ -38,18 +38,10 @@ export function assetName(url: string): string {
 
 type Pictures = Partial<NonNullable<InstagramMedia["image_versions2"]>>;
 
-// Media from the page itself can have its lists missing or set to null.
+// A media with no picture has no sizes.
 const pictures = (media: InstagramMedia): Pictures =>
   media.image_versions2 ?? {};
 
 /** The sizes of a media's picture, or none when it has no picture. */
 export const imageVersions = (media: InstagramMedia): readonly MediaVersion[] =>
   pictures(media).candidates ?? [];
-
-const videoVersions = (media: InstagramMedia): readonly MediaVersion[] =>
-  media.video_versions ?? [];
-
-export function assetNames(media: InstagramMedia): string[] {
-  const versions = [...imageVersions(media), ...videoVersions(media)];
-  return versions.map((version) => assetName(version.url));
-}

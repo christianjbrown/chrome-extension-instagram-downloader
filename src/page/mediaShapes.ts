@@ -6,13 +6,13 @@ import {
   isRecord,
   type JsonObject,
 } from "../shared/json";
-import type { InstagramMedia } from "../shared/media";
+import type { PageMedia } from "./ports";
 
 const isId = (value: unknown): boolean =>
   typeof value === "string" || typeof value === "number";
 
 // A post or slide carries an id and at least one of these.
-const pictureKeys: readonly (keyof InstagramMedia)[] = [
+const pictureKeys: readonly string[] = [
   "image_versions2",
   "video_versions",
   "carousel_media",
@@ -22,17 +22,14 @@ const pictureKeys: readonly (keyof InstagramMedia)[] = [
  * An object with the id every post, story and slide carries. The content
  * script checks the rest of its shape before it uses any of it.
  */
-export const isMediaRecord = (
-  value: unknown,
-): value is InstagramMedia & JsonObject => isRecord(value) && isId(value.pk);
+export const isMediaRecord = (value: unknown): value is PageMedia =>
+  isRecord(value) && isId(value.pk);
 
 const hasPicture = (value: JsonObject): boolean =>
   pictureKeys.some((key) => value[key] !== undefined);
 
 /** A post or slide, told apart from the other objects Instagram sends. */
-export const isMedia = (
-  value: JsonObject,
-): value is InstagramMedia & JsonObject =>
+export const isMedia = (value: JsonObject): value is PageMedia =>
   isMediaRecord(value) && hasPicture(value);
 
 const hasUserId = (value: JsonObject): boolean =>

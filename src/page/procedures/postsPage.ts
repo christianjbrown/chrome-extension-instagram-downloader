@@ -1,7 +1,7 @@
 // One page of an account's posts. The total comes free from the profile
 // Instagram already loaded, so it is only there when the account's page has
 // been visited.
-import type { Input, PostsPage } from "../../shared/bridge";
+import type { Input } from "../../shared/bridge";
 import { isRecord, type JsonObject } from "../../shared/json";
 import { POSTS_PAGE_PROCEDURE } from "../../shared/procedures/postsPage";
 import type {
@@ -9,6 +9,7 @@ import type {
   PageProcedure,
   PostCountLookup,
   PostsQuery,
+  PagePostsPage,
 } from "../ports";
 
 type Name = typeof POSTS_PAGE_PROCEDURE;
@@ -33,7 +34,7 @@ export class PostsPageProcedure implements PageProcedure<Name> {
     );
   }
 
-  async handle({ username, cursor }: Input<Name>): Promise<PostsPage> {
+  async handle({ username, cursor }: Input<Name>): Promise<PagePostsPage> {
     const page = await this.queries.postsPage(username, cursor);
     const total = this.users.postCount(username);
     return total === undefined ? page : { ...page, total };

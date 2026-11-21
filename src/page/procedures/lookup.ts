@@ -1,7 +1,6 @@
 // What the procedures answered from memory share: a lookup that may find
 // nothing, run so that a miss rejects instead of throwing.
-import type { Reel } from "../../shared/bridge";
-import type { ReelLookup } from "../ports";
+import type { PageReel, ReelLookup } from "../ports";
 
 const storyNotLoaded = "This story has not loaded yet";
 
@@ -17,7 +16,7 @@ export function found<T>(value: T | undefined, message: string): T {
 export function loadedReel(
   reels: ReelLookup,
   reelId: string | undefined,
-): Reel {
+): PageReel {
   return found(
     reelId === undefined ? undefined : reels.reel(reelId),
     storyNotLoaded,

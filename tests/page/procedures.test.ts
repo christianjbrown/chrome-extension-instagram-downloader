@@ -14,10 +14,13 @@ function setup() {
         totalPosts: 2,
       }),
     ),
-    mediaById: vi.fn((id: string) => Promise.resolve(photo(id))),
+    mediaById: vi.fn((id: string) => Promise.resolve({ ...photo(id) })),
     postsPage: vi.fn(() =>
       Promise.resolve({
-        items: [photo("1", "x.jpg", "other"), photo("2", "y.jpg", "alice")],
+        items: [
+          { ...photo("1", "x.jpg", "other") },
+          { ...photo("2", "y.jpg", "alice") },
+        ],
         cursor: undefined,
       }),
     ),
