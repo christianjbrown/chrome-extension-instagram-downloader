@@ -5,7 +5,7 @@ import { BridgeServer } from "./bridgeServer";
 import { whenParsed } from "./documentReady";
 import { scanEmbeddedJson } from "./embeddedJson";
 import type { PageConfig } from "./config";
-import { InstagramRefusalDetector } from "./refusalDetector";
+import { refusalDetector } from "./refusalWiring";
 import { FollowingClient } from "./followingClient";
 import { FollowingPageParser } from "./followingParser";
 import { FollowingPolicy } from "./followingPolicy";
@@ -66,6 +66,6 @@ export function startPage(target: PageWindow, config: PageConfig): void {
   new BridgeServer(
     procedures,
     { origin: pageOrigin, source: target },
-    new InstagramRefusalDetector(),
+    refusalDetector(),
   ).listen(target);
 }
