@@ -5,12 +5,11 @@ import type {
   JobRunner,
   FollowingRunner,
 } from "../bulk/ports";
-import type { Bridge } from "../ports";
+import type { Bridge, ErrorDescriber } from "../ports";
 import type { FolderSource, ItemDownloader } from "../saving/ports";
 import type { Notifier } from "../ui/ports";
 import type { CurrentViewer, Command, UsernameCommand } from "./ports";
 import { describeCounts } from "../bulk/progressText";
-import { errorMessage } from "../errorText";
 import { UNKNOWN_TAKEN_AT } from "../../shared/media";
 
 const text = {
@@ -75,6 +74,7 @@ export class ProfilePictureCommand implements UsernameCommand {
     private readonly bridge: Bridge,
     private readonly downloader: ItemDownloader,
     private readonly notifier: Notifier,
+    private readonly errors: ErrorDescriber,
   ) {}
 
   async run(username: string): Promise<void> {
@@ -88,7 +88,9 @@ export class ProfilePictureCommand implements UsernameCommand {
         url: account.profilePicUrl,
       });
     } catch (error) {
-      this.notifier.error(`${text.pictureFailed}: ${errorMessage(error)}`);
+      this.notifier.error(
+        `${text.pictureFailed}: ${this.errors.describe(error)}`,
+      );
     }
   }
 }

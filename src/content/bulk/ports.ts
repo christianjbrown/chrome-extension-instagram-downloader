@@ -95,6 +95,16 @@ export interface RunStateStore {
   save(viewerId: string, state: RunState): Promise<void>;
 }
 
+/** The steps a following run takes its stored state through. */
+export interface ResumePolicy {
+  /** A run over who the viewer follows now, keeping the progress made on them. */
+  begin(state: RunState, following: string[]): RunState;
+  /** The accounts the run still has to archive, in order. */
+  remaining(state: RunState, following: string[]): string[];
+  /** The run is over, but which accounts were archived in full is kept. */
+  finished(state: RunState): RunState;
+}
+
 export interface RunProgress {
   /** Whether a run for this account was stopped part way. */
   inProgress(viewerId: string): Promise<boolean>;

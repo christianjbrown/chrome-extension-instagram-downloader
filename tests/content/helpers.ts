@@ -1,5 +1,9 @@
 import type { Mock } from "vitest";
-import type { Scheduler, Bridge } from "../../src/content/ports";
+import type {
+  Scheduler,
+  Bridge,
+  ErrorDescriber,
+} from "../../src/content/ports";
 import type { RunReporter } from "../../src/content/ui/ports";
 import type { Input, Output, ProcedureName } from "../../src/shared/bridge";
 
@@ -36,6 +40,11 @@ export const reporter = (): Mocked<RunReporter> => ({
 
 export const notifier = (): { error: Mock<(message: string) => void> } => ({
   error: vi.fn(),
+});
+
+// Shows an error's own message, standing in for the real wording.
+export const errorText = (): ErrorDescriber => ({
+  describe: (error) => (error instanceof Error ? error.message : String(error)),
 });
 
 export const signal = (): AbortSignal => new AbortController().signal;

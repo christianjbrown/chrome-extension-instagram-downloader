@@ -6,6 +6,7 @@ import { ConsecutiveFailureTally } from "./bulk/failureTally";
 import { FollowingDownloader } from "./bulk/followingDownloader";
 import { FollowingLister } from "./bulk/followingLister";
 import { GatedPostTotals } from "./bulk/postTotals";
+import { FollowedAccountsResume } from "./bulk/resumePolicy";
 import {
   AnyStopPolicy,
   ReloadedExtensionPolicy,
@@ -66,8 +67,28 @@ function stopPolicies() {
   };
 }
 
+// Runs each bulk download in the progress panel, one at a time.
+function jobRunner(
+  { env, scheduler, notifier, buttons, errors }: Wiring,
+  folders: FolderSource,
+): JobRunner {
+  const { document } = env.window;
+  return new BulkRunner({
+    folders,
+    panel: new ProgressPanel(
+      document,
+      new SecondCountdown(scheduler, Date.now),
+      buttons,
+      new DomProgressBars(document),
+    ),
+    notifier,
+    controllerClass: env.window.AbortController,
+    errors,
+  });
+}
+
 export function bulk(wiring: Wiring): BulkParts {
-  const { env, config, bridge, notifier, scheduler } = wiring;
+  const { env, config, bridge, errors } = wiring;
   const pacer = bulkPacer(wiring);
   const namer = new SafeFileNamer();
   const fetchBlob = blobFetcher((url) => env.window.fetch(url), isMediaUrl);
@@ -86,22 +107,17 @@ export function bulk(wiring: Wiring): BulkParts {
     lister: new FollowingLister(bridge, pacer.gate),
     archiver,
     store: runs,
+    resume: new FollowedAccountsResume(),
     now: Date.now,
-    tally: new ConsecutiveFailureTally(config.failuresInARow, stops.any),
+    tally: new ConsecutiveFailureTally(
+      config.failuresInARow,
+      stops.any,
+      errors,
+    ),
   });
   const folders = new FolderPicker(new MemoryFolderStore(), (options) =>
     env.window.showDirectoryPicker(options),
   );
-  const runner = new BulkRunner(
-    folders,
-    new ProgressPanel(
-      env.window.document,
-      new SecondCountdown(scheduler, Date.now),
-      wiring.buttons,
-      new DomProgressBars(env.window.document),
-    ),
-    notifier,
-    env.window.AbortController,
-  );
+  const runner = jobRunner(wiring, folders);
   return { archiver, following, folders, runner, runs, fetchBlob, namer };
 }

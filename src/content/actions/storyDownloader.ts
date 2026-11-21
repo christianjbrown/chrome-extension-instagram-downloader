@@ -1,9 +1,8 @@
 import type { DownloadItem, InstagramMedia } from "../../shared/media";
-import type { Bridge, MediaFiles } from "../ports";
+import type { Bridge, ErrorDescriber, MediaFiles } from "../ports";
 import type { ItemDownloader } from "../saving/ports";
 import type { Notifier } from "../ui/ports";
 import type { StoryDownloads, StoryKind, StoryRoute } from "./ports";
-import { errorMessage } from "../errorText";
 
 const text = {
   unknownStory: "could not tell which story is showing",
@@ -15,6 +14,7 @@ export interface StoryDownloaderDependencies {
   readonly downloader: ItemDownloader;
   readonly notifier: Notifier;
   readonly files: MediaFiles;
+  readonly errors: ErrorDescriber;
   /** Each kind of story page, tried in order. */
   readonly kinds: readonly StoryKind<StoryRoute>[];
 }
@@ -63,7 +63,9 @@ export class StoryDownloader implements StoryDownloads {
       for (const item of await items())
         await this.deps.downloader.download(item);
     } catch (error) {
-      this.deps.notifier.error(`${text.failed}: ${errorMessage(error)}`);
+      this.deps.notifier.error(
+        `${text.failed}: ${this.deps.errors.describe(error)}`,
+      );
     }
   }
 }

@@ -1,4 +1,4 @@
-import { errorMessage } from "../../src/content/errorText";
+import { UserErrorText } from "../../src/content/errorText";
 import {
   BlockedError,
   abortError,
@@ -13,8 +13,10 @@ it("recognises a stop", () => {
 });
 
 it("describes any error as text", () => {
-  expect(errorMessage(new BlockedError("blocked"))).toBe("blocked");
-  expect(errorMessage(42)).toBe("42");
+  expect(new UserErrorText().describe(new BlockedError("blocked"))).toBe(
+    "blocked",
+  );
+  expect(new UserErrorText().describe(42)).toBe("42");
   expect(new BlockedError("b").name).toBe("BlockedError");
 });
 
@@ -23,7 +25,7 @@ it("explains a reloaded extension instead of Chrome's wording", () => {
   expect(isContextInvalidated(invalidated)).toBe(true);
   expect(isContextInvalidated(new Error("x"))).toBe(false);
   expect(isContextInvalidated("Extension context invalidated.")).toBe(false);
-  expect(errorMessage(invalidated)).toBe(
+  expect(new UserErrorText().describe(invalidated)).toBe(
     "The extension was reloaded or updated. Reload this page to carry on.",
   );
 });
