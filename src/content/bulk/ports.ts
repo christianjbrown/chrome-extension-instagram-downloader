@@ -43,6 +43,11 @@ export interface CatchUpPolicy {
   caughtUp(page: number, onlyNew: boolean, newFiles: number): boolean;
 }
 
+/** Tells the errors that end a whole run from those a run can carry on past. */
+export interface RunStopPolicy {
+  endsTheRun(error: unknown): boolean;
+}
+
 export interface FailureTally {
   /** Forgets the last run, ready for a new one. */
   reset(): void;

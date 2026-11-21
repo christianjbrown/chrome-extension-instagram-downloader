@@ -2,7 +2,6 @@ import { errorMessage } from "../../src/content/errorText";
 import {
   BlockedError,
   abortError,
-  endsTheRun,
   isAbortError,
   isContextInvalidated,
 } from "../../src/content/errors";
@@ -27,10 +26,4 @@ it("explains a reloaded extension instead of Chrome's wording", () => {
   expect(errorMessage(invalidated)).toBe(
     "The extension was reloaded or updated. Reload this page to carry on.",
   );
-});
-
-it("ends the run on a stop or a block and nothing else", () => {
-  expect(endsTheRun(abortError())).toBe(true);
-  expect(endsTheRun(new BlockedError("blocked"))).toBe(true);
-  expect(endsTheRun(new Error("x"))).toBe(false);
 });

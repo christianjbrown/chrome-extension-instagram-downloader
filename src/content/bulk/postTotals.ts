@@ -1,8 +1,7 @@
 import type { PostsPage } from "../../shared/bridge";
 import type { Bridge } from "../ports";
 import type { Gate } from "../pacing/ports";
-import type { PostTotals } from "./ports";
-import { endsTheRun } from "../errors";
+import type { PostTotals, RunStopPolicy } from "./ports";
 import type { WaitReporter } from "../pacing/pacing";
 
 // Takes the total from the first page when the profile was already loaded,
@@ -13,6 +12,7 @@ export class GatedPostTotals implements PostTotals {
   constructor(
     private readonly bridge: Bridge,
     private readonly gate: Gate,
+    private readonly stops: RunStopPolicy,
   ) {}
 
   async find(
@@ -31,7 +31,7 @@ export class GatedPostTotals implements PostTotals {
       );
       return account.totalPosts > 0 ? account.totalPosts : undefined;
     } catch (error) {
-      if (endsTheRun(error)) throw error;
+      if (this.stops.endsTheRun(error)) throw error;
       return undefined;
     }
   }
