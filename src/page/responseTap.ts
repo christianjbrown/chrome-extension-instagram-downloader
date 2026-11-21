@@ -1,6 +1,6 @@
 // Reads the JSON Instagram's own requests bring back, without changing them.
 import { EVENTS } from "../shared/dom";
-import { methodOf } from "./members";
+import { methodOf } from "../shared/members";
 import type { UrlPolicy } from "./ports";
 import { parseResponse } from "./responseText";
 

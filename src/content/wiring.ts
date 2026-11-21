@@ -2,13 +2,11 @@
 import type { KeyValueArea } from "./bulk/runStore";
 import type { MediaUrlPolicy } from "../shared/checks";
 import type { ContentConfig } from "./config";
-import type { ShowDirectoryPicker } from "./saving/folderPicker";
 import type { Bridge, ErrorDescriber, MediaFiles, Scheduler } from "./ports";
 import type { IconButtons, Notifier, TextButtons } from "./ui/ports";
 
 export interface ContentEnvironment {
-  readonly window: Window &
-    typeof globalThis & { showDirectoryPicker: ShowDirectoryPicker };
+  readonly window: Window & typeof globalThis;
   readonly storage: KeyValueArea;
 }
 

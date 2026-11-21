@@ -1,7 +1,8 @@
-// Calls into Instagram's own modules, whose shape nothing promises. Each
+// Calls into objects whose shape nothing promises, such as Instagram's own
+// modules or browser features the DOM types do not describe yet. Each
 // member is checked to be a function before it is called, and each answer
 // is checked before it is used.
-import { isJsonObject } from "../shared/json";
+import { isJsonObject } from "./json";
 
 /** A function whose arguments and answer are still unchecked. */
 export type Method = (...args: unknown[]) => unknown;

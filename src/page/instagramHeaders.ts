@@ -1,7 +1,7 @@
 // The headers that make a REST call look like Instagram's own, read from
 // Instagram's own modules at call time.
 import { HEADERS, MEMBERS, MODULES } from "./instagramApi";
-import { callMember, textAnswer } from "./members";
+import { callMember, textAnswer } from "../shared/members";
 import type { ModuleRequire, HeaderSource } from "./ports";
 
 export class InstagramHeaders implements HeaderSource {

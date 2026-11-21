@@ -3,7 +3,7 @@ import {
   idAnswer,
   methodOf,
   textAnswer,
-} from "../../src/page/members";
+} from "../../src/shared/members";
 
 describe("methodOf", () => {
   it("gives back a member that is a function", () => {

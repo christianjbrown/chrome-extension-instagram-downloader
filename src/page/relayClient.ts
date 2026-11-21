@@ -2,7 +2,7 @@
 // back plain JSON rather than the masked fragments its components see.
 import { isJsonObject, type JsonObject } from "../shared/json";
 import { MEMBERS, MODULES } from "./instagramApi";
-import { callMember } from "./members";
+import { callMember } from "../shared/members";
 import type { ModuleRequire, RelayQuery, Relay } from "./ports";
 
 const text = {

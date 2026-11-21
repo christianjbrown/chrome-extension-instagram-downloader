@@ -47,3 +47,10 @@ describe("FolderPicker", () => {
     }
   });
 });
+
+it("fails when a stored folder cannot be asked for access", async () => {
+  const stored = {} as FileSystemDirectoryHandle;
+  await expect(picker(stored).picker.pick()).rejects.toThrow(
+    "The folder cannot be asked for access",
+  );
+});

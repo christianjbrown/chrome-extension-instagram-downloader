@@ -25,6 +25,7 @@ import { blobFetcher } from "./saving/fetchBlob";
 import { SafeFileNamer } from "./saving/fileNamer";
 import { FolderPicker } from "./saving/folderPicker";
 import { MemoryFolderStore } from "./saving/folderStore";
+import { WindowDirectoryPicker } from "./saving/windowPicker";
 import { StoppedRunWording, WordedErrors } from "./errorText";
 import { SecondCountdown } from "./ui/countdown";
 import { CountdownLine } from "./ui/countdownLine";
@@ -39,7 +40,7 @@ import type {
   RunProgress,
 } from "./bulk/ports";
 import type { FetchBlob, FileNamer, FolderSource } from "./saving/ports";
-import type { Wiring } from "./wiring";
+import type { ContentEnvironment, Wiring } from "./wiring";
 
 /** What the features take from the bulk downloads. */
 export interface BulkParts {
@@ -94,6 +95,17 @@ function jobRunner(
   });
 }
 
+// The download folder, chosen through Chrome's own folder chooser.
+function folderSource(env: ContentEnvironment): FolderSource {
+  const picker = new WindowDirectoryPicker(
+    env.window,
+    env.window.FileSystemDirectoryHandle,
+  );
+  return new FolderPicker(new MemoryFolderStore(), (options) =>
+    picker.show(options),
+  );
+}
+
 export function bulk(wiring: Wiring): BulkParts {
   const { env, config, bridge, errors, mediaUrls } = wiring;
   const pacer = bulkPacer(wiring);
@@ -125,9 +137,7 @@ export function bulk(wiring: Wiring): BulkParts {
       errors,
     ),
   });
-  const folders = new FolderPicker(new MemoryFolderStore(), (options) =>
-    env.window.showDirectoryPicker(options),
-  );
+  const folders = folderSource(env);
   const runner = jobRunner(wiring, folders);
   return { archiver, following, folders, runner, runs, fetchBlob, namer };
 }

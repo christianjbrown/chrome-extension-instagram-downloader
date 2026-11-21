@@ -3,6 +3,12 @@
 import type { Input, Output, ProcedureName } from "../shared/bridge";
 import type { DownloadItem, InstagramMedia } from "../shared/media";
 
+/** Carries a request to the page script and brings back its unchecked answer. */
+export interface PageTransport {
+  call(name: ProcedureName, input: unknown): Promise<unknown>;
+}
+
+/** Asks the page script for something, and answers only once it is checked. */
 export interface Bridge {
   call<N extends ProcedureName>(name: N, input: Input<N>): Promise<Output<N>>;
 }
