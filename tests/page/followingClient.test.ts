@@ -1,6 +1,8 @@
 import { RefusedError } from "../../src/shared/refusal";
 import { PAGE_CONFIG } from "../../src/page/config";
 import { FollowingClient } from "../../src/page/followingClient";
+import { FollowingPageParser } from "../../src/page/followingParser";
+import { FollowingPolicy } from "../../src/page/followingPolicy";
 import { InstagramHeaders } from "../../src/page/instagramHeaders";
 
 const modules: Record<string, unknown> = {
@@ -25,6 +27,7 @@ function client(status: number, body: unknown) {
         path: PAGE_CONFIG.followingPath,
         pageSize: PAGE_CONFIG.followingPageSize,
       },
+      { policy: new FollowingPolicy(), parser: new FollowingPageParser() },
     ),
   };
 }
