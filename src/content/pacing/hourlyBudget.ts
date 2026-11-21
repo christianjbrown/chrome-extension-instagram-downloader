@@ -13,14 +13,25 @@ export class HourlyBudget implements Budget {
 
   async take(signal: AbortSignal, onWait: (ms: number) => void): Promise<void> {
     this.calls = this.calls.filter((time) => this.now() - time < HOUR_MS);
+    const oldest = this.oldestWhenFull();
+    if (oldest === undefined) this.calls.push(this.now());
+    else await this.waitFor(oldest, signal, onWait);
+  }
+
+  // The call that has to age out of the hour before another fits.
+  private oldestWhenFull(): number | undefined {
     const [oldest] = this.calls;
-    if (oldest !== undefined && this.calls.length >= this.limit) {
-      const wait = oldest + HOUR_MS - this.now();
-      onWait(wait);
-      await this.sleeper.sleep(wait, signal);
-      await this.take(signal, onWait);
-      return;
-    }
-    this.calls.push(this.now());
+    return this.calls.length >= this.limit ? oldest : undefined;
+  }
+
+  private async waitFor(
+    oldest: number,
+    signal: AbortSignal,
+    onWait: (ms: number) => void,
+  ): Promise<void> {
+    const wait = oldest + HOUR_MS - this.now();
+    onWait(wait);
+    await this.sleeper.sleep(wait, signal);
+    await this.take(signal, onWait);
   }
 }
