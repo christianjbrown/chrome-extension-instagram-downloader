@@ -13,9 +13,12 @@ export function blobFetcher(
 ): FetchBlob {
   return async (url) => {
     if (!isAllowed(url)) throw new Error(text.refused);
-    const response = await fetchFn(url);
-    if (!response.ok)
-      throw new Error(`${text.failed} (${String(response.status)})`);
-    return response.blob();
+    return blobOf(await fetchFn(url));
   };
+}
+
+function blobOf(response: Response): Promise<Blob> {
+  if (!response.ok)
+    throw new Error(`${text.failed} (${String(response.status)})`);
+  return response.blob();
 }

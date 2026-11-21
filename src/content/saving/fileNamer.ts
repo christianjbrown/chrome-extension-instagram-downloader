@@ -15,12 +15,22 @@ const imageExtension = "jpg";
 
 // Only extensions Instagram really serves; anything else gets the usual one
 // for the kind of file.
-function fileExtension(url: string, video = false): string {
-  const found = extensionPattern.exec(new URL(url).pathname)?.[1];
-  if (found !== undefined && knownExtensions.has(found.toLowerCase()))
-    return found;
-  return video ? videoExtension : imageExtension;
+const foundExtension = (url: string): string | undefined =>
+  extensionPattern.exec(new URL(url).pathname)?.[1];
+
+const isKnown = (found: string | undefined): found is string =>
+  found !== undefined && knownExtensions.has(found.toLowerCase());
+
+function knownExtension(url: string): string | undefined {
+  const found = foundExtension(url);
+  return isKnown(found) ? found : undefined;
 }
+
+const usualExtension = (video: boolean): string =>
+  video ? videoExtension : imageExtension;
+
+const fileExtension = (url: string, video: boolean): string =>
+  knownExtension(url) ?? usualExtension(video);
 
 // Names are built from the page's data, so only the characters real
 // usernames and ids use are kept. That is what earlier versions wrote for

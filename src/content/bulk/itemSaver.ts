@@ -1,9 +1,7 @@
 import type { DownloadItem } from "../../shared/media";
 import type { RandomWait } from "../pacing/ports";
-import type { ItemWriter, WriteOutcome } from "../saving/ports";
+import { OUTCOME, type ItemWriter, type WriteOutcome } from "../saving/ports";
 import type { ItemSaver } from "./ports";
-
-const skipped: WriteOutcome = "skipped";
 
 // Skips a file already in the folder, and waits a random time before each
 // one it writes, since files come from the CDN rather than the API.
@@ -20,7 +18,7 @@ export class PacedItemSaver implements ItemSaver {
     signal: AbortSignal,
   ): Promise<WriteOutcome> {
     signal.throwIfAborted();
-    if (await this.writer.exists(folder, item)) return skipped;
+    if (await this.writer.exists(folder, item)) return OUTCOME.skipped;
     await this.sleeper.between(this.fileDelayMs, signal);
     return this.writer.write(folder, item);
   }
