@@ -1,6 +1,7 @@
 // Sends requests to the page script and waits for its answer on a private port.
 import {
   isBridgeResponse,
+  type BridgeResponse,
   type Input,
   type Output,
   type ProcedureName,
@@ -28,6 +29,30 @@ export interface BridgeEnvironment {
   readonly timeoutMs: number;
 }
 
+type Failure = Extract<BridgeResponse, { ok: false }>;
+
+const failureOf = ({ error, refused }: Failure): Error =>
+  refused === true ? new RefusedError(error) : new Error(error);
+
+function answer(
+  response: BridgeResponse,
+  resolve: (value: unknown) => void,
+  reject: (error: Error) => void,
+): void {
+  if (response.ok) resolve(response.value);
+  else reject(failureOf(response));
+}
+
+// Anything but a well formed answer is turned down.
+function settle(
+  data: unknown,
+  resolve: (value: unknown) => void,
+  reject: (error: Error) => void,
+): void {
+  if (isBridgeResponse(data)) answer(data, resolve, reject);
+  else reject(new Error(text.unreadable));
+}
+
 export class PageBridge implements Bridge {
   constructor(
     private readonly postMessage: PostMessage,
@@ -44,12 +69,13 @@ export class PageBridge implements Bridge {
       channel.port1.onmessage = (event: MessageEvent<unknown>) => {
         cancel();
         channel.port1.close();
-        const response = event.data;
-        if (!isBridgeResponse(response)) reject(new Error(text.unreadable));
-        else if (response.ok) resolve(response.value as Output<N>);
-        else if (response.refused === true)
-          reject(new RefusedError(response.error));
-        else reject(new Error(response.error));
+        settle(
+          event.data,
+          (value) => {
+            resolve(value as Output<N>);
+          },
+          reject,
+        );
       };
       this.postMessage({ igdlProcedure: name, input }, this.env.pageOrigin, [
         channel.port2,

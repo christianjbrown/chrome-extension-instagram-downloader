@@ -42,7 +42,8 @@ type Pictures = Partial<NonNullable<InstagramMedia["image_versions2"]>>;
 const pictures = (media: InstagramMedia): Pictures =>
   media.image_versions2 ?? {};
 
-const imageVersions = (media: InstagramMedia): readonly MediaVersion[] =>
+/** The sizes of a media's picture, or none when it has no picture. */
+export const imageVersions = (media: InstagramMedia): readonly MediaVersion[] =>
   pictures(media).candidates ?? [];
 
 const videoVersions = (media: InstagramMedia): readonly MediaVersion[] =>
