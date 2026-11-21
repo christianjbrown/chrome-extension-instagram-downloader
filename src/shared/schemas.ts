@@ -3,19 +3,17 @@
 // untrusted input and rejected when it does not have the expected shape.
 import type { Output, ProcedureName } from "./bridge";
 import type { InstagramMedia, MediaVersion } from "./media";
+import { isJsonObject, isRecord, type JsonObject } from "./json";
 import { isMediaUrl } from "./mediaUrl";
 
 type Parser<T> = (value: unknown) => T;
-type Json = Record<string, unknown>;
 
 function reject(what: string): never {
   throw new Error(`The page sent an unexpected ${what}`);
 }
 
-const record = (value: unknown, what: string): Json =>
-  typeof value === "object" && value !== null && !Array.isArray(value)
-    ? (value as Json)
-    : reject(what);
+const record = (value: unknown, what: string): JsonObject =>
+  isRecord(value) ? value : reject(what);
 
 const text = (value: unknown, what: string): string =>
   typeof value === "string" ? value : reject(what);
@@ -58,12 +56,11 @@ const identifier = (value: unknown): string | number =>
 // the username out, so one that cannot name anybody is dropped rather than
 // failing the whole post.
 function user(value: unknown): InstagramMedia["user"] {
-  if (typeof value !== "object" || value === null) return undefined;
-  const raw = value as Json;
-  if (typeof raw.username !== "string") return undefined;
+  if (!isJsonObject(value) || typeof value.username !== "string")
+    return undefined;
   return {
-    username: raw.username,
-    ...(isIdentifier(raw.pk) ? { pk: raw.pk } : {}),
+    username: value.username,
+    ...(isIdentifier(value.pk) ? { pk: value.pk } : {}),
   };
 }
 

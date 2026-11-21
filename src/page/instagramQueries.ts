@@ -2,12 +2,8 @@
 // the part of the response it uses.
 import type { PostsPage } from "../shared/bridge";
 import type { InstagramMedia } from "../shared/media";
-import {
-  isJsonObject,
-  type JsonObject,
-  type ModuleRequire,
-  type Relay,
-} from "./relayClient";
+import { isJsonObject, type JsonObject } from "../shared/json";
+import type { ModuleRequire, Relay } from "./relayClient";
 import { MODULES, POST_BY_ID_MEMBER, RESPONSE_KEYS } from "./instagramApi";
 
 export interface ProfileUser {

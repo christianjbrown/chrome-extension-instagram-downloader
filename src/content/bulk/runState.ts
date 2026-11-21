@@ -1,14 +1,12 @@
 // Where a Download following run is up to, and which accounts have been
 // archived in full at least once, with the steps a run takes it through.
+import { isRecord } from "../../shared/json";
 
 export interface RunState {
   following: string[] | null;
   done: string[];
   completed: Record<string, number>;
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
 
 const isNames = (value: unknown): value is string[] =>
   Array.isArray(value) &&

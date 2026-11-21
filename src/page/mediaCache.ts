@@ -3,15 +3,8 @@
 import type { Reel } from "../shared/bridge";
 import { assetNames, type InstagramMedia } from "../shared/media";
 import type { KeyedStore, StoreFactory } from "./boundedMap";
-import {
-  eachObject,
-  isMedia,
-  isObject,
-  isReel,
-  isUser,
-  ownerOf,
-  type Json,
-} from "./mediaShapes";
+import { eachObject, isMedia, isReel, isUser, ownerOf } from "./mediaShapes";
+import { isJsonObject, type JsonObject } from "../shared/json";
 
 /** Takes in whatever Instagram sent the page. */
 interface MediaSink {
@@ -33,7 +26,7 @@ export class MediaCache implements MediaSink, MediaLookups {
   private readonly postCounts: KeyedStore<number>;
   private readonly reels: KeyedStore<Reel>;
   // Each kind of object Instagram sends, and where it is remembered.
-  private readonly rememberers: readonly ((value: Json) => void)[] = [
+  private readonly rememberers: readonly ((value: JsonObject) => void)[] = [
     (value) => {
       this.rememberMedia(value);
     },
@@ -58,13 +51,13 @@ export class MediaCache implements MediaSink, MediaLookups {
     });
   }
 
-  private rememberMedia(value: Json): void {
+  private rememberMedia(value: JsonObject): void {
     if (!isMedia(value)) return;
     const media = value as unknown as InstagramMedia;
     this.media.set(String(media.pk), media);
   }
 
-  private rememberUser(value: Json): void {
+  private rememberUser(value: JsonObject): void {
     if (!isUser(value)) return;
     const username = value.username as string;
     this.users.set(username, String(value.pk ?? value.id));
@@ -73,9 +66,11 @@ export class MediaCache implements MediaSink, MediaLookups {
       this.postCounts.set(username, value.media_count);
   }
 
-  private rememberReel(value: Json): void {
+  private rememberReel(value: JsonObject): void {
     if (!isReel(value)) return;
-    const items = (value.items as unknown[]).filter(isObject).filter(isMedia);
+    const items = (value.items as unknown[])
+      .filter(isJsonObject)
+      .filter(isMedia);
     const reel = { owner: ownerOf(value), items } as unknown as Reel;
     this.reels.set(String(value.id), reel);
   }

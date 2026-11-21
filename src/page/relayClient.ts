@@ -1,5 +1,6 @@
 // Runs Instagram's own Relay queries through its network layer, which hands
 // back plain JSON rather than the masked fragments its components see.
+import { isJsonObject, type JsonObject } from "../shared/json";
 import { MODULES } from "./instagramApi";
 
 export type ModuleRequire = (name: string) => unknown;
@@ -36,11 +37,6 @@ interface RelayEnvironment {
     ): { subscribe(observer: RelayObserver): unknown };
   };
 }
-
-export type JsonObject = Record<string, unknown>;
-
-export const isJsonObject = (value: unknown): value is JsonObject =>
-  typeof value === "object" && value !== null;
 
 // Skips Relay's own store, so every query asks Instagram afresh.
 const fetchFresh = { force: true } as const;

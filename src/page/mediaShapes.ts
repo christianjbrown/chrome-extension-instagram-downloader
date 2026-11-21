@@ -1,11 +1,7 @@
 // Tells the kinds of object Instagram sends apart by their shape, since
 // nothing in them says what they are.
+import { isJsonObject, type JsonObject } from "../shared/json";
 import type { InstagramMedia } from "../shared/media";
-
-export type Json = Record<string, unknown>;
-
-export const isObject = (value: unknown): value is Json =>
-  typeof value === "object" && value !== null;
 
 const isId = (value: unknown): boolean =>
   typeof value === "string" || typeof value === "number";
@@ -17,33 +13,36 @@ const pictureKeys: readonly (keyof InstagramMedia)[] = [
   "carousel_media",
 ];
 
-export function isMedia(value: Json): boolean {
+export function isMedia(value: JsonObject): boolean {
   return isId(value.pk) && pictureKeys.some((key) => value[key] !== undefined);
 }
 
-export function isUser(value: Json): boolean {
+export function isUser(value: JsonObject): boolean {
   return (
     typeof value.username === "string" && (isId(value.pk) || isId(value.id))
   );
 }
 
-export function isReel(value: Json): boolean {
+export function isReel(value: JsonObject): boolean {
   return Array.isArray(value.items) && isId(value.id);
 }
 
-export function ownerOf(reel: Json): string | undefined {
+export function ownerOf(reel: JsonObject): string | undefined {
   const user = reel.user;
-  return isObject(user) && typeof user.username === "string"
+  return isJsonObject(user) && typeof user.username === "string"
     ? user.username
     : undefined;
 }
 
 /** Calls visit on every object inside root, root included. */
-export function eachObject(root: unknown, visit: (value: Json) => void): void {
+export function eachObject(
+  root: unknown,
+  visit: (value: JsonObject) => void,
+): void {
   const pending: unknown[] = [root];
   while (pending.length > 0) {
     const value = pending.pop();
-    if (!isObject(value)) continue;
+    if (!isJsonObject(value)) continue;
     visit(value);
     pending.push(...Object.values(value));
   }

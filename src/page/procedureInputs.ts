@@ -1,6 +1,7 @@
 // Checks what the content script asked for. Any script on the page can send
 // the same request, so each procedure only accepts the shapes it really gets.
 import type { Input, ProcedureName } from "../shared/bridge";
+import { isRecord } from "../shared/json";
 
 // The longest value each request field may hold. Any script on the page can
 // send a request, so anything longer is turned away.
@@ -20,10 +21,6 @@ export interface InputValidator {
 
 type Guard<T> = (input: unknown) => input is T;
 type Guards = { [N in ProcedureName]: Guard<Input<N>> };
-type Json = Record<string, unknown>;
-
-const isRecord = (input: unknown): input is Json =>
-  typeof input === "object" && input !== null && !Array.isArray(input);
 
 const matches = (value: unknown, pattern: RegExp): value is string =>
   typeof value === "string" && pattern.test(value);
