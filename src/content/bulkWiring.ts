@@ -1,6 +1,7 @@
 // Builds the parts of a bulk download.
 import { AccountArchiver } from "./bulk/accountArchiver";
 import { CatchingUpPages } from "./bulk/accountPages";
+import { AccountCounts } from "./bulk/accountCounts";
 import { BarTallies } from "./bulk/accountTally";
 import { BulkRunner } from "./bulk/bulkRunner";
 import { PinnedAwareCatchUp } from "./bulk/catchUp";
@@ -136,7 +137,7 @@ function accountArchiver(
       catchUp: new PinnedAwareCatchUp(),
     }),
     saver: new PacedItemSaver(writer, pacer.sleeper, pacer.fileDelayMs),
-    tallies: new BarTallies(RUN_WORDING),
+    tallies: new BarTallies(RUN_WORDING, AccountCounts),
   });
 }
 

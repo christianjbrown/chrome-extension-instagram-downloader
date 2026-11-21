@@ -3,6 +3,7 @@ import { SlideFiles } from "../../../src/content/mediaFiles";
 import { LargestVersionChooser } from "../../../src/content/versionChooser";
 import { AccountArchiver } from "../../../src/content/bulk/accountArchiver";
 import { CatchingUpPages } from "../../../src/content/bulk/accountPages";
+import { AccountCounts } from "../../../src/content/bulk/accountCounts";
 import { BarTallies } from "../../../src/content/bulk/accountTally";
 import { PacedItemSaver } from "../../../src/content/bulk/itemSaver";
 import { PinnedAwareCatchUp } from "../../../src/content/bulk/catchUp";
@@ -62,7 +63,7 @@ function setup(
         catchUp: new PinnedAwareCatchUp(),
       }),
       saver: new PacedItemSaver(writer, pacer.sleeper, pacer.fileDelayMs),
-      tallies: new BarTallies(new EnglishRunWording()),
+      tallies: new BarTallies(new EnglishRunWording(), AccountCounts),
     }),
   };
 }
