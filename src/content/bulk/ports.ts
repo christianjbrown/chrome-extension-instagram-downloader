@@ -7,7 +7,7 @@ import type {
   HeadingReporter,
   RunReporter,
 } from "../ui/ports";
-import type { Counts } from "./progressText";
+import type { Counts } from "./counts";
 import type { RunState } from "./runState";
 
 export interface ArchiveRequest {

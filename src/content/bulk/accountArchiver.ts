@@ -10,7 +10,8 @@ import type {
 } from "./ports";
 import type { Pacer } from "../pacing/pacer";
 import { ALL_DONE } from "../ui/percent";
-import { describeProgress, noCounts, type Counts } from "./progressText";
+import { noCounts, type Counts } from "./counts";
+import { describeProgress } from "./progressText";
 
 interface Tally {
   readonly counts: Counts;
