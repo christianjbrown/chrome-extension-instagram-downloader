@@ -23,6 +23,7 @@ import { SafeFileNamer } from "./saving/fileNamer";
 import { FolderPicker } from "./saving/folderPicker";
 import { MemoryFolderStore } from "./saving/folderStore";
 import { isMediaUrl } from "../shared/mediaUrl";
+import { StoppedRunWording, WordedErrors } from "./errorText";
 import { SecondCountdown } from "./ui/countdown";
 import { ProgressPanel } from "./ui/progressPanel";
 import { DomProgressBars } from "./ui/progressBar";
@@ -83,7 +84,8 @@ function jobRunner(
     ),
     notifier,
     controllerClass: env.window.AbortController,
-    errors,
+    // A stop ends a run on purpose, so the panel says how to carry on.
+    errors: new WordedErrors([new StoppedRunWording()], errors),
   });
 }
 
