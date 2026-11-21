@@ -81,7 +81,7 @@ function shared(wiring: Wiring) {
     parts,
     downloader,
     assets,
-    posts: new PostDownloader(bridge, downloader, notifier),
+    posts: new PostDownloader(bridge, downloader, notifier, wiring.files),
     viewers: new ViewerSource(bridge, Date.now, config.viewerRetryMs),
   };
 }
@@ -130,10 +130,13 @@ function accountFeatures(
     }),
     new StoryToolbar({
       document,
-      downloader: new StoryDownloader(bridge, downloader, notifier, [
-        new UserStories(bridge),
-        new HighlightStories(bridge),
-      ]),
+      downloader: new StoryDownloader({
+        bridge,
+        downloader,
+        notifier,
+        files: wiring.files,
+        kinds: [new UserStories(bridge), new HighlightStories(bridge)],
+      }),
       assets,
       stories: routes.stories,
       buttons,

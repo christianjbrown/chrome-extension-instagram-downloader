@@ -1,6 +1,5 @@
-import { downloadItems } from "../../shared/media";
 import type { PostsPage } from "../../shared/bridge";
-import type { Bridge } from "../ports";
+import type { Bridge, MediaFiles } from "../ports";
 import type { ItemWriter } from "../saving/ports";
 import type {
   CatchUpPolicy,
@@ -21,6 +20,7 @@ interface Tally {
 
 export interface ArchiverDependencies {
   readonly bridge: Bridge;
+  readonly files: MediaFiles;
   readonly writer: ItemWriter;
   readonly pacer: Pacer;
   readonly totals: PostTotals;
@@ -87,7 +87,7 @@ export class AccountArchiver implements Archiver {
       tally.post += 1;
       if (tally.total !== undefined)
         reporter.accountBar(Math.min(ALL_DONE, tally.post / tally.total));
-      for (const item of downloadItems(media, username)) {
+      for (const item of this.deps.files.items(media, username)) {
         await this.writeOne(folder, item, tally.counts, signal);
         reporter.detail(
           describeProgress(tally.post, tally.total, tally.counts),

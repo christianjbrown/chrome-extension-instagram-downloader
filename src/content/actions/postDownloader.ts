@@ -1,5 +1,5 @@
-import { downloadItems, type InstagramMedia } from "../../shared/media";
-import type { Bridge } from "../ports";
+import type { InstagramMedia } from "../../shared/media";
+import type { Bridge, MediaFiles } from "../ports";
 import type { ItemDownloader } from "../saving/ports";
 import type { Notifier } from "../ui/ports";
 import type { PostTarget, PostDownloads } from "./ports";
@@ -15,11 +15,12 @@ export class PostDownloader implements PostDownloads {
     private readonly bridge: Bridge,
     private readonly downloader: ItemDownloader,
     private readonly notifier: Notifier,
+    private readonly files: MediaFiles,
   ) {}
 
   async download(target: PostTarget, owner?: string): Promise<void> {
     try {
-      const items = downloadItems(await this.find(target), owner);
+      const items = this.files.items(await this.find(target), owner);
       const slide = "slide" in target ? target.slide : undefined;
       const chosen =
         slide === undefined ? items : items.slice(slide, slide + 1);

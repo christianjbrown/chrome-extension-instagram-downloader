@@ -1,3 +1,4 @@
+import { SlideFiles } from "../../../src/content/mediaFiles";
 import { PostDownloader } from "../../../src/content/actions/postDownloader";
 import { cdn, photo } from "../../fixtures";
 import { fakeBridge, notifier } from "../helpers";
@@ -16,7 +17,7 @@ function setup() {
   return {
     downloader,
     notes,
-    posts: new PostDownloader(bridge, downloader, notes),
+    posts: new PostDownloader(bridge, downloader, notes, new SlideFiles()),
   };
 }
 
@@ -42,10 +43,12 @@ describe("PostDownloader", () => {
       },
     };
     const bridge = fakeBridge({ media: () => anonymous });
-    await new PostDownloader(bridge, downloader, notifier()).download(
-      { mediaId: "3", slide: undefined },
-      "bob",
-    );
+    await new PostDownloader(
+      bridge,
+      downloader,
+      notifier(),
+      new SlideFiles(),
+    ).download({ mediaId: "3", slide: undefined }, "bob");
     expect(downloader.download).toHaveBeenCalledWith(
       expect.objectContaining({ username: "bob" }),
     );

@@ -58,6 +58,7 @@ export function bulk(wiring: Wiring): BulkParts {
   const fetchBlob = blobFetcher((url) => env.window.fetch(url), isMediaUrl);
   const writer = new DirectoryWriter(fetchBlob, namer);
   const archiver = new AccountArchiver({
+    files: wiring.files,
     bridge,
     writer,
     pacer,
