@@ -10,13 +10,10 @@ import { HighlightStories } from "./actions/highlightStories";
 import { StoryDownloader } from "./actions/storyDownloader";
 import { UserStories } from "./actions/userStories";
 import { ViewerSource } from "./actions/viewerSource";
-import type { Feature } from "./features/feature";
+import type { Feature, ProfileButton } from "./features/feature";
 import { GridButtons } from "./features/gridButtons";
 import { PostActions } from "./features/postActions";
-import {
-  ProfileToolbar,
-  type ProfileCommands,
-} from "./features/profileToolbar";
+import { ProfileToolbar } from "./features/profileToolbar";
 import { StoryToolbar } from "./features/storyToolbar";
 import { PagePostLocator } from "./dom/postLocator";
 import { VisibleAssetFinder } from "./dom/visibleAsset";
@@ -29,25 +26,43 @@ import { GridThumbnails } from "./dom/gridThumbnails";
 import { PathRouteParser } from "./dom/route";
 import { PostPage, ProfilePage, StoryPage } from "./dom/routeKinds";
 
+import { SignedInProfile } from "./actions/ownProfile";
+import { StoppedFollowingRun } from "./bulk/resumableRun";
+import { AllSlidesButton, ShowingSlideButton } from "./features/postButtons";
+import {
+  CommandButton,
+  FollowingButton,
+  PROFILE_BUTTON_LOOKS,
+} from "./features/profileButtons";
 import { bulk, type BulkParts } from "./bulkWiring";
 import type { ContentEnvironment, Wiring } from "./wiring";
 
-function profileCommands(
+// The buttons under a profile's header, in the order they appear.
+function profileButtons(
   { bridge, notifier }: Wiring,
   parts: BulkParts,
   viewers: CurrentViewer,
   downloader: ItemDownloader,
-): ProfileCommands {
-  return {
-    account: new DownloadAccountCommand(parts.runner, parts.archiver),
-    following: new DownloadFollowingCommand(
-      parts.runner,
-      parts.following,
-      viewers,
+): ProfileButton[] {
+  return [
+    new CommandButton(
+      PROFILE_BUTTON_LOOKS.downloadAll,
+      new DownloadAccountCommand(parts.runner, parts.archiver),
     ),
-    picture: new ProfilePictureCommand(bridge, downloader, notifier),
-    folder: new ChangeFolderCommand(parts.folders, notifier),
-  };
+    new CommandButton(
+      PROFILE_BUTTON_LOOKS.picture,
+      new ProfilePictureCommand(bridge, downloader, notifier),
+    ),
+    new CommandButton(
+      PROFILE_BUTTON_LOOKS.folder,
+      new ChangeFolderCommand(parts.folders, notifier),
+    ),
+    new FollowingButton(
+      new DownloadFollowingCommand(parts.runner, parts.following, viewers),
+      new SignedInProfile(viewers),
+      new StoppedFollowingRun(parts.runs),
+    ),
+  ];
 }
 
 // The readers of the address, one per kind of page a feature looks for.
@@ -100,7 +115,7 @@ function postFeatures(
       downloader: posts,
       notifier,
       locator: new PagePostLocator(routes.posts, assets, carousel),
-      carousel,
+      postButtons: [new ShowingSlideButton(), new AllSlidesButton(carousel)],
       buttons,
     }),
     new GridButtons(
@@ -122,11 +137,9 @@ function accountFeatures(
   return [
     new ProfileToolbar({
       document,
-      commands: profileCommands(wiring, parts, viewers, downloader),
-      viewers,
-      runs: parts.runs,
       profiles: routes.profiles,
       buttons,
+      profileButtons: profileButtons(wiring, parts, viewers, downloader),
     }),
     new StoryToolbar({
       document,
