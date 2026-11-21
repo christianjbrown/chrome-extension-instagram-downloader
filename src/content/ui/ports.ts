@@ -55,6 +55,11 @@ export interface IconButtons {
   button(spec: ButtonSpec): HTMLButtonElement;
 }
 
+/** The classes a labelled button takes to show its icon. */
+export interface IconClasses {
+  labelled(icon: string): string;
+}
+
 /** Makes the buttons that show their label as text. */
 export interface TextButtons {
   textButton(spec: ButtonSpec): HTMLButtonElement;

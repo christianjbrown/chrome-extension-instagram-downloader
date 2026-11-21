@@ -12,6 +12,30 @@ import type { WriteOutcome } from "../saving/ports";
 import type { Counts } from "./counts";
 import type { RunState } from "./runState";
 
+/** How an account's files are worded once it is done. */
+export interface CountsWording {
+  counts(counts: Counts): string;
+}
+
+/** How the posts and files of the account being saved are worded. */
+export interface ProgressWording {
+  progress(post: number, total: number | undefined, counts: Counts): string;
+}
+
+/** How the accounts a run could not read are worded. */
+export interface FailureWording {
+  failureStop(inARow: number, username: string, reason: string): string;
+  /** Nothing when every account was read. */
+  unreadable(usernames: readonly string[]): string;
+}
+
+/** How a run over the accounts the viewer follows is worded. */
+export interface FollowingWording {
+  account(position: number, total: number): string;
+  accountsFinished(total: number): string;
+  followingFinished(total: number): string;
+}
+
 export interface ArchiveRequest {
   readonly username: string;
   readonly folder: FileSystemDirectoryHandle;

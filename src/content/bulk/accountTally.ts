@@ -2,8 +2,7 @@ import { ALL_DONE } from "../ui/percent";
 import type { AccountProgress, DetailReporter } from "../ui/ports";
 import type { WriteOutcome } from "../saving/ports";
 import { noCounts, type Counts } from "./counts";
-import type { AccountTally, TallyStarter } from "./ports";
-import { describeProgress } from "./progressText";
+import type { AccountTally, ProgressWording, TallyStarter } from "./ports";
 
 // Counts one account's posts and files, and shows them on the panel as words
 // and as the account's bar.
@@ -12,7 +11,10 @@ class BarTally implements AccountTally {
   private post = 0;
   private known: number | undefined;
 
-  constructor(private readonly reporter: DetailReporter & AccountProgress) {}
+  constructor(
+    private readonly reporter: DetailReporter & AccountProgress,
+    private readonly wording: ProgressWording,
+  ) {}
 
   begin(): void {
     this.reporter.accountBar(undefined);
@@ -35,7 +37,9 @@ class BarTally implements AccountTally {
 
   file(outcome: WriteOutcome): void {
     this.counts[outcome] += 1;
-    this.reporter.detail(describeProgress(this.post, this.known, this.counts));
+    this.reporter.detail(
+      this.wording.progress(this.post, this.known, this.counts),
+    );
   }
 
   saved(): number {
@@ -61,7 +65,9 @@ class BarTally implements AccountTally {
 
 /** Starts a bar tally for each account. */
 export class BarTallies implements TallyStarter {
+  constructor(private readonly wording: ProgressWording) {}
+
   start(reporter: DetailReporter & AccountProgress): AccountTally {
-    return new BarTally(reporter);
+    return new BarTally(reporter, this.wording);
   }
 }

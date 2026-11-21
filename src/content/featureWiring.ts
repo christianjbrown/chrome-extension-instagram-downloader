@@ -26,6 +26,7 @@ import type { ItemDownloader } from "./saving/ports";
 import { DotCarousel } from "./dom/carousel";
 import { GridThumbnails } from "./dom/gridThumbnails";
 import { routes, type Routes } from "./routeWiring";
+import { TextButtonClasses } from "./ui/buttons";
 
 import { SignedInProfile } from "./actions/ownProfile";
 import { StoppedFollowingRun } from "./bulk/resumableRun";
@@ -45,7 +46,7 @@ function profileButtons(
   return [
     new CommandButton(
       BUTTON_LOOKS.downloadAll,
-      new DownloadAccountCommand(parts.runner, parts.archiver),
+      new DownloadAccountCommand(parts.runner, parts.archiver, parts.wording),
     ),
     new CommandButton(
       BUTTON_LOOKS.picture,
@@ -138,6 +139,7 @@ function accountFeatures(
   routes: Routes,
 ): Feature[] {
   const { env, bridge, notifier, buttons } = wiring;
+  const iconClasses = new TextButtonClasses();
   const { document } = env.window;
   const stories = new StoryDownloader({
     finder,
@@ -152,12 +154,14 @@ function accountFeatures(
       document,
       profiles: routes.profiles,
       buttons,
+      iconClasses,
       profileButtons: profileButtons(wiring, parts, viewers, downloader),
     }),
     new StoryToolbar({
       document,
       stories: routes.stories,
       buttons,
+      iconClasses,
       storyButtons: [
         new CurrentStoryButton(BUTTON_LOOKS.story, stories, assets, document),
         new AllStoriesButton(BUTTON_LOOKS.allStories, stories),

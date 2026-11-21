@@ -33,12 +33,23 @@ import { EnglishPanelWording } from "./ui/panelWording";
 import { progressPanel } from "./panelWiring";
 import type {
   Archiver,
+  CountsWording,
   FollowingRunner,
   JobRunner,
   RunProgress,
+  RunStateStore,
 } from "./bulk/ports";
-import type { FetchBlob, FileNamer, FolderSource } from "./saving/ports";
+import { EnglishRunWording } from "./bulk/progressText";
+import type {
+  FetchBlob,
+  FileNamer,
+  FolderSource,
+  ItemWriter,
+} from "./saving/ports";
 import type { ContentEnvironment, Wiring } from "./wiring";
+
+// The words of every bulk download.
+const RUN_WORDING = new EnglishRunWording();
 
 /** What the features take from the bulk downloads. */
 export interface BulkParts {
@@ -49,6 +60,7 @@ export interface BulkParts {
   readonly runs: RunProgress;
   readonly fetchBlob: FetchBlob;
   readonly namer: FileNamer;
+  readonly wording: CountsWording;
 }
 
 function bulkPacer({ config, scheduler }: Wiring): Pacer {
@@ -105,14 +117,17 @@ function folderSource(env: ContentEnvironment): FolderSource {
   );
 }
 
-export function bulk(wiring: Wiring): BulkParts {
-  const { env, config, bridge, errors, mediaUrls } = wiring;
-  const pacer = bulkPacer(wiring);
-  const namer = new SafeFileNamer();
-  const fetchBlob = blobFetcher((url) => env.window.fetch(url), mediaUrls);
-  const writer = new DirectoryWriter(fetchBlob, namer);
-  const stops = stopPolicies();
-  const archiver = new AccountArchiver({
+type Stops = ReturnType<typeof stopPolicies>;
+
+// Saves one account's posts, paced, counting what it saved.
+function accountArchiver(
+  wiring: Wiring,
+  pacer: Pacer,
+  writer: ItemWriter,
+  stops: Stops,
+): Archiver {
+  const { bridge } = wiring;
+  return new AccountArchiver({
     files: wiring.files,
     pages: new CatchingUpPages({
       bridge,
@@ -121,10 +136,18 @@ export function bulk(wiring: Wiring): BulkParts {
       catchUp: new PinnedAwareCatchUp(),
     }),
     saver: new PacedItemSaver(writer, pacer.sleeper, pacer.fileDelayMs),
-    tallies: new BarTallies(),
+    tallies: new BarTallies(RUN_WORDING),
   });
-  const runs = new RunStore(env.storage);
-  const following = new FollowingDownloader({
+}
+
+// Archives every account the viewer follows, keeping its place in storage.
+function followingRunner(
+  { bridge, config, errors }: Wiring,
+  pacer: Pacer,
+  { archiver, runs }: { archiver: Archiver; runs: RunStateStore },
+  stops: Stops,
+): FollowingRunner {
+  return new FollowingDownloader({
     lister: new FollowingLister(bridge, pacer.gate),
     archiver,
     store: runs,
@@ -134,9 +157,36 @@ export function bulk(wiring: Wiring): BulkParts {
       config.failuresInARow,
       stops.any,
       errors,
+      RUN_WORDING,
     ),
+    wording: RUN_WORDING,
   });
+}
+
+export function bulk(wiring: Wiring): BulkParts {
+  const { env, mediaUrls } = wiring;
+  const pacer = bulkPacer(wiring);
+  const namer = new SafeFileNamer();
+  const fetchBlob = blobFetcher((url) => env.window.fetch(url), mediaUrls);
+  const stops = stopPolicies();
+  const archiver = accountArchiver(
+    wiring,
+    pacer,
+    new DirectoryWriter(fetchBlob, namer),
+    stops,
+  );
+  const runs = new RunStore(env.storage);
+  const following = followingRunner(wiring, pacer, { archiver, runs }, stops);
   const folders = folderSource(env);
   const runner = jobRunner(wiring, folders);
-  return { archiver, following, folders, runner, runs, fetchBlob, namer };
+  return {
+    archiver,
+    following,
+    folders,
+    runner,
+    runs,
+    fetchBlob,
+    namer,
+    wording: RUN_WORDING,
+  };
 }

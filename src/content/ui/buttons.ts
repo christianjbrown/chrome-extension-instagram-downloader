@@ -1,6 +1,11 @@
 import { ATTRIBUTES, EVENTS, type ElementMaker, TAGS } from "../../shared/dom";
 import { classes } from "./classNames";
-import type { ButtonSpec, IconButtons, TextButtons } from "./ports";
+import type {
+  ButtonSpec,
+  IconButtons,
+  IconClasses,
+  TextButtons,
+} from "./ports";
 
 // The look every labelled button shares.
 export const TEXT_BUTTON_CLASS = "igdl-text-button";
@@ -34,5 +39,8 @@ export class DomButtons implements IconButtons, TextButtons {
 }
 
 // A labelled button with its icon before the text; the icon is drawn in CSS.
-export const textButtonClass = (icon: string): string =>
-  classes(TEXT_BUTTON_CLASS, `${ICON_CLASS_PREFIX}${icon}`);
+export class TextButtonClasses implements IconClasses {
+  labelled(icon: string): string {
+    return classes(TEXT_BUTTON_CLASS, `${ICON_CLASS_PREFIX}${icon}`);
+  }
+}

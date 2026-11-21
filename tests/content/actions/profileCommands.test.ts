@@ -1,3 +1,4 @@
+import { EnglishRunWording } from "../../../src/content/bulk/progressText";
 import {
   ChangeFolderCommand,
   DownloadAccountCommand,
@@ -23,7 +24,11 @@ it("downloading an account archives it in full", async () => {
   const archiver = {
     archive: vi.fn(() => Promise.resolve({ saved: 2, skipped: 1, failed: 0 })),
   };
-  await new DownloadAccountCommand(runner, archiver).run("alice");
+  await new DownloadAccountCommand(
+    runner,
+    archiver,
+    new EnglishRunWording(),
+  ).run("alice");
   const report = reporter();
   await expect(jobs[0]?.run(folder, signal(), report)).resolves.toBe(
     "Finished: 2 new files, 1 already exists.",

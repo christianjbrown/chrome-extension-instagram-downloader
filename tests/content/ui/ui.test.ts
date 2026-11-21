@@ -1,4 +1,4 @@
-import { DomButtons, textButtonClass } from "../../../src/content/ui/buttons";
+import { DomButtons, TextButtonClasses } from "../../../src/content/ui/buttons";
 import { SecondCountdown } from "../../../src/content/ui/countdown";
 import { ToastNotifier } from "../../../src/content/ui/notifier";
 import type { Countdown } from "../../../src/content/ui/ports";
@@ -42,10 +42,12 @@ describe("buttons", () => {
   });
 });
 
-describe("textButtonClass", () => {
+describe("TextButtonClasses", () => {
   it("names the shared look and one icon", () => {
-    expect(textButtonClass("folder")).toBe("igdl-text-button igdl-icon-folder");
-    expect(textButtonClass("download-all")).toBe(
+    expect(new TextButtonClasses().labelled("folder")).toBe(
+      "igdl-text-button igdl-icon-folder",
+    );
+    expect(new TextButtonClasses().labelled("download-all")).toBe(
       "igdl-text-button igdl-icon-download-all",
     );
   });

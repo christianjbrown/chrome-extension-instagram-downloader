@@ -2,9 +2,8 @@ import { TAGS, type ElementMaker } from "../../shared/dom";
 import type { RouteReader } from "../dom/ports";
 import type { ProfileRoute } from "../dom/routes/profile";
 import { PROFILE_HEADER } from "../dom/selectors";
-import { textButtonClass } from "../ui/buttons";
 import { bySelector } from "../ui/classNames";
-import type { TextButtons } from "../ui/ports";
+import type { IconClasses, TextButtons } from "../ui/ports";
 import type { ButtonLook, Feature, ProfileButton } from "./feature";
 
 // Marks the row of buttons under a profile header, for content.css and for
@@ -21,6 +20,7 @@ export interface ProfileToolbarDependencies {
   readonly document: ElementMaker & Pick<ParentNode, "querySelector">;
   readonly profiles: RouteReader<ProfileRoute>;
   readonly buttons: TextButtons;
+  readonly iconClasses: IconClasses;
   /** The buttons, in the order they appear. */
   readonly profileButtons: readonly ProfileButton[];
 }
@@ -75,7 +75,7 @@ export class ProfileToolbar implements Feature {
   private element(look: ButtonLook, run: () => Promise<void>): HTMLElement {
     return this.deps.buttons.textButton({
       label: look.label,
-      className: textButtonClass(look.icon),
+      className: this.deps.iconClasses.labelled(look.icon),
       onClick: () => void run(),
     });
   }

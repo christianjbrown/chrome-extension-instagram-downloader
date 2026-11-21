@@ -1,3 +1,4 @@
+import { EnglishRunWording } from "../../../src/content/bulk/progressText";
 import type { FollowingPage } from "../../../src/shared/bridge";
 import { ConsecutiveFailureTally } from "../../../src/content/bulk/failureTally";
 import { StopOrBlockPolicy } from "../../../src/content/bulk/stopPolicies";
@@ -75,7 +76,13 @@ function setup(
     store,
     resume,
     now: () => 1234,
-    tally: new ConsecutiveFailureTally(2, new StopOrBlockPolicy(), errorText()),
+    tally: new ConsecutiveFailureTally(
+      2,
+      new StopOrBlockPolicy(),
+      errorText(),
+      new EnglishRunWording(),
+    ),
+    wording: new EnglishRunWording(),
   });
   const report = reporter();
   const run = () =>

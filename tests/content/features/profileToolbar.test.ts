@@ -1,3 +1,4 @@
+import { TextButtonClasses } from "../../../src/content/ui/buttons";
 import { SignedInProfile } from "../../../src/content/actions/ownProfile";
 import { StoppedFollowingRun } from "../../../src/content/bulk/resumableRun";
 import { BUTTON_LOOKS } from "../../../src/content/buttonLooks";
@@ -26,6 +27,7 @@ function setup(
     document,
     profiles: routes(page).profiles,
     buttons: widgets(),
+    iconClasses: new TextButtonClasses(),
     profileButtons: [
       new CommandButton(BUTTON_LOOKS.downloadAll, commands.account),
       new CommandButton(BUTTON_LOOKS.picture, commands.picture),
@@ -147,6 +149,7 @@ describe("ProfileToolbar", () => {
       document,
       profiles: routes(view("/alice/", document.body.innerHTML)).profiles,
       buttons: widgets(),
+      iconClasses: new TextButtonClasses(),
       profileButtons: [late, prompt],
     }).scan();
     showLater?.();

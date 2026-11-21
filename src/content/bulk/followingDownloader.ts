@@ -8,12 +8,8 @@ import type {
   FollowingRequest,
   ResumePolicy,
   FollowingRunner,
+  FollowingWording,
 } from "./ports";
-import {
-  describeAccount,
-  describeAccountsFinished,
-  describeFollowingFinished,
-} from "./progressText";
 import type { RunState } from "./runState";
 
 // Archives every account the viewer follows, one at a time, keeping its
@@ -29,6 +25,7 @@ export interface FollowingDependencies {
   readonly resume: ResumePolicy;
   readonly now: () => number;
   readonly tally: FailureTally;
+  readonly wording: FollowingWording;
 }
 
 export class FollowingDownloader implements FollowingRunner {
@@ -46,7 +43,7 @@ export class FollowingDownloader implements FollowingRunner {
     const last = await this.archiveAll(request, state, left, following.length);
     this.reportFinished(request.reporter, following.length);
     await this.deps.store.save(viewer.id, resume.finished(last));
-    return `${describeFollowingFinished(following.length)}${this.deps.tally.summary()}`;
+    return `${this.deps.wording.followingFinished(following.length)}${this.deps.tally.summary()}`;
   }
 
   // Goes through the accounts left, giving back the state after the last.
@@ -72,12 +69,13 @@ export class FollowingDownloader implements FollowingRunner {
     total: number,
     username: string,
   ): void {
-    reporter.overall(describeAccount(done + 1, total), done / total);
+    reporter.overall(this.deps.wording.account(done + 1, total), done / total);
     reporter.heading(username);
   }
 
   private reportFinished(reporter: RunReporter, total: number): void {
-    if (total > 0) reporter.overall(describeAccountsFinished(total), ALL_DONE);
+    if (total > 0)
+      reporter.overall(this.deps.wording.accountsFinished(total), ALL_DONE);
   }
 
   // A failed account keeps the state it had, so the run carries on past it.

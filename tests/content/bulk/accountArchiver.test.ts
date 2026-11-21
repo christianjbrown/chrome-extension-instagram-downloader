@@ -1,3 +1,4 @@
+import { EnglishRunWording } from "../../../src/content/bulk/progressText";
 import { SlideFiles } from "../../../src/content/mediaFiles";
 import { LargestVersionChooser } from "../../../src/content/versionChooser";
 import { AccountArchiver } from "../../../src/content/bulk/accountArchiver";
@@ -61,7 +62,7 @@ function setup(
         catchUp: new PinnedAwareCatchUp(),
       }),
       saver: new PacedItemSaver(writer, pacer.sleeper, pacer.fileDelayMs),
-      tallies: new BarTallies(),
+      tallies: new BarTallies(new EnglishRunWording()),
     }),
   };
 }

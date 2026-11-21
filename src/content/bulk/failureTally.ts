@@ -1,7 +1,6 @@
 import { BlockedError } from "../errors";
-import { describeFailureStop, describeUnreadable } from "./progressText";
 import type { ErrorDescriber } from "../ports";
-import type { FailureTally, RunStopPolicy } from "./ports";
+import type { FailureTally, FailureWording, RunStopPolicy } from "./ports";
 
 // Keeps a run of the following list going past one account that will not
 // load, a private or renamed one say, but gives up when several in a row
@@ -14,6 +13,7 @@ export class ConsecutiveFailureTally implements FailureTally {
     private readonly limit: number,
     private readonly stops: RunStopPolicy,
     private readonly errors: ErrorDescriber,
+    private readonly wording: FailureWording,
   ) {}
 
   reset(): void {
@@ -36,11 +36,15 @@ export class ConsecutiveFailureTally implements FailureTally {
     this.inARow += 1;
     if (this.inARow >= this.limit)
       throw new BlockedError(
-        describeFailureStop(this.inARow, username, this.errors.describe(error)),
+        this.wording.failureStop(
+          this.inARow,
+          username,
+          this.errors.describe(error),
+        ),
       );
   }
 
   summary(): string {
-    return describeUnreadable(this.names);
+    return this.wording.unreadable(this.names);
   }
 }

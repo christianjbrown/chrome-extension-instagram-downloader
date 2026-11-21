@@ -2,8 +2,7 @@ import { TAGS, type PageBody } from "../../shared/dom";
 import type { StoryRoute } from "../dom/route";
 import type { RouteReader } from "../dom/ports";
 import { bySelector } from "../ui/classNames";
-import { textButtonClass } from "../ui/buttons";
-import type { TextButtons } from "../ui/ports";
+import type { IconClasses, TextButtons } from "../ui/ports";
 import type { Feature, StoryButton } from "./feature";
 
 // Marks the buttons over the story viewer, for content.css and for finding
@@ -14,6 +13,7 @@ export interface StoryToolbarDependencies {
   readonly document: PageBody & Pick<ParentNode, "querySelector">;
   readonly stories: RouteReader<StoryRoute>;
   readonly buttons: TextButtons;
+  readonly iconClasses: IconClasses;
   /** The buttons, in the order they appear. */
   readonly storyButtons: readonly StoryButton[];
 }
@@ -49,7 +49,7 @@ export class StoryToolbar implements Feature {
   private element(button: StoryButton): HTMLElement {
     return this.deps.buttons.textButton({
       label: button.look.label,
-      className: textButtonClass(button.look.icon),
+      className: this.deps.iconClasses.labelled(button.look.icon),
       onClick: () => {
         const route = this.deps.stories.read();
         if (route !== undefined) void button.run(route);

@@ -1,3 +1,4 @@
+import { TextButtonClasses } from "../../../src/content/ui/buttons";
 import { BUTTON_LOOKS } from "../../../src/content/buttonLooks";
 import { StoryToolbar } from "../../../src/content/features/storyToolbar";
 import {
@@ -18,6 +19,7 @@ function setup(path: string) {
     document,
     stories: routes(page).stories,
     buttons: buttons(),
+    iconClasses: new TextButtonClasses(),
     storyButtons: [
       new CurrentStoryButton(
         BUTTON_LOOKS.story,
