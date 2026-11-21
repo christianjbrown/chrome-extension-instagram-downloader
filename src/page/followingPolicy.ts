@@ -11,19 +11,27 @@ const text = {
   http: "HTTP",
 } as const;
 
+const hasMessage = (body: unknown): body is JsonObject & { message: string } =>
+  isJsonObject(body) && typeof body.message === "string";
+
+const said = (body: unknown): string | undefined =>
+  hasMessage(body) ? body.message : undefined;
+
 function failureReason(status: number, body: unknown): string {
-  const said =
-    isJsonObject(body) && typeof body.message === "string"
-      ? body.message
-      : undefined;
-  return said ?? `${text.http} ${String(status)}`;
+  return said(body) ?? `${text.http} ${String(status)}`;
 }
+
+const isListed = (body: unknown): body is JsonObject =>
+  isJsonObject(body) && body.status !== FAILED_STATUS;
 
 export class FollowingPolicy implements ResponsePolicy {
   accept(status: number, body: unknown): JsonObject {
     if (status === TOO_MANY_REQUESTS) throw new RefusedError(text.slowDown);
-    if (!isJsonObject(body) || body.status === FAILED_STATUS)
-      throw new Error(`${text.notListed} (${failureReason(status, body)})`);
-    return body;
+    return this.page(status, body);
+  }
+
+  private page(status: number, body: unknown): JsonObject {
+    if (isListed(body)) return body;
+    throw new Error(`${text.notListed} (${failureReason(status, body)})`);
   }
 }

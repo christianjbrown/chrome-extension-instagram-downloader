@@ -2,7 +2,13 @@
 // the part of the response it uses.
 import type { PostsPage } from "../shared/bridge";
 import type { InstagramMedia } from "../shared/media";
-import { isJsonObject, type JsonObject } from "../shared/json";
+import {
+  hasUsername,
+  isJsonObject,
+  textOrUndefined,
+  type JsonObject,
+} from "../shared/json";
+import { optionalField, someCount } from "../shared/fields";
 import { isMediaRecord } from "./mediaShapes";
 import type { Relay, ProfileUser, Queries } from "./ports";
 import { MODULES, POST_BY_ID_MEMBER, RESPONSE_KEYS } from "./instagramApi";
@@ -15,8 +21,6 @@ const text = {
 
 // An account that does not say how many posts it has is counted as empty.
 const noPosts = 0;
-
-const noneLeftOut = 0;
 
 function field(value: unknown, key: string): unknown {
   if (!isJsonObject(value)) throw new Error(`${text.unexpected} at ${key}`);
@@ -46,15 +50,24 @@ const postsVariables = (
   __relay_internal__pv__PolarisImmersiveFeedrelayprovider: false,
 });
 
-// Posts without even an id are left out and counted, so the run counts them
-// as failed rather than losing them.
-const unreadable = (count: number): { unreadable?: number } =>
-  count === noneLeftOut ? {} : { unreadable: count };
-
-function profilePicture(user: JsonObject): string | undefined {
+// The full size picture when Instagram sent one, and the small one if not.
+function pictureUrl(user: JsonObject): unknown {
   const hd = user.hd_profile_pic_url_info;
-  const url = isJsonObject(hd) ? hd.url : user.profile_pic_url;
-  return typeof url === "string" ? url : undefined;
+  return isJsonObject(hd) ? hd.url : user.profile_pic_url;
+}
+
+const profilePicture = (user: JsonObject): string | undefined =>
+  textOrUndefined(pictureUrl(user));
+
+const postCountOf = ({ media_count: count }: JsonObject): number =>
+  typeof count === "number" ? count : noPosts;
+
+// The cursor of the page after this one, when there is one.
+function nextCursor(pageInfo: unknown): string | undefined {
+  const more = field(pageInfo, RESPONSE_KEYS.hasNextPage) === true;
+  return more
+    ? textOrUndefined(field(pageInfo, RESPONSE_KEYS.endCursor))
+    : undefined;
 }
 
 export class InstagramQueries implements Queries {
@@ -86,13 +99,12 @@ export class InstagramQueries implements Queries {
       field(edge, RESPONSE_KEYS.node),
     );
     const items = nodes.filter(isMediaRecord);
-    const pageInfo = field(connection, RESPONSE_KEYS.pageInfo);
-    const more = field(pageInfo, RESPONSE_KEYS.hasNextPage) === true;
-    const end = field(pageInfo, RESPONSE_KEYS.endCursor);
     return {
       items,
-      cursor: more && typeof end === "string" ? end : undefined,
-      ...unreadable(nodes.length - items.length),
+      cursor: nextCursor(field(connection, RESPONSE_KEYS.pageInfo)),
+      // Posts without even an id are left out and counted, so the run
+      // counts them as failed rather than losing them.
+      ...optionalField("unreadable", someCount(nodes.length - items.length)),
     };
   }
 
@@ -103,13 +115,11 @@ export class InstagramQueries implements Queries {
       enable_integrity_filters: true,
     });
     const user = field(data, RESPONSE_KEYS.user);
-    if (!isJsonObject(user) || typeof user.username !== "string")
-      throw new Error(text.accountNotFound);
+    if (!hasUsername(user)) throw new Error(text.accountNotFound);
     return {
       username: user.username,
       profilePicUrl: profilePicture(user),
-      totalPosts:
-        typeof user.media_count === "number" ? user.media_count : noPosts,
+      totalPosts: postCountOf(user),
     };
   }
 }

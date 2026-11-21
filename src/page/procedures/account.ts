@@ -36,11 +36,15 @@ export class AccountProcedure implements PageProcedure<Name> {
   }
 
   private async userId(username: string): Promise<string> {
-    const cached = this.users.userId(username);
-    if (cached !== undefined) return cached;
-    // Pinned collaborations can put someone else's post first.
+    return this.users.userId(username) ?? this.idFromPosts(username);
+  }
+
+  // Pinned collaborations can put someone else's post first.
+  private async idFromPosts(username: string): Promise<string> {
     const { items } = await this.queries.postsPage(username, undefined);
-    const own = items.find((item) => item.user?.username === username);
-    return String(found(own?.user?.pk, `${notFound} ${username}`));
+    const owner = items
+      .map((item) => item.user)
+      .find((user) => user?.username === username);
+    return String(found(owner?.pk, `${notFound} ${username}`));
   }
 }

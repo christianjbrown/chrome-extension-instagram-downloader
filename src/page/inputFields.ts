@@ -31,9 +31,10 @@ export class OptionalTextField implements FieldCheck {
   constructor(private readonly limit: number) {}
 
   accepts(value: unknown): boolean {
-    return (
-      value === undefined ||
-      (typeof value === "string" && value.length <= this.limit)
-    );
+    return value === undefined || this.isShortText(value);
+  }
+
+  private isShortText(value: unknown): boolean {
+    return typeof value === "string" && value.length <= this.limit;
   }
 }

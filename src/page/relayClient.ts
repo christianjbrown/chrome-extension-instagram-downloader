@@ -39,13 +39,18 @@ const fetchFresh = { force: true } as const;
 const isQuery = (value: unknown): value is RelayQuery =>
   isJsonObject(value) && value.params !== undefined;
 
+// A module that is not an object is the query itself, whatever was asked.
+const namedMember = (loaded: unknown, member: string): unknown =>
+  isJsonObject(loaded) ? loaded[member] : loaded;
+
+const memberOf = (loaded: unknown, member: string | undefined): unknown =>
+  member === undefined ? loaded : namedMember(loaded, member);
+
 export class RelayClient implements Relay {
   constructor(private readonly require: ModuleRequire) {}
 
   query(moduleName: string, member?: string): RelayQuery {
-    const loaded = this.require(moduleName);
-    const query =
-      member === undefined || !isJsonObject(loaded) ? loaded : loaded[member];
+    const query = memberOf(this.require(moduleName), member);
     if (!isQuery(query)) throw new Error(`${moduleName} ${text.unavailable}`);
     return query;
   }

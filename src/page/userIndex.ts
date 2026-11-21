@@ -10,12 +10,18 @@ export class UserIndex implements Rememberer, UserLookup {
   ) {}
 
   remember(value: JsonObject): void {
-    if (!isUser(value)) return;
-    const username = value.username as string;
-    this.ids.set(username, String(value.pk ?? value.id));
-    // The profile page's own copy of the account carries its post count.
-    if (typeof value.media_count === "number")
-      this.postCounts.set(username, value.media_count);
+    if (isUser(value)) this.rememberUser(value);
+  }
+
+  private rememberUser(user: JsonObject & { username: string }): void {
+    this.ids.set(user.username, String(user.pk ?? user.id));
+    this.rememberCount(user);
+  }
+
+  // The profile page's own copy of the account carries its post count.
+  private rememberCount(user: JsonObject & { username: string }): void {
+    if (typeof user.media_count === "number")
+      this.postCounts.set(user.username, user.media_count);
   }
 
   userId(username: string): string | undefined {

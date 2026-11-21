@@ -2,7 +2,7 @@
 // Instagram already loaded, so it is only there when the account's page has
 // been visited.
 import type { Input, PostsPage } from "../../shared/bridge";
-import { isRecord } from "../../shared/json";
+import { isRecord, type JsonObject } from "../../shared/json";
 import { POSTS_PAGE_PROCEDURE } from "../../shared/procedures/postsPage";
 import type {
   FieldCheck,
@@ -24,10 +24,12 @@ export class PostsPageProcedure implements PageProcedure<Name> {
   ) {}
 
   isInput(input: unknown): input is Input<Name> {
+    return isRecord(input) && this.accepts(input);
+  }
+
+  private accepts(input: JsonObject): boolean {
     return (
-      isRecord(input) &&
-      this.username.accepts(input.username) &&
-      this.cursor.accepts(input.cursor)
+      this.username.accepts(input.username) && this.cursor.accepts(input.cursor)
     );
   }
 

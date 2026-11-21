@@ -15,7 +15,11 @@ export class BoundedMap<V> implements IterableStore<V> {
   set(key: string, value: V): void {
     this.entries.delete(key);
     this.entries.set(key, value);
-    if (this.entries.size <= this.limit) return;
+    if (this.entries.size > this.limit) this.forgetOldest();
+  }
+
+  // A Map goes through its keys oldest first.
+  private forgetOldest(): void {
     for (const oldest of this.entries.keys()) {
       this.entries.delete(oldest);
       return;
