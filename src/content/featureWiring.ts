@@ -23,12 +23,9 @@ import { VisibleAssetFinder } from "./dom/visibleAsset";
 import { FileDownloader } from "./saving/fileDownloader";
 import type { CurrentViewer } from "./actions/ports";
 import type { ItemDownloader } from "./saving/ports";
-import { AddressRoute } from "./dom/addressRoute";
 import { DotCarousel } from "./dom/carousel";
 import { GridThumbnails } from "./dom/gridThumbnails";
-import { PostPath, ProfilePath, StoryPath } from "./dom/pathMatchers";
-import { PathRouteParser } from "./dom/route";
-import { PostPage, ProfilePage, StoryPage } from "./dom/routeKinds";
+import { routes, type Routes } from "./routeWiring";
 
 import { SignedInProfile } from "./actions/ownProfile";
 import { StoppedFollowingRun } from "./bulk/resumableRun";
@@ -39,7 +36,7 @@ import {
   PROFILE_BUTTON_LOOKS,
 } from "./features/profileButtons";
 import { bulk, type BulkParts } from "./bulkWiring";
-import type { ContentEnvironment, Wiring } from "./wiring";
+import type { Wiring } from "./wiring";
 
 // The buttons under a profile's header, in the order they appear.
 function profileButtons(
@@ -68,25 +65,6 @@ function profileButtons(
     ),
   ];
 }
-
-// The readers of the address, one per kind of page a feature looks for.
-function routes(env: ContentEnvironment) {
-  const pathname = (): string => env.window.location.pathname;
-  // Tried in this order, so a story or post address is never read as a
-  // profile.
-  const parser = new PathRouteParser([
-    new StoryPath(),
-    new PostPath(),
-    new ProfilePath(),
-  ]);
-  return {
-    posts: new AddressRoute(pathname, parser, new PostPage()),
-    profiles: new AddressRoute(pathname, parser, new ProfilePage()),
-    stories: new AddressRoute(pathname, parser, new StoryPage()),
-  };
-}
-
-type Routes = ReturnType<typeof routes>;
 
 // What the features share: the downloads, and how they read the page.
 function shared(wiring: Wiring) {
@@ -189,7 +167,7 @@ function accountFeatures(
 
 export function features(wiring: Wiring): Feature[] {
   const parts = shared(wiring);
-  const pages = routes(wiring.env);
+  const pages = routes(() => wiring.env.window.location.pathname);
   return [
     ...postFeatures(wiring, parts, pages),
     ...accountFeatures(wiring, parts, pages),

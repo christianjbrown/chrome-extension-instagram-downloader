@@ -7,7 +7,7 @@ import type {
   PostLocator,
   RouteReader,
 } from "./ports";
-import type { PostRoute } from "./route";
+import type { PostRoute } from "./routes/post";
 
 const postLink = 'a[href*="/p/"], a[href*="/reel/"]';
 

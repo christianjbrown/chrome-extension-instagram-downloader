@@ -1,6 +1,7 @@
 // The buttons over the story viewer. The composition root lists them in the
 // order they appear.
-import type { StoryDownloads, StoryRoute } from "../actions/ports";
+import type { StoryDownloads } from "../actions/ports";
+import type { StoryRoute } from "../dom/route";
 import type { AssetFinder } from "../dom/ports";
 import type { ButtonLook, StoryButton } from "./feature";
 

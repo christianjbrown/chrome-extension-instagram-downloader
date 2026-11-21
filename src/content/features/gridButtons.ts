@@ -1,7 +1,7 @@
 import { shortcodeToMediaId } from "../../shared/shortcode";
 import type { PostDownloads } from "../actions/ports";
 import type { RouteReader, Thumbnail, ThumbnailSource } from "../dom/ports";
-import type { ProfileRoute } from "../dom/route";
+import type { ProfileRoute } from "../dom/routes/profile";
 import { CLASS, classes } from "../ui/classNames";
 import type { IconButtons } from "../ui/ports";
 import type { Feature } from "./feature";

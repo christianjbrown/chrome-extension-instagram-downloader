@@ -1,6 +1,6 @@
 import { TAGS } from "../../shared/dom";
 import type { RouteReader } from "../dom/ports";
-import type { ProfileRoute } from "../dom/route";
+import type { ProfileRoute } from "../dom/routes/profile";
 import { PROFILE_HEADER } from "../dom/selectors";
 import { textButtonClass } from "../ui/buttons";
 import { bySelector, CLASS } from "../ui/classNames";

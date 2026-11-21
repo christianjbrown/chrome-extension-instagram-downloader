@@ -1,9 +1,8 @@
 import type { Reel } from "../../shared/bridge";
-import { ROUTE_KINDS, type Route } from "../dom/route";
+import { HIGHLIGHT_KIND, type HighlightRoute } from "../dom/routes/highlight";
 import type { Bridge } from "../ports";
-import type { StoryKind, StoryRoute } from "./ports";
-
-type HighlightRoute = Extract<Route, { kind: typeof ROUTE_KINDS.highlight }>;
+import type { StoryRoute } from "../dom/route";
+import type { StoryKind } from "./ports";
 
 // /stories/highlights/id/: a saved highlight, whose address names neither
 // the story showing nor whose it is.
@@ -11,7 +10,7 @@ export class HighlightStories implements StoryKind<HighlightRoute> {
   constructor(private readonly bridge: Bridge) {}
 
   matches(route: StoryRoute): route is HighlightRoute {
-    return route.kind === ROUTE_KINDS.highlight;
+    return route.kind === HIGHLIGHT_KIND;
   }
 
   mediaId(): undefined {

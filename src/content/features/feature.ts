@@ -1,4 +1,4 @@
-import type { StoryRoute } from "../actions/ports";
+import type { StoryRoute } from "../dom/route";
 import type { ButtonIcon } from "../ui/buttons";
 
 /** Something that adds its buttons to the page; run again whenever it changes. */

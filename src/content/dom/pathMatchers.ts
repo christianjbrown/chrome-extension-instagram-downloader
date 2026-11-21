@@ -1,5 +1,10 @@
 // One matcher per kind of page, each recognising its own addresses.
-import { OTHER_ROUTE, ROUTE_KINDS, type Route } from "./route";
+import type { Route } from "./route";
+import { HIGHLIGHT_KIND } from "./routes/highlight";
+import { OTHER_ROUTE } from "./routes/other";
+import { POST_KIND } from "./routes/post";
+import { PROFILE_KIND } from "./routes/profile";
+import { USER_STORY_KIND } from "./routes/userStory";
 import type { PathMatcher } from "./ports";
 
 const storiesSegment = "stories";
@@ -41,13 +46,13 @@ export class StoryPath implements PathMatcher {
   private owned(owner: string, media: string | undefined): Route {
     return owner === highlightsSegment
       ? this.highlight(media)
-      : { kind: ROUTE_KINDS.story, username: owner, mediaId: media };
+      : { kind: USER_STORY_KIND, username: owner, mediaId: media };
   }
 
   private highlight(media: string | undefined): Route {
     return media === undefined
       ? OTHER_ROUTE
-      : { kind: ROUTE_KINDS.highlight, highlightId: media };
+      : { kind: HIGHLIGHT_KIND, highlightId: media };
   }
 }
 
@@ -74,7 +79,7 @@ export class PostPath implements PathMatcher {
   }
 
   private post(shortcode: string | undefined): Route | undefined {
-    return shortcode ? { kind: ROUTE_KINDS.post, shortcode } : undefined;
+    return shortcode ? { kind: POST_KIND, shortcode } : undefined;
   }
 }
 
@@ -86,7 +91,7 @@ export class ProfilePath implements PathMatcher {
 
   private profile(first: string | undefined): Route | undefined {
     return isAccountName(first)
-      ? { kind: ROUTE_KINDS.profile, username: first }
+      ? { kind: PROFILE_KIND, username: first }
       : undefined;
   }
 }

@@ -1,5 +1,5 @@
 import { TAGS } from "../../shared/dom";
-import type { StoryRoute } from "../actions/ports";
+import type { StoryRoute } from "../dom/route";
 import type { RouteReader } from "../dom/ports";
 import { bySelector, CLASS } from "../ui/classNames";
 import { textButtonClass } from "../ui/buttons";
