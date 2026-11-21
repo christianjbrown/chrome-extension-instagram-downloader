@@ -1,5 +1,6 @@
 // What the content script shows on the page, as its callers see it.
 import type { WaitReporter } from "../pacing/pacing";
+import type { PanelPart } from "./panelParts";
 
 export interface Countdown {
   /** Calls show with the time left now and as each second passes, down to zero. The returned function stops it. */
@@ -66,4 +67,31 @@ export interface ProgressBars {
   create(className: string): HTMLElement;
   /** Fills the bar to the fraction done, or hides it when that is unknown. */
   show(bar: HTMLElement, fraction: number | undefined): void;
+}
+
+/** The progress panel on the page: its lines, its bars and its one button. */
+export interface PanelView {
+  /** Puts up a new panel in place of any other, its button stopping the run. */
+  show(stopLabel: string, onStop: () => void): void;
+  /** Writes a line, when a panel is up. */
+  line(part: PanelPart, text: string): void;
+  /** Fills a bar, or hides it when the fraction is unknown. */
+  bar(part: PanelPart, fraction: number | undefined): void;
+  /** Turns the button into one that takes the panel away. */
+  offerClose(closeLabel: string): void;
+}
+
+/** The words the progress panel uses for itself. */
+export interface PanelWording {
+  readonly note: string;
+  readonly stop: string;
+  readonly close: string;
+  wait(reason: string, remainingMs: number): string;
+}
+
+/** Shows a wait as it counts down, until it ends or is stopped. */
+export interface WaitLine {
+  /** Writes the wait each second, in place of any wait already showing. */
+  start(reason: string, ms: number, write: (text: string) => void): void;
+  stop(): void;
 }

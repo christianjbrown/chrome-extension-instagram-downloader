@@ -27,6 +27,9 @@ import { FolderPicker } from "./saving/folderPicker";
 import { MemoryFolderStore } from "./saving/folderStore";
 import { StoppedRunWording, WordedErrors } from "./errorText";
 import { SecondCountdown } from "./ui/countdown";
+import { CountdownLine } from "./ui/countdownLine";
+import { DomPanelView } from "./ui/domPanelView";
+import { EnglishPanelWording } from "./ui/panelWording";
 import { ProgressPanel } from "./ui/progressPanel";
 import { DomProgressBars } from "./ui/progressBar";
 import type {
@@ -76,13 +79,13 @@ function jobRunner(
   folders: FolderSource,
 ): JobRunner {
   const { document } = env.window;
+  const wording = new EnglishPanelWording();
   return new BulkRunner({
     folders,
     panel: new ProgressPanel(
-      document,
-      new SecondCountdown(scheduler, Date.now),
-      buttons,
-      new DomProgressBars(document),
+      new DomPanelView(document, buttons, new DomProgressBars(document)),
+      new CountdownLine(new SecondCountdown(scheduler, Date.now), wording),
+      wording,
     ),
     notifier,
     controllerClass: env.window.AbortController,
