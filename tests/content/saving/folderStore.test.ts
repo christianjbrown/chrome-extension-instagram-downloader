@@ -24,7 +24,7 @@ describe("LegacyFolderDatabase", () => {
       opening.onsuccess = resolve;
     });
     opening.result.close();
-    new LegacyFolderDatabase(factory).remove();
+    new LegacyFolderDatabase(factory).run();
     await vi.waitFor(async () => {
       const names = (await factory.databases()).map((d) => d.name);
       expect(names).not.toContain("instagram-downloader-extension");
@@ -33,7 +33,7 @@ describe("LegacyFolderDatabase", () => {
 
   it("does nothing when there is no such database", () => {
     const factory = { deleteDatabase: vi.fn() };
-    new LegacyFolderDatabase(factory).remove();
+    new LegacyFolderDatabase(factory).run();
     expect(factory.deleteDatabase).toHaveBeenCalledWith(
       "instagram-downloader-extension",
     );

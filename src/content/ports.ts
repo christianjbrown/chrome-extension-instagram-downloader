@@ -35,6 +35,19 @@ export interface ErrorWording {
   text(error: unknown): string;
 }
 
+/** Something done once as the content script starts. */
+export interface StartupStep {
+  run(): void;
+}
+
+/** Runs the features over the page now and whenever it changes. */
+export interface PageWatcher {
+  start(
+    root: Node,
+    createObserver: (callback: () => void) => MutationObserver,
+  ): void;
+}
+
 /** Picks the address a media is saved from. */
 export interface VersionChooser {
   url(media: InstagramMedia): string | undefined;

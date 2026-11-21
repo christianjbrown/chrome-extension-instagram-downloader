@@ -1,10 +1,10 @@
-import type { Scheduler } from "../ports";
+import type { PageWatcher, Scheduler } from "../ports";
 import type { Feature } from "./feature";
 
 // Runs every feature once, then again shortly after the page changes.
 // Instagram swaps whole pages without reloading, so this is how buttons
 // appear on new posts and new pages.
-export class PageScanner {
+export class PageScanner implements PageWatcher {
   private scheduled = false;
 
   constructor(
