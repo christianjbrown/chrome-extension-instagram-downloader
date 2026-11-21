@@ -1,5 +1,5 @@
 import css from "../../../static/content.css?raw";
-import { BUTTON_LOOKS } from "../../../src/content/buttonLooks";
+import { BUTTON_LOOKS } from "../../../src/content/featureWiring";
 import { GRID_LINK_CLASS } from "../../../src/content/dom/gridThumbnails";
 import { GRID_BUTTON_CLASS } from "../../../src/content/features/gridButtons";
 import { POST_ACTIONS_CLASS } from "../../../src/content/features/postActions";

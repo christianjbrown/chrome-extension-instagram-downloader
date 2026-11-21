@@ -1,5 +1,5 @@
 import { TextButtonClasses } from "../../../src/content/ui/buttons";
-import { BUTTON_LOOKS } from "../../../src/content/buttonLooks";
+import { BUTTON_LOOKS } from "../../../src/content/featureWiring";
 import { StoryToolbar } from "../../../src/content/features/storyToolbar";
 import {
   AllStoriesButton,
