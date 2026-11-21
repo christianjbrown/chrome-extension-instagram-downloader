@@ -1,0 +1,46 @@
+// An account by username: its id from what Instagram already sent, or from
+// its own posts, and the rest from its profile.
+import type { Account, Input } from "../../shared/bridge";
+import { isRecord } from "../../shared/json";
+import { ACCOUNT_PROCEDURE } from "../../shared/procedures/account";
+import type {
+  FieldCheck,
+  PageProcedure,
+  PostsQuery,
+  ProfileQuery,
+  UserIdLookup,
+} from "../ports";
+import { found } from "./lookup";
+
+type Name = typeof ACCOUNT_PROCEDURE.name;
+
+const notFound = "Could not find";
+
+export class AccountProcedure implements PageProcedure<Name> {
+  readonly name = ACCOUNT_PROCEDURE.name;
+
+  constructor(
+    private readonly users: UserIdLookup,
+    private readonly queries: PostsQuery & ProfileQuery,
+    private readonly username: FieldCheck,
+  ) {}
+
+  isInput(input: unknown): input is Input<Name> {
+    return isRecord(input) && this.username.accepts(input.username);
+  }
+
+  async handle({ username }: Input<Name>): Promise<Account> {
+    const id = await this.userId(username);
+    const profile = await this.queries.profile(id);
+    return { id, ...profile };
+  }
+
+  private async userId(username: string): Promise<string> {
+    const cached = this.users.userId(username);
+    if (cached !== undefined) return cached;
+    // Pinned collaborations can put someone else's post first.
+    const { items } = await this.queries.postsPage(username, undefined);
+    const own = items.find((item) => item.user?.username === username);
+    return String(found(own?.user?.pk, `${notFound} ${username}`));
+  }
+}

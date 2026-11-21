@@ -1,9 +1,11 @@
 import { PAGE_CONFIG } from "../../src/page/config";
-import { ProcedureInputs } from "../../src/page/procedureInputs";
+import { procedureTable } from "../../src/page/procedureWiring";
+import type { ProcedureName } from "../../src/shared/bridge";
 
-const inputs = new ProcedureInputs(PAGE_CONFIG.inputLimits);
-const isValidInput = inputs.isValidInput.bind(inputs);
-const isProcedureName = inputs.isProcedureName.bind(inputs);
+// The input checks never reach what the procedures answer from.
+const procedures = procedureTable({} as never, PAGE_CONFIG.inputLimits);
+const isValidInput = (name: ProcedureName, input: unknown): boolean =>
+  procedures[name].isInput(input);
 
 describe("procedure inputs", () => {
   it("accepts what the content script really sends", () => {
@@ -34,10 +36,5 @@ describe("procedure inputs", () => {
     expect(isValidInput("followingPage", { userId: "9/x" })).toBe(false);
     expect(isValidInput("reel", {})).toBe(false);
     expect(isValidInput("userReel", null)).toBe(false);
-  });
-
-  it("knows its own procedure names only", () => {
-    expect(isProcedureName("viewer")).toBe(true);
-    expect(isProcedureName("constructor")).toBe(false);
   });
 });

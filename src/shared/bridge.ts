@@ -33,26 +33,28 @@ export interface Reel {
   readonly items: readonly InstagramMedia[];
 }
 
-interface Procedures {
-  viewer: { input: Record<string, never>; output: Viewer };
-  media: { input: { mediaId: string }; output: InstagramMedia };
-  mediaByAsset: { input: { asset: string }; output: InstagramMedia };
-  postsPage: {
-    input: { username: string; cursor: string | undefined };
-    output: PostsPage;
-  };
-  account: { input: { username: string }; output: Account };
-  followingPage: {
-    input: { userId: string; next: string | undefined };
-    output: FollowingPage;
-  };
-  reel: { input: { reelId: string }; output: Reel };
-  userReel: { input: { username: string }; output: Reel };
-}
+// Every procedure the content script can ask the page for, by name, with what
+// it takes and what it answers. Each procedure's own module under
+// shared/procedures adds its entry, so a new one changes nothing here. It is
+// exported for those modules to extend, which knip does not count as a use.
+/** @public */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface Procedures {}
 
 export type ProcedureName = keyof Procedures;
 export type Input<N extends ProcedureName> = Procedures[N]["input"];
 export type Output<N extends ProcedureName> = Procedures[N]["output"];
+
+/** How the content script checks one procedure's answer before using it. */
+export interface ProcedureOutput<N extends ProcedureName> {
+  readonly name: N;
+  parse(value: unknown): Output<N>;
+}
+
+/** Every procedure's answer check, by procedure name. */
+export type ProcedureOutputs = {
+  readonly [N in ProcedureName]: ProcedureOutput<N>;
+};
 
 export interface BridgeRequest {
   readonly igdlProcedure: ProcedureName;

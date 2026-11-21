@@ -2,18 +2,10 @@
 import {
   isBridgeRequest,
   type BridgeResponse,
-  type Input,
-  type Output,
   type ProcedureName,
 } from "../shared/bridge";
 import { EVENTS } from "../shared/dom";
-import type { InputValidator, RefusalDetector } from "./ports";
-
-export type Handlers = {
-  readonly [N in ProcedureName]: (input: Input<N>) => Promise<Output<N>>;
-};
-
-type AnyHandler = (input: unknown) => Promise<unknown>;
+import type { PageProcedure, ProcedureTable, RefusalDetector } from "./ports";
 
 const text = {
   unknown: "Unknown request",
@@ -31,10 +23,9 @@ export interface TrustedSender {
 
 export class BridgeServer {
   constructor(
-    private readonly handlers: Handlers,
+    private readonly procedures: ProcedureTable,
     private readonly sender: TrustedSender,
     private readonly refusals: RefusalDetector,
-    private readonly inputs: InputValidator,
   ) {}
 
   listen(target: Pick<Window, "addEventListener">): void {
@@ -53,21 +44,22 @@ export class BridgeServer {
   }
 
   private async respond(name: string, input: unknown): Promise<BridgeResponse> {
-    // Own properties only: "constructor" and "toString" are not procedures.
-    if (
-      !this.inputs.isProcedureName(name) ||
-      !Object.hasOwn(this.handlers, name)
-    )
-      return { ok: false, error: text.unknown };
-    if (!this.inputs.isValidInput(name, input))
-      return { ok: false, error: text.invalid };
-    const handler = this.handlers[name] as AnyHandler;
+    const procedure = this.procedure(name);
+    if (procedure === undefined) return { ok: false, error: text.unknown };
+    if (!procedure.isInput(input)) return { ok: false, error: text.invalid };
     try {
-      return { ok: true, value: await handler(input) };
+      return { ok: true, value: await procedure.handle(input) };
     } catch (error) {
       return this.refusals.isRefusal(error)
         ? { ok: false, error: message(error), refused: true }
         : { ok: false, error: message(error) };
     }
+  }
+
+  // Own properties only: "constructor" and "toString" are not procedures.
+  private procedure(name: string): PageProcedure<ProcedureName> | undefined {
+    return Object.hasOwn(this.procedures, name)
+      ? this.procedures[name as ProcedureName]
+      : undefined;
   }
 }

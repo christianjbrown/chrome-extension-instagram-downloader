@@ -1,4 +1,5 @@
-import { createProcedures } from "../../src/page/procedures";
+import { PAGE_CONFIG } from "../../src/page/config";
+import { procedureTable } from "../../src/page/procedureWiring";
 import { photo } from "../fixtures";
 import { memory } from "./memory";
 
@@ -24,21 +25,17 @@ function setup() {
   const following = {
     page: vi.fn(() => Promise.resolve({ usernames: ["a"], next: undefined })),
   };
-  const procedures = createProcedures({
-    viewer,
-    media,
-    users,
-    reels,
-    queries: queries,
-    following: following,
-  });
+  const procedures = procedureTable(
+    { viewer, media, users, reels, queries, following },
+    PAGE_CONFIG.inputLimits,
+  );
   return { cache, queries, following, procedures };
 }
 
 describe("page procedures", () => {
   it("identifies the signed-in account", async () => {
     const { procedures } = setup();
-    await expect(procedures.viewer({})).resolves.toEqual({
+    await expect(procedures.viewer.handle({})).resolves.toEqual({
       id: "1",
       username: "me",
     });
@@ -47,11 +44,15 @@ describe("page procedures", () => {
   it("answers media from the cache before asking Instagram", async () => {
     const { cache, queries, procedures } = setup();
     cache.ingest(photo("5"));
-    await expect(procedures.media({ mediaId: "5" })).resolves.toMatchObject({
+    await expect(
+      procedures.media.handle({ mediaId: "5" }),
+    ).resolves.toMatchObject({
       pk: "5",
     });
     expect(queries.mediaById).not.toHaveBeenCalled();
-    await expect(procedures.media({ mediaId: "6" })).resolves.toMatchObject({
+    await expect(
+      procedures.media.handle({ mediaId: "6" }),
+    ).resolves.toMatchObject({
       pk: "6",
     });
   });
@@ -60,24 +61,24 @@ describe("page procedures", () => {
     const { cache, procedures } = setup();
     cache.ingest(photo("5", "five.jpg"));
     await expect(
-      procedures.mediaByAsset({ asset: "five.jpg" }),
+      procedures.mediaByAsset.handle({ asset: "five.jpg" }),
     ).resolves.toMatchObject({ pk: "5" });
     await expect(
-      procedures.mediaByAsset({ asset: "nope.jpg" }),
+      procedures.mediaByAsset.handle({ asset: "nope.jpg" }),
     ).rejects.toThrow("That picture has not loaded yet");
   });
 
   it("passes post pages and following pages through", async () => {
     const { cache, procedures, queries, following } = setup();
     await expect(
-      procedures.postsPage({ username: "a", cursor: "c" }),
+      procedures.postsPage.handle({ username: "a", cursor: "c" }),
     ).resolves.not.toHaveProperty("total");
     expect(queries.postsPage).toHaveBeenCalledWith("a", "c");
     cache.ingest({ username: "a", pk: "3", media_count: 12 });
     await expect(
-      procedures.postsPage({ username: "a", cursor: undefined }),
+      procedures.postsPage.handle({ username: "a", cursor: undefined }),
     ).resolves.toMatchObject({ total: 12 });
-    await procedures.followingPage({ userId: "1", next: "n" });
+    await procedures.followingPage.handle({ userId: "1", next: "n" });
     expect(following.page).toHaveBeenCalledWith("1", "n");
   });
 
@@ -85,15 +86,15 @@ describe("page procedures", () => {
     const { cache, queries, procedures } = setup();
     cache.ingest({ username: "cached", pk: "8" });
     await expect(
-      procedures.account({ username: "cached" }),
+      procedures.account.handle({ username: "cached" }),
     ).resolves.toMatchObject({ id: "8", username: "me" });
     await expect(
-      procedures.account({ username: "alice" }),
+      procedures.account.handle({ username: "alice" }),
     ).resolves.toMatchObject({ id: "1" });
     expect(queries.profile).toHaveBeenLastCalledWith("1");
-    await expect(procedures.account({ username: "nobody" })).rejects.toThrow(
-      "Could not find nobody",
-    );
+    await expect(
+      procedures.account.handle({ username: "nobody" }),
+    ).rejects.toThrow("Could not find nobody");
   });
 
   it("returns stories that have loaded", async () => {
@@ -103,17 +104,19 @@ describe("page procedures", () => {
       user: { username: "carol", pk: "77" },
       items: [photo("9")],
     });
-    await expect(procedures.reel({ reelId: "77" })).resolves.toMatchObject({
+    await expect(
+      procedures.reel.handle({ reelId: "77" }),
+    ).resolves.toMatchObject({
       owner: "carol",
     });
     await expect(
-      procedures.userReel({ username: "carol" }),
+      procedures.userReel.handle({ username: "carol" }),
     ).resolves.toMatchObject({ owner: "carol" });
-    await expect(procedures.reel({ reelId: "1" })).rejects.toThrow(
+    await expect(procedures.reel.handle({ reelId: "1" })).rejects.toThrow(
       "This story has not loaded yet",
     );
-    await expect(procedures.userReel({ username: "dave" })).rejects.toThrow(
-      "This story has not loaded yet",
-    );
+    await expect(
+      procedures.userReel.handle({ username: "dave" }),
+    ).rejects.toThrow("This story has not loaded yet");
   });
 });

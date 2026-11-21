@@ -16,6 +16,7 @@ import { LargestVersionChooser } from "./versionChooser";
 
 import { features } from "./featureWiring";
 import type { ContentEnvironment } from "./wiring";
+import { PROCEDURE_OUTPUTS } from "./procedureWiring";
 
 function pageBridge(
   env: ContentEnvironment,
@@ -34,6 +35,7 @@ function pageBridge(
         timeoutMs: config.bridgeTimeoutMs,
       },
     ),
+    PROCEDURE_OUTPUTS,
   );
 }
 

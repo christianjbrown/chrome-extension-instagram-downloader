@@ -1,7 +1,7 @@
 // Settings for the page script. Only its entry point reads them, and hands
 // each one to the part that needs it.
 import { USER_ID_PLACEHOLDER } from "./followingClient";
-import type { InputLimits } from "./procedureInputs";
+import type { InputLimits } from "./inputFields";
 
 export interface PageConfig {
   // How many posts, accounts and stories are remembered before the oldest go.
