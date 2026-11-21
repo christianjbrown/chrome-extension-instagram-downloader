@@ -7,8 +7,11 @@ import { bySelector, CLASS } from "../ui/classNames";
 import type { TextButtons } from "../ui/ports";
 import type { ButtonLook, Feature, ProfileButton } from "./feature";
 
-const isFor = (toolbar: HTMLElement | null, username: string): boolean =>
-  toolbar?.dataset.username === username;
+// The toolbar names the profile it was made for.
+const usernameAttribute = "data-username";
+
+const isFor = (toolbar: Element | null, username: string): boolean =>
+  toolbar?.getAttribute(usernameAttribute) === username;
 
 export interface ProfileToolbarDependencies {
   readonly document: Document;
@@ -36,15 +39,13 @@ export class ProfileToolbar implements Feature {
 
   // A toolbar left from another profile is swapped for this one's.
   private refresh(header: Element, username: string): void {
-    const existing = header.querySelector<HTMLElement>(
-      bySelector(CLASS.profileToolbar),
-    );
+    const existing = header.querySelector(bySelector(CLASS.profileToolbar));
     if (!isFor(existing, username)) this.replace(header, existing, username);
   }
 
   private replace(
     header: Element,
-    existing: HTMLElement | null,
+    existing: Element | null,
     username: string,
   ): void {
     existing?.remove();
@@ -54,7 +55,7 @@ export class ProfileToolbar implements Feature {
   private toolbar(username: string): HTMLElement {
     const toolbar = this.deps.document.createElement(TAGS.div);
     toolbar.className = CLASS.profileToolbar;
-    toolbar.dataset.username = username;
+    toolbar.setAttribute(usernameAttribute, username);
     const placed: (HTMLElement | undefined)[] = [];
     this.deps.profileButtons.forEach((button, index) => {
       button.offer(username, (look) => {

@@ -6,7 +6,7 @@ function setup(html: string, width = 300, path = "/alice/") {
   const downloader = { download: vi.fn(() => Promise.resolve()) };
   const page = view(path, html);
   const feature = new GridButtons(
-    new GridThumbnails(document, 100),
+    new GridThumbnails(document, 100, HTMLAnchorElement),
     downloader,
     routes(page).profiles,
     buttons(),

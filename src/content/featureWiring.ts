@@ -141,7 +141,11 @@ function postFeatures(
       buttons,
     }),
     new GridButtons(
-      new GridThumbnails(document, config.gridMinimumWidth),
+      new GridThumbnails(
+        document,
+        config.gridMinimumWidth,
+        env.window.HTMLAnchorElement,
+      ),
       posts,
       routes.profiles,
       buttons,

@@ -4,6 +4,9 @@
 // is checked before it is used.
 import { isJsonObject } from "./json";
 
+/** A class, as `instanceof` checks a value against it. */
+export type ClassOf<T> = abstract new (...args: never[]) => T;
+
 /** A function whose arguments and answer are still unchecked. */
 export type Method = (...args: unknown[]) => unknown;
 

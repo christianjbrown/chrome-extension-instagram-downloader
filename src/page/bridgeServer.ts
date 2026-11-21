@@ -33,16 +33,19 @@ export class BridgeServer {
     });
   }
 
-  async handle(event: MessageEvent): Promise<void> {
+  async handle(event: MessageEvent<unknown>): Promise<void> {
     if (this.isTrusted(event)) await this.answer(event);
   }
 
-  private isTrusted({ origin, source }: MessageEvent): boolean {
+  private isTrusted({ origin, source }: MessageEvent<unknown>): boolean {
     return origin === this.sender.origin && source === this.sender.source;
   }
 
   // Each request brings the port its answer goes back on.
-  private async answer({ ports: [port], data }: MessageEvent): Promise<void> {
+  private async answer({
+    ports: [port],
+    data,
+  }: MessageEvent<unknown>): Promise<void> {
     if (port !== undefined) await this.reply(port, data);
   }
 

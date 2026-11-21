@@ -1,3 +1,4 @@
+import type { ClassOf } from "../../shared/members";
 import { shortcodeFromPath } from "../../shared/shortcode";
 import { CLASS } from "../ui/classNames";
 import type { Thumbnail, ThumbnailSource } from "./ports";
@@ -12,12 +13,18 @@ export class GridThumbnails implements ThumbnailSource {
   constructor(
     private readonly document: Document,
     private readonly minimumWidth: number,
+    // Links are checked against the window's own anchor class.
+    private readonly anchors: ClassOf<HTMLAnchorElement>,
   ) {}
 
   unmarked(): Thumbnail[] {
-    return Array.from(
-      this.document.querySelectorAll<HTMLAnchorElement>(thumbnail),
-    ).flatMap((link) => (this.wanted(link) ? this.thumbnailOf(link) : []));
+    return Array.from(this.document.querySelectorAll(thumbnail))
+      .filter((element) => this.isLink(element))
+      .flatMap((link) => (this.wanted(link) ? this.thumbnailOf(link) : []));
+  }
+
+  private isLink(element: Element): element is HTMLAnchorElement {
+    return element instanceof this.anchors;
   }
 
   mark({ link }: Thumbnail): void {
