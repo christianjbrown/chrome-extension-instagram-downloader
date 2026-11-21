@@ -2,9 +2,13 @@
 // Instagram already sent only.
 import type { Input } from "../../shared/bridge";
 import { isRecord } from "../../shared/json";
-import type { InstagramMedia } from "../../shared/media";
 import { MEDIA_BY_ASSET_PROCEDURE } from "../../shared/procedures/mediaByAsset";
-import type { FieldCheck, MediaByAssetLookup, PageProcedure } from "../ports";
+import type {
+  FieldCheck,
+  MediaByAssetLookup,
+  PageProcedure,
+  PageMedia,
+} from "../ports";
 import { found, settle } from "./lookup";
 
 type Name = typeof MEDIA_BY_ASSET_PROCEDURE;
@@ -23,7 +27,7 @@ export class MediaByAssetProcedure implements PageProcedure<Name> {
     return isRecord(input) && this.asset.accepts(input.asset);
   }
 
-  handle({ asset }: Input<Name>): Promise<InstagramMedia> {
+  handle({ asset }: Input<Name>): Promise<PageMedia> {
     return settle(() =>
       found(this.media.mediaByAsset(asset), pictureNotLoaded),
     );

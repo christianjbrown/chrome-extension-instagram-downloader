@@ -1,7 +1,5 @@
 // The handful of Instagram queries this extension needs, each returning only
 // the part of the response it uses.
-import type { PostsPage } from "../shared/bridge";
-import type { InstagramMedia } from "../shared/media";
 import {
   hasUsername,
   isJsonObject,
@@ -10,7 +8,13 @@ import {
 } from "../shared/json";
 import { optionalField, someCount } from "../shared/fields";
 import { isMediaRecord } from "./mediaShapes";
-import type { Relay, ProfileUser, Queries } from "./ports";
+import type {
+  PageMedia,
+  PagePostsPage,
+  Relay,
+  ProfileUser,
+  Queries,
+} from "./ports";
 import { MODULES, POST_BY_ID_MEMBER, RESPONSE_KEYS } from "./instagramApi";
 
 const text = {
@@ -76,7 +80,7 @@ export class InstagramQueries implements Queries {
     private readonly postsPageSize: number,
   ) {}
 
-  async mediaById(mediaId: string): Promise<InstagramMedia> {
+  async mediaById(mediaId: string): Promise<PageMedia> {
     const query = this.relay.query(MODULES.postQuery, POST_BY_ID_MEMBER);
     const data = await this.relay.run(query, { mediaId });
     const info = field(data, RESPONSE_KEYS.mediaInfo);
@@ -88,7 +92,7 @@ export class InstagramQueries implements Queries {
   async postsPage(
     username: string,
     cursor: string | undefined,
-  ): Promise<PostsPage> {
+  ): Promise<PagePostsPage> {
     const query = this.relay.query(MODULES.profilePostsQuery);
     const data = await this.relay.run(
       query,

@@ -1,7 +1,7 @@
 // An account by username: its id from what Instagram already sent, or from
 // its own posts, and the rest from its profile.
 import type { Account, Input } from "../../shared/bridge";
-import { isRecord } from "../../shared/json";
+import { hasUsername, isRecord, type JsonObject } from "../../shared/json";
 import { ACCOUNT_PROCEDURE } from "../../shared/procedures/account";
 import type {
   FieldCheck,
@@ -15,6 +15,9 @@ import { found } from "./lookup";
 type Name = typeof ACCOUNT_PROCEDURE;
 
 const notFound = "Could not find";
+
+const isNamed = (user: unknown, username: string): boolean =>
+  hasUsername(user) && user.username === username;
 
 export class AccountProcedure implements PageProcedure<Name> {
   readonly name = ACCOUNT_PROCEDURE;
@@ -44,7 +47,9 @@ export class AccountProcedure implements PageProcedure<Name> {
     const { items } = await this.queries.postsPage(username, undefined);
     const owner = items
       .map((item) => item.user)
-      .find((user) => user?.username === username);
+      .find((user): user is JsonObject & { pk?: unknown } =>
+        isNamed(user, username),
+      );
     return String(found(owner?.pk, `${notFound} ${username}`));
   }
 }

@@ -11,6 +11,29 @@ import type {
 import type { JsonObject } from "../shared/json";
 import type { InstagramMedia } from "../shared/media";
 
+/**
+ * A post, story or slide as Instagram sent it: an object with an id, and
+ * nothing else checked. The content script checks the whole shape before it
+ * uses any of it.
+ */
+export type PageMedia = JsonObject & { readonly pk: string | number };
+
+/** A value the page sends back, with every media in it left unchecked. */
+type Unchecked<T> = T extends InstagramMedia
+  ? PageMedia
+  : T extends readonly (infer E)[]
+    ? readonly Unchecked<E>[]
+    : T extends object
+      ? { readonly [K in keyof T]: Unchecked<T[K]> }
+      : T;
+
+/** What a procedure answers, before the content script checks it. */
+type PageOutput<N extends ProcedureName> = Unchecked<Output<N>>;
+
+export type PageReel = Unchecked<Reel>;
+
+export type PagePostsPage = Unchecked<PostsPage>;
+
 /** Somewhere to remember values by key. */
 export interface KeyedStore<V> {
   get(key: string): V | undefined;
@@ -34,13 +57,13 @@ export interface Rememberer {
 
 /** The posts, stories and slides remembered so far, by id. */
 export interface MediaByIdLookup {
-  mediaById(pk: string): InstagramMedia | undefined;
+  mediaById(pk: string): PageMedia | undefined;
 }
 
 /** The posts, stories and slides remembered so far, by picture. */
 export interface MediaByAssetLookup {
   /** The media, or the carousel slide, a picture on screen belongs to. */
-  mediaByAsset(asset: string): InstagramMedia | undefined;
+  mediaByAsset(asset: string): PageMedia | undefined;
 }
 
 export interface MediaLookup extends MediaByIdLookup, MediaByAssetLookup {}
@@ -59,7 +82,7 @@ export interface UserLookup extends UserIdLookup, PostCountLookup {}
 
 /** The story reels remembered so far. */
 export interface ReelLookup {
-  reel(reelId: string): Reel | undefined;
+  reel(reelId: string): PageReel | undefined;
 }
 
 /** Which of the page's requests are worth reading. */
@@ -82,11 +105,14 @@ export interface ProfileUser {
 }
 
 export interface MediaQuery {
-  mediaById(mediaId: string): Promise<InstagramMedia>;
+  mediaById(mediaId: string): Promise<PageMedia>;
 }
 
 export interface PostsQuery {
-  postsPage(username: string, cursor: string | undefined): Promise<PostsPage>;
+  postsPage(
+    username: string,
+    cursor: string | undefined,
+  ): Promise<PagePostsPage>;
 }
 
 export interface ProfileQuery {
@@ -105,7 +131,7 @@ export interface PageProcedure<N extends ProcedureName> {
   readonly name: N;
   /** Whether a request has the only shape this procedure accepts. */
   isInput(input: unknown): input is Input<N>;
-  handle(input: Input<N>): Promise<Output<N>>;
+  handle(input: Input<N>): Promise<PageOutput<N>>;
 }
 
 /** Every procedure the page answers, by name. */

@@ -1,6 +1,6 @@
 // An account's current stories by its username, from what Instagram already
 // sent only.
-import type { Input, Reel } from "../../shared/bridge";
+import type { Input } from "../../shared/bridge";
 import { isRecord } from "../../shared/json";
 import { USER_REEL_PROCEDURE } from "../../shared/procedures/userReel";
 import type {
@@ -8,6 +8,7 @@ import type {
   PageProcedure,
   ReelLookup,
   UserIdLookup,
+  PageReel,
 } from "../ports";
 import { loadedReel, settle } from "./lookup";
 
@@ -26,7 +27,7 @@ export class UserReelProcedure implements PageProcedure<Name> {
     return isRecord(input) && this.username.accepts(input.username);
   }
 
-  handle({ username }: Input<Name>): Promise<Reel> {
+  handle({ username }: Input<Name>): Promise<PageReel> {
     return settle(() => loadedReel(this.reels, this.users.userId(username)));
   }
 }
