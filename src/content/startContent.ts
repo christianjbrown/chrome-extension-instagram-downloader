@@ -22,11 +22,15 @@ import type { Feature, PageView } from "./features/feature";
 import { GridButtons } from "./features/gridButtons";
 import { PageScanner } from "./features/pageScanner";
 import { PostActions } from "./features/postActions";
-import { ProfileToolbar } from "./features/profileToolbar";
+import {
+  ProfileToolbar,
+  type ProfileCommands,
+} from "./features/profileToolbar";
 import { StoryToolbar } from "./features/storyToolbar";
 import { ApiGate } from "./pacing/apiGate";
 import { HourlyBudget } from "./pacing/hourlyBudget";
-import { defaultPacing } from "./pacing/pacing";
+import type { ContentConfig } from "./config";
+import { VisibleAssetFinder } from "./dom/visibleAsset";
 import { TimerSleeper } from "./pacing/sleeper";
 import { DirectoryWriter } from "./saving/directoryWriter";
 import { blobFetcher } from "./saving/fetchBlob";
@@ -49,22 +53,23 @@ export interface ContentEnvironment {
   readonly storage: KeyValueArea;
 }
 
-function bulkPacer(): Pacer {
+function bulkPacer({ pacing }: ContentConfig): Pacer {
   const sleeper = new TimerSleeper();
   const gate = new ApiGate(
     sleeper,
-    new HourlyBudget(defaultPacing.apiCallsPerHour, sleeper, Date.now),
-    defaultPacing,
+    new HourlyBudget(pacing.apiCallsPerHour, sleeper, Date.now),
+    pacing,
   );
-  return { gate, sleeper, pacing: defaultPacing };
+  return { gate, sleeper, pacing };
 }
 
 function bulk(
   env: ContentEnvironment,
+  config: ContentConfig,
   bridge: Bridge,
   notifier: ToastNotifier,
 ) {
-  const pacer = bulkPacer();
+  const pacer = bulkPacer(config);
   const namer = new SafeFileNamer();
   const fetchBlob = blobFetcher((url) => env.window.fetch(url), isMediaUrl);
   const writer = new DirectoryWriter(fetchBlob, namer);
@@ -80,7 +85,7 @@ function bulk(
     archiver,
     store: runs,
     now: Date.now,
-    tally: new ConsecutiveFailureTally(3),
+    tally: new ConsecutiveFailureTally(config.failuresInARow),
   });
   const folders = new FolderPicker(new MemoryFolderStore(), (options) =>
     env.window.showDirectoryPicker(options),
@@ -97,7 +102,11 @@ function bulk(
   return { archiver, following, folders, runner, runs, fetchBlob, namer };
 }
 
-function pageBridge(env: ContentEnvironment, scheduler: Scheduler): Bridge {
+function pageBridge(
+  env: ContentEnvironment,
+  config: ContentConfig,
+  scheduler: Scheduler,
+): Bridge {
   return new ValidatedBridge(
     new PageBridge(
       (message, origin, transfer) => {
@@ -107,32 +116,26 @@ function pageBridge(env: ContentEnvironment, scheduler: Scheduler): Bridge {
         pageOrigin,
         newChannel: () => new env.window.MessageChannel(),
         scheduler,
+        timeoutMs: config.bridgeTimeoutMs,
       },
     ),
   );
 }
 
-function features(
-  env: ContentEnvironment,
-  bridge: Bridge,
-  notifier: ToastNotifier,
-): Feature[] {
-  const { document } = env.window;
-  const view: PageView = {
-    document,
-    pathname: () => env.window.location.pathname,
-    viewportHeight: () => env.window.innerHeight,
-  };
-  const parts = bulk(env, bridge, notifier);
-  const downloader = new FileDownloader(
-    document,
-    parts.fetchBlob,
-    env.window.URL,
-    parts.namer,
-  );
-  const posts = new PostDownloader(bridge, downloader, notifier);
-  const viewers = new ViewerSource(bridge, Date.now);
-  const commands = {
+type BulkParts = ReturnType<typeof bulk>;
+
+interface SingleDownloads {
+  readonly bridge: Bridge;
+  readonly downloader: FileDownloader;
+  readonly notifier: ToastNotifier;
+}
+
+function profileCommands(
+  parts: BulkParts,
+  viewers: ViewerSource,
+  { bridge, downloader, notifier }: SingleDownloads,
+): ProfileCommands {
+  return {
     account: new DownloadAccountCommand(parts.runner, parts.archiver),
     following: new DownloadFollowingCommand(
       parts.runner,
@@ -142,21 +145,67 @@ function features(
     picture: new ProfilePictureCommand(bridge, downloader, notifier),
     folder: new ChangeFolderCommand(parts.folders, notifier),
   };
+}
+
+function features(
+  env: ContentEnvironment,
+  config: ContentConfig,
+  bridge: Bridge,
+  notifier: ToastNotifier,
+): Feature[] {
+  const { document } = env.window;
+  const view: PageView = {
+    document,
+    pathname: () => env.window.location.pathname,
+  };
+  const assets = new VisibleAssetFinder(
+    { viewportHeight: () => env.window.innerHeight },
+    config.assetMinimumSide,
+  );
+  const parts = bulk(env, config, bridge, notifier);
+  const downloader = new FileDownloader(
+    document,
+    parts.fetchBlob,
+    env.window.URL,
+    parts.namer,
+  );
+  const posts = new PostDownloader(bridge, downloader, notifier);
+  const viewers = new ViewerSource(bridge, Date.now, config.viewerRetryMs);
+  const commands = profileCommands(parts, viewers, {
+    bridge,
+    downloader,
+    notifier,
+  });
   return [
-    new PostActions(view, posts, notifier),
-    new GridButtons(view, posts),
+    new PostActions(view, posts, notifier, assets),
+    new GridButtons(view, posts, config.gridMinimumWidth),
     new ProfileToolbar(view, commands, viewers, parts.runs),
-    new StoryToolbar(view, new StoryDownloader(bridge, downloader, notifier)),
+    new StoryToolbar(
+      view,
+      new StoryDownloader(bridge, downloader, notifier),
+      assets,
+    ),
   ];
 }
 
-export function startContent(env: ContentEnvironment): void {
+export function startContent(
+  env: ContentEnvironment,
+  config: ContentConfig,
+): void {
   const { document } = env.window;
   new LegacyFolderDatabase(env.window.indexedDB).remove();
   const scheduler = new TimeoutScheduler();
-  const notifier = new ToastNotifier(document, scheduler);
-  const bridge = pageBridge(env, scheduler);
-  new PageScanner(features(env, bridge, notifier), scheduler).start(
+  const notifier = new ToastNotifier(
+    document,
+    scheduler,
+    config.toastLifetimeMs,
+  );
+  const bridge = pageBridge(env, config, scheduler);
+  new PageScanner(
+    features(env, config, bridge, notifier),
+    scheduler,
+    config.scanDelayMs,
+  ).start(
     document.body,
     (callback) => new env.window.MutationObserver(callback),
   );

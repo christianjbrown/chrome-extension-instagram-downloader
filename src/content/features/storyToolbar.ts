@@ -1,6 +1,6 @@
 import type { StoryDownloader, StoryRoute } from "../actions/storyDownloader";
 import { parseRoute } from "../dom/route";
-import { largestVisibleAsset } from "../dom/visibleAsset";
+import type { AssetFinder } from "../dom/visibleAsset";
 import { bySelector, CLASS } from "../ui/classNames";
 import {
   createTextButton,
@@ -26,6 +26,7 @@ export class StoryToolbar implements Feature {
   constructor(
     private readonly view: PageView,
     private readonly downloader: StoryDownloader,
+    private readonly assets: AssetFinder,
   ) {}
 
   scan(): void {
@@ -43,10 +44,7 @@ export class StoryToolbar implements Feature {
     const toolbar = this.view.document.createElement("div");
     toolbar.className = CLASS.storyToolbar;
     this.add(toolbar, "download", text.download, (route) =>
-      this.downloader.current(
-        route,
-        largestVisibleAsset(this.view.document, this.view.viewportHeight()),
-      ),
+      this.downloader.current(route, this.assets.largest(this.view.document)),
     );
     this.add(toolbar, "download-all", text.downloadAll, (route) =>
       this.downloader.all(route),

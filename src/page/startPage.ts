@@ -1,6 +1,8 @@
 // Wires up the page script. Runs at document_start in Instagram's own world.
 import { pageOrigin } from "../shared/origin";
 import { BridgeServer } from "./bridgeServer";
+import type { PageConfig } from "./config";
+import { ProcedureInputs } from "./procedureInputs";
 import { InstagramRefusalDetector } from "./refusalDetector";
 import { FollowingClient } from "./followingClient";
 import { InstagramQueries } from "./instagramQueries";
@@ -26,13 +28,10 @@ export function scanEmbeddedJson(
   }
 }
 
-// How many posts, accounts and stories are remembered before the oldest go.
-const cacheLimit = 2000;
-
 type PageWindow = Window & typeof globalThis & { require?: unknown };
 
-export function startPage(target: PageWindow): void {
-  const cache = new MediaCache(cacheLimit);
+export function startPage(target: PageWindow, config: PageConfig): void {
+  const cache = new MediaCache(config.cacheLimit);
   const ingest = (value: unknown): void => {
     cache.ingest(value);
   };
@@ -48,15 +47,21 @@ export function startPage(target: PageWindow): void {
   const require = windowRequire(target);
   const procedures = createProcedures({
     cache,
-    queries: new InstagramQueries(new RelayClient(require), require),
-    following: new FollowingClient(require, (url, init) =>
-      target.fetch(url, init),
+    queries: new InstagramQueries(
+      new RelayClient(require),
+      require,
+      config.postsPageSize,
+    ),
+    following: new FollowingClient(
+      require,
+      (url, init) => target.fetch(url, init),
+      { path: config.followingPath, pageSize: config.followingPageSize },
     ),
   });
   new BridgeServer(
     procedures,
-    pageOrigin,
-    target,
+    { origin: pageOrigin, source: target },
     new InstagramRefusalDetector(),
+    new ProcedureInputs(config.inputLimits),
   ).listen(target);
 }

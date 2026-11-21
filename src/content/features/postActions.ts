@@ -2,7 +2,7 @@ import { shortcodeFromPath, shortcodeToMediaId } from "../../shared/shortcode";
 import type { PostDownloader, PostTarget } from "../actions/postDownloader";
 import { carouselSlide, isCarousel } from "../dom/carousel";
 import { parseRoute } from "../dom/route";
-import { largestVisibleAsset } from "../dom/visibleAsset";
+import type { AssetFinder } from "../dom/visibleAsset";
 import { ARTICLE, MAIN } from "../dom/selectors";
 import { createButton } from "../ui/buttons";
 import { bySelector, CLASS, classes } from "../ui/classNames";
@@ -52,6 +52,7 @@ export class PostActions implements Feature {
     private readonly view: PageView,
     private readonly downloader: PostDownloader,
     private readonly notifier: Notifier,
+    private readonly assets: AssetFinder,
   ) {}
 
   scan(): void {
@@ -105,7 +106,7 @@ export class PostActions implements Feature {
         mediaId: shortcodeToMediaId(shortcode),
         slide: all ? undefined : carouselSlide(container),
       };
-    const asset = largestVisibleAsset(container, this.view.viewportHeight());
+    const asset = this.assets.largest(container);
     return asset === undefined ? undefined : { asset };
   }
 

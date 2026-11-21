@@ -1,6 +1,6 @@
 import type { StoryDownloader } from "../../../src/content/actions/storyDownloader";
 import { StoryToolbar } from "../../../src/content/features/storyToolbar";
-import { view } from "./view";
+import { assets, view } from "./view";
 
 function setup(path: string) {
   const downloader = {
@@ -13,6 +13,7 @@ function setup(path: string) {
   const feature = new StoryToolbar(
     page,
     downloader as unknown as StoryDownloader,
+    assets(),
   );
   feature.scan();
   return { downloader, feature, page };

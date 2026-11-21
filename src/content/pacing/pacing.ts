@@ -16,13 +16,6 @@ export interface WaitReporter {
   waiting(reason: string, ms: number): void;
 }
 
-export const defaultPacing: Pacing = {
-  apiDelayMs: [4000, 9000],
-  apiCallsPerHour: 600,
-  fileDelayMs: [400, 1200],
-  backoffMs: [15 * MINUTE_MS, 30 * MINUTE_MS, 60 * MINUTE_MS, 120 * MINUTE_MS],
-};
-
 // Past this, a wait is shown in whole minutes.
 const minutesOnlyFromMs = 10 * MINUTE_MS;
 

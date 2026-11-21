@@ -3,9 +3,8 @@ export interface Feature {
   scan(): void;
 }
 
-/** Where the page is and how much of it is on screen, read at click time. */
+/** Where the page is, read at click time. */
 export interface PageView {
   readonly document: Document;
   pathname(): string;
-  viewportHeight(): number;
 }

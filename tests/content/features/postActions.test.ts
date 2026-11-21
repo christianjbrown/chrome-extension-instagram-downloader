@@ -1,7 +1,7 @@
 import type { PostDownloader } from "../../../src/content/actions/postDownloader";
 import { PostActions } from "../../../src/content/features/postActions";
 import { notifier } from "../helpers";
-import { bookmark, click, view } from "./view";
+import { assets, bookmark, click, view } from "./view";
 
 function setup(path: string, html: string) {
   const downloader = { download: vi.fn(() => Promise.resolve()) };
@@ -10,6 +10,7 @@ function setup(path: string, html: string) {
     view(path, html),
     downloader as unknown as PostDownloader,
     notes,
+    assets(),
   );
   feature.scan();
   return { downloader, notes, feature };

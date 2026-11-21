@@ -1,5 +1,7 @@
 import { AccountArchiver } from "../../../src/content/bulk/accountArchiver";
-import { defaultPacing } from "../../../src/content/pacing/pacing";
+import { CONTENT_CONFIG } from "../../../src/content/config";
+
+const defaultPacing = CONTENT_CONFIG.pacing;
 import type { ItemWriter } from "../../../src/content/saving/directoryWriter";
 import { photo } from "../../fixtures";
 import {

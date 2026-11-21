@@ -7,6 +7,7 @@ function setup(html: string, width = 300, path = "/alice/") {
   const feature = new GridButtons(
     view(path, html),
     downloader as unknown as PostDownloader,
+    100,
   );
   for (const link of document.querySelectorAll("a"))
     link.getBoundingClientRect = () => ({ width }) as DOMRect;

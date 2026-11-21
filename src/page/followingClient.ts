@@ -14,9 +14,15 @@ const text = {
   http: "HTTP",
 } as const;
 
-const pageSize = 25;
-const followingPath = (userId: string): string =>
-  `/api/v1/friendships/${encodeURIComponent(userId)}/following/`;
+/** Marks where the user's id goes in the endpoint's path. */
+export const USER_ID_PLACEHOLDER = "{userId}";
+
+export interface FollowingEndpoint {
+  /** The path, with USER_ID_PLACEHOLDER where the id goes. */
+  readonly path: string;
+  readonly pageSize: number;
+}
+
 const numericId = /^\d+$/;
 
 function usernames(users: unknown): string[] {
@@ -40,7 +46,15 @@ export class FollowingClient {
   constructor(
     private readonly require: ModuleRequire,
     private readonly fetch: Fetch,
+    private readonly endpoint: FollowingEndpoint,
   ) {}
+
+  private path(userId: string): string {
+    return this.endpoint.path.replace(
+      USER_ID_PLACEHOLDER,
+      encodeURIComponent(userId),
+    );
+  }
 
   private headers(): Record<string, string> {
     const config = this.require(MODULES.config) as { getIGAppID(): string };
@@ -55,10 +69,12 @@ export class FollowingClient {
 
   async page(userId: string, next: string | undefined): Promise<FollowingPage> {
     if (!numericId.test(userId)) throw new Error(text.invalidUser);
-    const query = new URLSearchParams({ count: String(pageSize) });
+    const query = new URLSearchParams({
+      count: String(this.endpoint.pageSize),
+    });
     if (next !== undefined) query.set("max_id", next);
     const response = await this.fetch(
-      `${followingPath(userId)}?${query.toString()}`,
+      `${this.path(userId)}?${query.toString()}`,
       { headers: this.headers() },
     );
     const body: unknown = await response.json().catch(() => undefined);

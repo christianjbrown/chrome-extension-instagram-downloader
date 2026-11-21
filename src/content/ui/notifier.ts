@@ -10,7 +10,7 @@ export class ToastNotifier implements Notifier {
   constructor(
     private readonly document: Document,
     private readonly scheduler: Scheduler,
-    private readonly lifetimeMs = 6000,
+    private readonly lifetimeMs: number,
   ) {}
 
   error(message: string): void {

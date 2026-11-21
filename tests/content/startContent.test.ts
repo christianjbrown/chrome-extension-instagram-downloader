@@ -1,4 +1,5 @@
 import { IDBFactory } from "fake-indexeddb";
+import { CONTENT_CONFIG } from "../../src/content/config";
 import {
   startContent,
   type ContentEnvironment,
@@ -47,7 +48,10 @@ function environment() {
     get: () => Promise.resolve({}),
     set: () => Promise.resolve(),
   };
-  startContent({ window: target, storage } as unknown as ContentEnvironment);
+  startContent(
+    { window: target, storage } as unknown as ContentEnvironment,
+    CONTENT_CONFIG,
+  );
   return { postMessage, fetch, showDirectoryPicker, click };
 }
 

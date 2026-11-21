@@ -4,7 +4,9 @@ import { ConsecutiveFailureTally } from "../../../src/content/bulk/failureTally"
 import { FollowingDownloader } from "../../../src/content/bulk/followingDownloader";
 import { FollowingLister } from "../../../src/content/bulk/followingLister";
 import { RunStore } from "../../../src/content/bulk/runStore";
-import { defaultPacing } from "../../../src/content/pacing/pacing";
+import { CONTENT_CONFIG } from "../../../src/content/config";
+
+const defaultPacing = CONTENT_CONFIG.pacing;
 import {
   MemoryFolder,
   asFolder,

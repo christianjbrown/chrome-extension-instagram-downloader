@@ -35,11 +35,15 @@ function asArray(value: unknown): unknown[] {
   return value as unknown[];
 }
 
-const postsVariables = (username: string, cursor: string | undefined) => ({
+const postsVariables = (
+  username: string,
+  cursor: string | undefined,
+  pageSize: number,
+) => ({
   after: cursor ?? null,
-  first: 12,
+  first: pageSize,
   data: {
-    count: 12,
+    count: pageSize,
     include_reel_media_seen_timestamp: true,
     include_relationship_info: true,
     latest_besties_reel_media: true,
@@ -59,6 +63,7 @@ export class InstagramQueries {
   constructor(
     private readonly relay: RelayClient,
     private readonly require: ModuleRequire,
+    private readonly postsPageSize: number,
   ) {}
 
   viewerId(): string {
@@ -82,7 +87,10 @@ export class InstagramQueries {
     cursor: string | undefined,
   ): Promise<PostsPage> {
     const query = this.relay.query(MODULES.profilePostsQuery);
-    const data = await this.relay.run(query, postsVariables(username, cursor));
+    const data = await this.relay.run(
+      query,
+      postsVariables(username, cursor, this.postsPageSize),
+    );
     const connection = field(data, RESPONSE_KEYS.timeline);
     const items = asArray(field(connection, RESPONSE_KEYS.edges)).map((edge) =>
       field(edge, RESPONSE_KEYS.node),

@@ -29,7 +29,7 @@ export interface BridgeEnvironment {
   readonly pageOrigin: string;
   readonly newChannel: ChannelFactory;
   readonly scheduler: Scheduler;
-  readonly timeoutMs?: number;
+  readonly timeoutMs: number;
 }
 
 export class PageBridge implements Bridge {
@@ -41,13 +41,10 @@ export class PageBridge implements Bridge {
   call<N extends ProcedureName>(name: N, input: Input<N>): Promise<Output<N>> {
     return new Promise((resolve, reject) => {
       const channel = this.env.newChannel();
-      const cancel = this.env.scheduler.after(
-        this.env.timeoutMs ?? 60_000,
-        () => {
-          channel.port1.close();
-          reject(new Error(text.noAnswer));
-        },
-      );
+      const cancel = this.env.scheduler.after(this.env.timeoutMs, () => {
+        channel.port1.close();
+        reject(new Error(text.noAnswer));
+      });
       channel.port1.onmessage = (event: MessageEvent<unknown>) => {
         cancel();
         channel.port1.close();

@@ -7,7 +7,6 @@ import { CLASS, classes } from "../ui/classNames";
 import type { Feature, PageView } from "./feature";
 
 const thumbnail = 'a[href*="/p/"]:has(img), a[href*="/reel/"]:has(img)';
-const minimumWidth = 100;
 const label = "Download post";
 
 // A download button in the corner of each thumbnail on profile, explore,
@@ -16,6 +15,7 @@ export class GridButtons implements Feature {
   constructor(
     private readonly view: PageView,
     private readonly downloader: PostDownloader,
+    private readonly minimumWidth: number,
   ) {}
 
   scan(): void {
@@ -24,7 +24,7 @@ export class GridButtons implements Feature {
     )) {
       if (link.classList.contains(CLASS.gridLink) || link.closest(ARTICLE))
         continue;
-      if (link.getBoundingClientRect().width < minimumWidth) continue;
+      if (link.getBoundingClientRect().width < this.minimumWidth) continue;
       const shortcode = shortcodeFromPath(link.pathname);
       if (shortcode === undefined) continue;
       link.classList.add(CLASS.gridLink);

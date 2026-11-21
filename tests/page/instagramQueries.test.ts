@@ -14,6 +14,7 @@ function queries(data: unknown, modules: Record<string, unknown> = {}) {
     queries: new InstagramQueries(
       relay as unknown as RelayClient,
       (name) => modules[name],
+      12,
     ),
   };
 }
