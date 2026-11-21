@@ -3,8 +3,12 @@ import type { PostDownloads } from "../actions/ports";
 import type { PostLocator } from "../dom/ports";
 import type { IconButtons, Notifier } from "../ui/ports";
 import { ARTICLE, MAIN } from "../dom/selectors";
-import { bySelector, CLASS } from "../ui/classNames";
+import { bySelector } from "../ui/classNames";
 import type { Feature, PostButton } from "./feature";
+
+// Marks the group of buttons beside a bookmark, for content.css and for
+// finding it again.
+export const POST_ACTIONS_CLASS = "igdl-post-actions";
 
 // Instagram's bookmark icon, saved or not, marks every post's action bar.
 const bookmarkIcon =
@@ -42,7 +46,7 @@ function outermostAlone(element: Element): Element {
 
 // A slot already holding our buttons beside it is left alone.
 const hasActions = (slot: Element): boolean =>
-  Boolean(slot.parentElement?.querySelector(bySelector(CLASS.postActions)));
+  Boolean(slot.parentElement?.querySelector(bySelector(POST_ACTIONS_CLASS)));
 
 const isGroup = (element: Element | null): element is Element =>
   element !== null && element.childElementCount > loneChild;
@@ -94,7 +98,7 @@ export class PostActions implements Feature {
 
   private group(slot: Element): HTMLElement {
     const group = this.deps.document.createElement(TAGS.span);
-    group.className = CLASS.postActions;
+    group.className = POST_ACTIONS_CLASS;
     const container = this.container(slot);
     const shown = this.deps.postButtons.filter((button) =>
       button.shows(container),

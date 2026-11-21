@@ -1,10 +1,14 @@
 import { TAGS } from "../../shared/dom";
 import type { StoryRoute } from "../dom/route";
 import type { RouteReader } from "../dom/ports";
-import { bySelector, CLASS } from "../ui/classNames";
+import { bySelector } from "../ui/classNames";
 import { textButtonClass } from "../ui/buttons";
 import type { TextButtons } from "../ui/ports";
 import type { Feature, StoryButton } from "./feature";
+
+// Marks the buttons over the story viewer, for content.css and for finding
+// them again.
+export const STORY_TOOLBAR_CLASS = "igdl-story-toolbar";
 
 export interface StoryToolbarDependencies {
   readonly document: Document;
@@ -20,7 +24,7 @@ export class StoryToolbar implements Feature {
 
   scan(): void {
     const existing = this.deps.document.querySelector(
-      bySelector(CLASS.storyToolbar),
+      bySelector(STORY_TOOLBAR_CLASS),
     );
     if (this.deps.stories.read() === undefined) this.remove(existing);
     else this.show(existing);
@@ -36,7 +40,7 @@ export class StoryToolbar implements Feature {
 
   private toolbar(): HTMLElement {
     const toolbar = this.deps.document.createElement(TAGS.div);
-    toolbar.className = CLASS.storyToolbar;
+    toolbar.className = STORY_TOOLBAR_CLASS;
     for (const button of this.deps.storyButtons)
       toolbar.append(this.element(button));
     return toolbar;

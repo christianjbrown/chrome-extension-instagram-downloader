@@ -1,6 +1,11 @@
 import { TAGS } from "../../shared/dom";
-import { bySelector, CLASS } from "./classNames";
+import { bySelector } from "./classNames";
 import type { PanelPart, PanelView, TextButtons } from "./ports";
+
+// The panel itself, and its one button, which is found again to swap Stop
+// for Close.
+export const PANEL_CLASS = "igdl-panel";
+export const PANEL_BUTTON_CLASS = "igdl-panel-button";
 
 // Builds the fixed panel on the page from its parts, top to bottom, with its
 // one button below them.
@@ -27,12 +32,12 @@ export class DomPanelView implements PanelView {
 
   private build(stopLabel: string, onStop: () => void): HTMLElement {
     const panel = this.document.createElement(TAGS.div);
-    panel.className = CLASS.panel;
+    panel.className = PANEL_CLASS;
     for (const part of this.parts) panel.append(part.create());
     panel.append(
       this.buttons.textButton({
         label: stopLabel,
-        className: CLASS.panelButton,
+        className: PANEL_BUTTON_CLASS,
         onClick: onStop,
       }),
     );
@@ -41,10 +46,10 @@ export class DomPanelView implements PanelView {
 
   // The Stop button becomes Close once the run is over.
   private closeButton(panel: HTMLElement, closeLabel: string): void {
-    panel.querySelector(bySelector(CLASS.panelButton))?.replaceWith(
+    panel.querySelector(bySelector(PANEL_BUTTON_CLASS))?.replaceWith(
       this.buttons.textButton({
         label: closeLabel,
-        className: CLASS.panelButton,
+        className: PANEL_BUTTON_CLASS,
         onClick: () => {
           panel.remove();
         },

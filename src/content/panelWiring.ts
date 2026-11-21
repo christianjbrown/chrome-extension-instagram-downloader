@@ -1,5 +1,5 @@
-// Builds the progress panel from its lines and bars, listed top to bottom.
-import { panelPartClass } from "./ui/classNames";
+// Builds the progress panel from its lines and bars, listed top to bottom,
+// each with the class content.css styles it by.
 import { DomPanelView } from "./ui/domPanelView";
 import { DomPanelBar } from "./ui/panelBar";
 import { DomPanelLine } from "./ui/panelLine";
@@ -12,18 +12,17 @@ export function progressPanel(
   waits: WaitLine,
   wording: PanelWording,
 ): RunPanel {
-  const line = (part: string) =>
-    new DomPanelLine(document, panelPartClass(part));
+  const line = (className: string) => new DomPanelLine(document, className);
   // Bars stay hidden until something reports a fraction.
-  const bar = (part: string) => new DomPanelBar(document, panelPartClass(part));
+  const bar = (className: string) => new DomPanelBar(document, className);
   const lines = {
-    title: line("title"),
-    overall: line("overall"),
-    overallBar: bar("overall-bar"),
-    heading: line("heading"),
-    detail: line("detail"),
-    accountBar: bar("account-bar"),
-    note: line("note"),
+    title: line("igdl-panel-title"),
+    overall: line("igdl-panel-overall"),
+    overallBar: bar("igdl-panel-overall-bar"),
+    heading: line("igdl-panel-heading"),
+    detail: line("igdl-panel-detail"),
+    accountBar: bar("igdl-panel-account-bar"),
+    note: line("igdl-panel-note"),
   } satisfies PanelLines;
   const parts = [
     lines.title,

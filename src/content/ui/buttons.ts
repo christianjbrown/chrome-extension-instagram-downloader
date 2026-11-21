@@ -1,6 +1,12 @@
 import { ATTRIBUTES, EVENTS, TAGS } from "../../shared/dom";
-import { CLASS, classes } from "./classNames";
+import { classes } from "./classNames";
 import type { ButtonSpec, IconButtons, TextButtons } from "./ports";
+
+// The look every labelled button shares.
+export const TEXT_BUTTON_CLASS = "igdl-text-button";
+
+// Begins the class that names the icon drawn on a labelled button.
+export const ICON_CLASS_PREFIX = "igdl-icon-";
 
 // Buttons sit inside Instagram's own links, so a click must not reach them.
 export class DomButtons implements IconButtons, TextButtons {
@@ -29,4 +35,4 @@ export class DomButtons implements IconButtons, TextButtons {
 
 // A labelled button with its icon before the text; the icon is drawn in CSS.
 export const textButtonClass = (icon: string): string =>
-  classes(CLASS.textButton, `${CLASS.iconPrefix}${icon}`);
+  classes(TEXT_BUTTON_CLASS, `${ICON_CLASS_PREFIX}${icon}`);

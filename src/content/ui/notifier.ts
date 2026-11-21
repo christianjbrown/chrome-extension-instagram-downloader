@@ -1,7 +1,9 @@
 import { ATTRIBUTES, TAGS } from "../../shared/dom";
 import type { Scheduler } from "../ports";
 import type { Notifier } from "./ports";
-import { CLASS } from "./classNames";
+
+// The class content.css styles each message with.
+export const TOAST_CLASS = "igdl-toast";
 
 const alertRole = "alert";
 
@@ -15,7 +17,7 @@ export class ToastNotifier implements Notifier {
 
   error(message: string): void {
     const toast = this.document.createElement(TAGS.div);
-    toast.className = CLASS.toast;
+    toast.className = TOAST_CLASS;
     toast.setAttribute(ATTRIBUTES.role, alertRole);
     toast.textContent = message;
     this.document.body.append(toast);

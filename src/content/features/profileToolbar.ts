@@ -3,9 +3,13 @@ import type { RouteReader } from "../dom/ports";
 import type { ProfileRoute } from "../dom/routes/profile";
 import { PROFILE_HEADER } from "../dom/selectors";
 import { textButtonClass } from "../ui/buttons";
-import { bySelector, CLASS } from "../ui/classNames";
+import { bySelector } from "../ui/classNames";
 import type { TextButtons } from "../ui/ports";
 import type { ButtonLook, Feature, ProfileButton } from "./feature";
+
+// Marks the row of buttons under a profile header, for content.css and for
+// finding it again.
+export const PROFILE_TOOLBAR_CLASS = "igdl-profile-toolbar";
 
 // The toolbar names the profile it was made for.
 const usernameAttribute = "data-username";
@@ -39,7 +43,7 @@ export class ProfileToolbar implements Feature {
 
   // A toolbar left from another profile is swapped for this one's.
   private refresh(header: Element, username: string): void {
-    const existing = header.querySelector(bySelector(CLASS.profileToolbar));
+    const existing = header.querySelector(bySelector(PROFILE_TOOLBAR_CLASS));
     if (!isFor(existing, username)) this.replace(header, existing, username);
   }
 
@@ -54,7 +58,7 @@ export class ProfileToolbar implements Feature {
 
   private toolbar(username: string): HTMLElement {
     const toolbar = this.deps.document.createElement(TAGS.div);
-    toolbar.className = CLASS.profileToolbar;
+    toolbar.className = PROFILE_TOOLBAR_CLASS;
     toolbar.setAttribute(usernameAttribute, username);
     const placed: (HTMLElement | undefined)[] = [];
     this.deps.profileButtons.forEach((button, index) => {

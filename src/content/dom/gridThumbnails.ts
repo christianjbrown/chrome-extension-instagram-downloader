@@ -1,8 +1,10 @@
 import type { ClassOf } from "../../shared/members";
 import { shortcodeFromPath } from "../../shared/shortcode";
-import { CLASS } from "../ui/classNames";
 import type { Thumbnail, ThumbnailSource } from "./ports";
 import { ARTICLE } from "./selectors";
+
+// Marks a thumbnail that has its button, so it is not found again.
+export const GRID_LINK_CLASS = "igdl-grid-link";
 
 const thumbnail = 'a[href*="/p/"]:has(img), a[href*="/reel/"]:has(img)';
 
@@ -28,7 +30,7 @@ export class GridThumbnails implements ThumbnailSource {
   }
 
   mark({ link }: Thumbnail): void {
-    link.classList.add(CLASS.gridLink);
+    link.classList.add(GRID_LINK_CLASS);
   }
 
   // A link that names no post is left out.
@@ -38,7 +40,7 @@ export class GridThumbnails implements ThumbnailSource {
   }
 
   private wanted(link: HTMLAnchorElement): boolean {
-    return !link.classList.contains(CLASS.gridLink) && this.fitsGrid(link);
+    return !link.classList.contains(GRID_LINK_CLASS) && this.fitsGrid(link);
   }
 
   private fitsGrid(link: HTMLAnchorElement): boolean {
