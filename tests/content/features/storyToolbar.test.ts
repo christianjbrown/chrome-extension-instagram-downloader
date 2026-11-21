@@ -1,4 +1,8 @@
 import { StoryToolbar } from "../../../src/content/features/storyToolbar";
+import {
+  AllStoriesButton,
+  CurrentStoryButton,
+} from "../../../src/content/features/storyButtons";
 import { assets, buttons, routes, view } from "./view";
 
 function setup(path: string) {
@@ -11,10 +15,12 @@ function setup(path: string) {
     ({ top: 0, bottom: 500, width: 400, height: 500 }) as DOMRect;
   const feature = new StoryToolbar({
     document,
-    downloader,
-    assets: assets(),
     stories: routes(page).stories,
     buttons: buttons(),
+    storyButtons: [
+      new CurrentStoryButton(downloader, assets(), document),
+      new AllStoriesButton(downloader),
+    ],
   });
   feature.scan();
   return { downloader, feature, page };

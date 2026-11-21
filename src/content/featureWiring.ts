@@ -17,6 +17,7 @@ import { GridButtons } from "./features/gridButtons";
 import { PostActions } from "./features/postActions";
 import { ProfileToolbar } from "./features/profileToolbar";
 import { StoryToolbar } from "./features/storyToolbar";
+import { AllStoriesButton, CurrentStoryButton } from "./features/storyButtons";
 import { PagePostLocator } from "./dom/postLocator";
 import { VisibleAssetFinder } from "./dom/visibleAsset";
 import { FileDownloader } from "./saving/fileDownloader";
@@ -155,6 +156,14 @@ function accountFeatures(
 ): Feature[] {
   const { env, bridge, notifier, buttons } = wiring;
   const { document } = env.window;
+  const stories = new StoryDownloader({
+    finder,
+    downloader,
+    notifier,
+    files: wiring.files,
+    errors: wiring.errors,
+    kinds: [new UserStories(bridge), new HighlightStories(bridge)],
+  });
   return [
     new ProfileToolbar({
       document,
@@ -164,17 +173,12 @@ function accountFeatures(
     }),
     new StoryToolbar({
       document,
-      downloader: new StoryDownloader({
-        finder,
-        downloader,
-        notifier,
-        files: wiring.files,
-        errors: wiring.errors,
-        kinds: [new UserStories(bridge), new HighlightStories(bridge)],
-      }),
-      assets,
       stories: routes.stories,
       buttons,
+      storyButtons: [
+        new CurrentStoryButton(stories, assets, document),
+        new AllStoriesButton(stories),
+      ],
     }),
   ];
 }
