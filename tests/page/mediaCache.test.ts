@@ -1,9 +1,10 @@
+import { BoundedMap } from "../../src/page/boundedMap";
 import { MediaCache } from "../../src/page/mediaCache";
 import { photo } from "../fixtures";
 
 describe("MediaCache", () => {
   it("finds media, users and story reels anywhere in a response", () => {
-    const cache = new MediaCache(100);
+    const cache = new MediaCache(<V>() => new BoundedMap<V>(100));
     const story = photo("50", "story.jpg", "carol");
     cache.ingest({
       data: {
@@ -35,14 +36,14 @@ describe("MediaCache", () => {
   });
 
   it("ignores objects that only look like media", () => {
-    const cache = new MediaCache(100);
+    const cache = new MediaCache(<V>() => new BoundedMap<V>(100));
     cache.ingest({ pk: { nested: true }, image_versions2: {} });
     cache.ingest({ pk: "1" });
     expect(cache.mediaById("1")).toBeUndefined();
   });
 
   it("recognises numeric ids and every kind of media", () => {
-    const cache = new MediaCache(100);
+    const cache = new MediaCache(<V>() => new BoundedMap<V>(100));
     cache.ingest([
       { pk: 3, video_versions: [] },
       { pk: "4", carousel_media: [] },
@@ -52,7 +53,7 @@ describe("MediaCache", () => {
   });
 
   it("matches a picture on screen to its media or carousel slide", () => {
-    const cache = new MediaCache(100);
+    const cache = new MediaCache(<V>() => new BoundedMap<V>(100));
     const slide = photo("21", "slide.jpg");
     cache.ingest({ ...photo("20", "cover.jpg"), carousel_media: [slide] });
     expect(cache.mediaByAsset("cover.jpg")?.pk).toBe("20");
@@ -61,13 +62,13 @@ describe("MediaCache", () => {
   });
 
   it("answers undefined for things it has not seen", () => {
-    const cache = new MediaCache(100);
+    const cache = new MediaCache(<V>() => new BoundedMap<V>(100));
     expect(cache.userId("nobody")).toBeUndefined();
     expect(cache.reel("1")).toBeUndefined();
   });
 
   it("forgets the oldest entries past its limit", () => {
-    const cache = new MediaCache(2);
+    const cache = new MediaCache(<V>() => new BoundedMap<V>(2));
     for (const id of ["1", "2", "1", "3"]) cache.ingest(photo(id));
     expect(cache.mediaById("2")).toBeUndefined();
     expect(cache.mediaById("1")).toBeDefined();

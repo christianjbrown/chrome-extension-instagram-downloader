@@ -1,6 +1,16 @@
+/** Somewhere to remember values by key. */
+export interface KeyedStore<V> {
+  get(key: string): V | undefined;
+  set(key: string, value: V): void;
+  values(): MapIterator<V>;
+}
+
+/** Makes an empty store for one kind of value. */
+export type StoreFactory = <V>() => KeyedStore<V>;
+
 // A map that keeps only its newest entries, forgetting the oldest past the
 // limit, so a long session cannot grow it without end.
-export class BoundedMap<V> {
+export class BoundedMap<V> implements KeyedStore<V> {
   private readonly entries = new Map<string, V>();
 
   constructor(private readonly limit: number) {}

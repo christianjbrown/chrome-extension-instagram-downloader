@@ -2,7 +2,7 @@
 // downloads need no extra request at all.
 import type { Reel } from "../shared/bridge";
 import { assetNames, type InstagramMedia } from "../shared/media";
-import { BoundedMap } from "./boundedMap";
+import type { KeyedStore, StoreFactory } from "./boundedMap";
 import {
   eachObject,
   isMedia,
@@ -28,10 +28,10 @@ export interface MediaLookups {
 }
 
 export class MediaCache implements MediaSink, MediaLookups {
-  private readonly media: BoundedMap<InstagramMedia>;
-  private readonly users: BoundedMap<string>;
-  private readonly postCounts: BoundedMap<number>;
-  private readonly reels: BoundedMap<Reel>;
+  private readonly media: KeyedStore<InstagramMedia>;
+  private readonly users: KeyedStore<string>;
+  private readonly postCounts: KeyedStore<number>;
+  private readonly reels: KeyedStore<Reel>;
   // Each kind of object Instagram sends, and where it is remembered.
   private readonly rememberers: readonly ((value: Json) => void)[] = [
     (value) => {
@@ -45,11 +45,11 @@ export class MediaCache implements MediaSink, MediaLookups {
     },
   ];
 
-  constructor(limit: number) {
-    this.media = new BoundedMap(limit);
-    this.users = new BoundedMap(limit);
-    this.postCounts = new BoundedMap(limit);
-    this.reels = new BoundedMap(limit);
+  constructor(stores: StoreFactory) {
+    this.media = stores();
+    this.users = stores();
+    this.postCounts = stores();
+    this.reels = stores();
   }
 
   ingest(root: unknown): void {

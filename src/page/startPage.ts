@@ -1,5 +1,6 @@
 // Wires up the page script. Runs at document_start in Instagram's own world.
 import { pageOrigin } from "../shared/origin";
+import { BoundedMap } from "./boundedMap";
 import { BridgeServer } from "./bridgeServer";
 import { scanEmbeddedJson } from "./embeddedJson";
 import type { PageConfig } from "./config";
@@ -16,7 +17,7 @@ import { InstagramApiPolicy, tapFetch, tapXhr } from "./responseTap";
 type PageWindow = Window & typeof globalThis & { require?: unknown };
 
 export function startPage(target: PageWindow, config: PageConfig): void {
-  const cache = new MediaCache(config.cacheLimit);
+  const cache = new MediaCache(<V>() => new BoundedMap<V>(config.cacheLimit));
   const ingest = (value: unknown): void => {
     cache.ingest(value);
   };
