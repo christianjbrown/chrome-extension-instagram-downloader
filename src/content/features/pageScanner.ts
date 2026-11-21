@@ -33,12 +33,14 @@ export class PageScanner {
   }
 
   private scanAll(): void {
-    for (const feature of this.features) {
-      try {
-        feature.scan();
-      } catch {
-        // One feature tripping over an unexpected page must not stop the rest.
-      }
+    for (const feature of this.features) this.scanOne(feature);
+  }
+
+  private scanOne(feature: Feature): void {
+    try {
+      feature.scan();
+    } catch {
+      // One feature tripping over an unexpected page must not stop the rest.
     }
   }
 }

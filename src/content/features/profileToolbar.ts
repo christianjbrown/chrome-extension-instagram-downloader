@@ -7,6 +7,9 @@ import { bySelector, CLASS } from "../ui/classNames";
 import type { TextButtons } from "../ui/ports";
 import type { ButtonLook, Feature, ProfileButton } from "./feature";
 
+const isFor = (toolbar: HTMLElement | null, username: string): boolean =>
+  toolbar?.dataset.username === username;
+
 export interface ProfileToolbarDependencies {
   readonly document: Document;
   readonly profiles: RouteReader<ProfileRoute>;
@@ -23,14 +26,29 @@ export class ProfileToolbar implements Feature {
 
   scan(): void {
     const route = this.deps.profiles.read();
+    if (route !== undefined) this.showOn(route.username);
+  }
+
+  private showOn(username: string): void {
     const header = this.deps.document.querySelector(PROFILE_HEADER);
-    if (route === undefined || header === null) return;
+    if (header !== null) this.refresh(header, username);
+  }
+
+  // A toolbar left from another profile is swapped for this one's.
+  private refresh(header: Element, username: string): void {
     const existing = header.querySelector<HTMLElement>(
       bySelector(CLASS.profileToolbar),
     );
-    if (existing?.dataset.username === route.username) return;
+    if (!isFor(existing, username)) this.replace(header, existing, username);
+  }
+
+  private replace(
+    header: Element,
+    existing: HTMLElement | null,
+    username: string,
+  ): void {
     existing?.remove();
-    header.append(this.toolbar(route.username));
+    header.append(this.toolbar(username));
   }
 
   private toolbar(username: string): HTMLElement {
