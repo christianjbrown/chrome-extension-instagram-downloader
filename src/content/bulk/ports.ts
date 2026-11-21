@@ -158,6 +158,20 @@ export interface FollowingRequest {
   readonly reporter: RunReporter;
 }
 
+/** Shows where a following run has got to, and words how it ended. */
+export interface FollowingProgress {
+  /** The account starting now, counting those already done before it. */
+  account(
+    reporter: RunReporter,
+    done: number,
+    total: number,
+    username: string,
+  ): void;
+  finished(reporter: RunReporter, total: number): void;
+  /** The sentence that ends the run, followed by the accounts it could not read. */
+  summary(total: number, unreadable: string): string;
+}
+
 export interface FollowingRunner {
   run(request: FollowingRequest): Promise<string>;
 }

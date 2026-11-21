@@ -1,3 +1,4 @@
+import { PanelFollowingProgress } from "../../../src/content/bulk/followingProgress";
 import { EnglishRunWording } from "../../../src/content/bulk/progressText";
 import type { FollowingPage } from "../../../src/shared/bridge";
 import { ConsecutiveFailureTally } from "../../../src/content/bulk/failureTally";
@@ -82,7 +83,7 @@ function setup(
       errorText(),
       new EnglishRunWording(),
     ),
-    wording: new EnglishRunWording(),
+    progress: new PanelFollowingProgress(new EnglishRunWording()),
   });
   const report = reporter();
   const run = () =>

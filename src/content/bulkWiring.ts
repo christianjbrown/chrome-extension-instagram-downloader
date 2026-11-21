@@ -7,6 +7,7 @@ import { PinnedAwareCatchUp } from "./bulk/catchUp";
 import { ConsecutiveFailureTally } from "./bulk/failureTally";
 import { FollowingDownloader } from "./bulk/followingDownloader";
 import { FollowingLister } from "./bulk/followingLister";
+import { PanelFollowingProgress } from "./bulk/followingProgress";
 import { PacedItemSaver } from "./bulk/itemSaver";
 import { GatedPostTotals } from "./bulk/postTotals";
 import { FollowedAccountsResume } from "./bulk/resumePolicy";
@@ -159,7 +160,7 @@ function followingRunner(
       errors,
       RUN_WORDING,
     ),
-    wording: RUN_WORDING,
+    progress: new PanelFollowingProgress(RUN_WORDING),
   });
 }
 
