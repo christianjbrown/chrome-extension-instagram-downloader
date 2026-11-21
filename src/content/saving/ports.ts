@@ -10,8 +10,6 @@ export const OUTCOME = {
 
 export type WriteOutcome = (typeof OUTCOME)[keyof typeof OUTCOME];
 
-export const WRITE_OUTCOMES: readonly WriteOutcome[] = Object.values(OUTCOME);
-
 export interface ItemWriter {
   exists(
     folder: FileSystemDirectoryHandle,
