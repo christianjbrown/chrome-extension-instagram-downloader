@@ -1,12 +1,18 @@
 import type { StoryDownloader, StoryRoute } from "../actions/storyDownloader";
 import { parseRoute } from "../dom/route";
 import { largestVisibleAsset } from "../dom/visibleAsset";
+import { bySelector, CLASS } from "../ui/classNames";
 import {
   createTextButton,
   textButtonClass,
   type ButtonIcon,
 } from "../ui/buttons";
 import type { Feature, PageView } from "./feature";
+
+const text = {
+  download: "Download this story",
+  downloadAll: "Download all",
+} as const;
 
 function storyRoute(pathname: string): StoryRoute | undefined {
   const route = parseRoute(pathname);
@@ -23,7 +29,9 @@ export class StoryToolbar implements Feature {
   ) {}
 
   scan(): void {
-    const existing = this.view.document.querySelector(".igdl-story-toolbar");
+    const existing = this.view.document.querySelector(
+      bySelector(CLASS.storyToolbar),
+    );
     if (storyRoute(this.view.pathname()) === undefined) {
       existing?.remove();
       return;
@@ -33,14 +41,14 @@ export class StoryToolbar implements Feature {
 
   private toolbar(): HTMLElement {
     const toolbar = this.view.document.createElement("div");
-    toolbar.className = "igdl-story-toolbar";
-    this.add(toolbar, "download", "Download this story", (route) =>
+    toolbar.className = CLASS.storyToolbar;
+    this.add(toolbar, "download", text.download, (route) =>
       this.downloader.current(
         route,
         largestVisibleAsset(this.view.document, this.view.viewportHeight()),
       ),
     );
-    this.add(toolbar, "download-all", "Download all", (route) =>
+    this.add(toolbar, "download-all", text.downloadAll, (route) =>
       this.downloader.all(route),
     );
     return toolbar;

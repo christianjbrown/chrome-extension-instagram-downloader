@@ -15,6 +15,11 @@ export type Handlers = {
 
 type AnyHandler = (input: unknown) => Promise<unknown>;
 
+const text = {
+  unknown: "Unknown request",
+  invalid: "Invalid request",
+} as const;
+
 const message = (error: unknown): string =>
   error instanceof Error ? error.message : String(error);
 
@@ -45,9 +50,8 @@ export class BridgeServer {
   private async respond(name: string, input: unknown): Promise<BridgeResponse> {
     // Own properties only: "constructor" and "toString" are not procedures.
     if (!isProcedureName(name) || !Object.hasOwn(this.handlers, name))
-      return { ok: false, error: "Unknown request" };
-    if (!isValidInput(name, input))
-      return { ok: false, error: "Invalid request" };
+      return { ok: false, error: text.unknown };
+    if (!isValidInput(name, input)) return { ok: false, error: text.invalid };
     const handler = this.handlers[name] as AnyHandler;
     try {
       return { ok: true, value: await handler(input) };

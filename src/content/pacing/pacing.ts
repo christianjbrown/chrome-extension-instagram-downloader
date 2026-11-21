@@ -1,4 +1,6 @@
 // How hard bulk downloads lean on Instagram. Slower is safer.
+import { MINUTE_MS, SECOND_MS, SECONDS_PER_MINUTE } from "../time";
+
 export interface Pacing {
   /** Random wait before every Instagram API call, which sets the pace. */
   readonly apiDelayMs: readonly [number, number];
@@ -14,15 +16,15 @@ export interface WaitReporter {
   waiting(reason: string, ms: number): void;
 }
 
-const second = 1000;
-const minute = 60 * second;
-
 export const defaultPacing: Pacing = {
   apiDelayMs: [4000, 9000],
   apiCallsPerHour: 600,
   fileDelayMs: [400, 1200],
-  backoffMs: [15 * minute, 30 * minute, 60 * minute, 120 * minute],
+  backoffMs: [15 * MINUTE_MS, 30 * MINUTE_MS, 60 * MINUTE_MS, 120 * MINUTE_MS],
 };
+
+// Past this, a wait is shown in whole minutes.
+const minutesOnlyFromMs = 10 * MINUTE_MS;
 
 const count = (n: number, unit: string): string =>
   `${String(n)} ${unit}${n === 1 ? "" : "s"}`;
@@ -30,11 +32,12 @@ const count = (n: number, unit: string): string =>
 // Seconds count for the short waits, where "2 minutes" would overstate a
 // 61 second wait; past ten minutes they are only noise.
 function duration(ms: number): string {
-  const seconds = Math.ceil(ms / second);
-  if (seconds < 60) return count(seconds, "second");
-  if (ms >= 10 * minute) return count(Math.ceil(ms / minute), "minute");
-  const minutes = count(Math.floor(seconds / 60), "minute");
-  const remainder = seconds % 60;
+  const seconds = Math.ceil(ms / SECOND_MS);
+  if (seconds < SECONDS_PER_MINUTE) return count(seconds, "second");
+  if (ms >= minutesOnlyFromMs)
+    return count(Math.ceil(ms / MINUTE_MS), "minute");
+  const minutes = count(Math.floor(seconds / SECONDS_PER_MINUTE), "minute");
+  const remainder = seconds % SECONDS_PER_MINUTE;
   return remainder === 0 ? minutes : `${minutes} ${count(remainder, "second")}`;
 }
 

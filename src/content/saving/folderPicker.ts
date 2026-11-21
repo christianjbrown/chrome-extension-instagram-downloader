@@ -18,6 +18,10 @@ export interface FolderSource {
 }
 
 const readwrite = { mode: "readwrite" } as const;
+const granted: Permission = "granted";
+
+// Chrome remembers where this picker was last opened, separately from others.
+const pickerId = "instagram-downloader";
 
 // Must be called straight from a click: Chrome only shows the permission
 // prompt and the folder chooser while the click is recent.
@@ -31,8 +35,8 @@ export class FolderPicker implements FolderSource {
     const stored = chooseAgain ? undefined : await this.store.get();
     if (stored !== undefined && (await this.permitted(stored))) return stored;
     const chosen = await this.showPicker({
-      id: "instagram-downloader",
-      mode: "readwrite",
+      id: pickerId,
+      ...readwrite,
       startIn: "downloads",
     });
     await this.store.set(chosen);
@@ -41,7 +45,7 @@ export class FolderPicker implements FolderSource {
 
   private async permitted(folder: FileSystemDirectoryHandle): Promise<boolean> {
     const handle = folder as unknown as PermissionHandle;
-    if ((await handle.queryPermission(readwrite)) === "granted") return true;
-    return (await handle.requestPermission(readwrite)) === "granted";
+    if ((await handle.queryPermission(readwrite)) === granted) return true;
+    return (await handle.requestPermission(readwrite)) === granted;
   }
 }

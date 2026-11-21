@@ -3,6 +3,11 @@ import type { Pacer } from "../pacing/pacer";
 import type { RunReporter } from "../ui/progressPanel";
 import type { Viewer } from "../../shared/bridge";
 
+const text = {
+  heading: "Listing accounts you follow",
+  soFar: "so far",
+} as const;
+
 export interface ListRequest {
   readonly viewer: Viewer;
   readonly signal: AbortSignal;
@@ -22,7 +27,7 @@ export class FollowingLister implements FollowingSource {
   ) {}
 
   async list({ viewer, signal, reporter }: ListRequest): Promise<string[]> {
-    reporter.heading("Listing accounts you follow");
+    reporter.heading(text.heading);
     const usernames: string[] = [];
     let next: string | undefined;
     do {
@@ -32,7 +37,7 @@ export class FollowingLister implements FollowingSource {
         reporter,
       );
       usernames.push(...page.usernames);
-      reporter.detail(`${String(usernames.length)} so far`);
+      reporter.detail(`${String(usernames.length)} ${text.soFar}`);
       next = page.next;
     } while (next !== undefined);
     return [...new Set(usernames)];

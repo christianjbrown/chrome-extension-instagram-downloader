@@ -8,6 +8,12 @@ export interface UrlPolicy {
 
 const watchedPath = /^\/(?:graphql|api)\//;
 
+// The guard Instagram puts in front of JSON so it cannot run as a script.
+const scriptGuard = /^for \(;;\);/;
+
+// Response types that leave the body readable as text.
+const textResponseTypes = new Set<XMLHttpRequestResponseType>(["", "text"]);
+
 // Instagram's own GraphQL and API calls, and nothing on any other site.
 export class InstagramApiPolicy implements UrlPolicy {
   constructor(private readonly origin: string) {}
@@ -28,7 +34,7 @@ export class InstagramApiPolicy implements UrlPolicy {
 // line, when Instagram streams deferred parts of a query.
 export function parseResponse(text: string): unknown[] {
   return text
-    .replace(/^for \(;;\);/, "")
+    .replace(scriptGuard, "")
     .split("\n")
     .flatMap((line) => {
       try {
@@ -62,7 +68,7 @@ export function tapXhr(
   prototype.send = function (this: TappedRequest, ...args: unknown[]) {
     if (policy.isWatched(this.igdlUrl ?? "")) {
       this.addEventListener("load", () => {
-        if (this.responseType === "" || this.responseType === "text")
+        if (textResponseTypes.has(this.responseType))
           feed(this.responseText, sink);
       });
     }

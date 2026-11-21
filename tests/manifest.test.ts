@@ -1,4 +1,5 @@
 import manifestJson from "../static/manifest.json";
+import { pageOrigin } from "../src/shared/origin";
 
 interface Manifest {
   permissions: string[];
@@ -17,5 +18,12 @@ describe("manifest", () => {
   it("asks for no host access: content scripts fetch the CDN with the page's CORS", () => {
     expect(manifest.host_permissions).toBeUndefined();
     expect(manifest.permissions).toEqual(["storage"]);
+  });
+});
+
+describe("page origin", () => {
+  it("is where the manifest injects the scripts", () => {
+    for (const script of manifest.content_scripts)
+      expect(script.matches).toEqual([`${pageOrigin}/*`]);
   });
 });

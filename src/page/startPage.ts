@@ -1,5 +1,5 @@
 // Wires up the page script. Runs at document_start in Instagram's own world.
-import { pageOrigin } from "../shared/bridge";
+import { pageOrigin } from "../shared/origin";
 import { BridgeServer } from "./bridgeServer";
 import { InstagramRefusalDetector } from "./refusalDetector";
 import { FollowingClient } from "./followingClient";
@@ -14,14 +14,14 @@ import {
   tapXhr,
 } from "./responseTap";
 
+const embeddedJson = 'script[type="application/json"]';
+
 // Instagram embeds the data for the first screen in the HTML itself.
 export function scanEmbeddedJson(
   document: Document,
   sink: (value: unknown) => void,
 ): void {
-  for (const script of document.querySelectorAll(
-    'script[type="application/json"]',
-  )) {
+  for (const script of document.querySelectorAll(embeddedJson)) {
     for (const value of parseResponse(script.textContent)) sink(value);
   }
 }

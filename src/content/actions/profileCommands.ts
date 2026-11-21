@@ -8,7 +8,21 @@ import { errorMessage } from "../errors";
 import type { FolderSource } from "../saving/folderPicker";
 import type { ItemDownloader } from "../saving/fileDownloader";
 import type { Notifier } from "../ui/notifier";
+import { UNKNOWN_TAKEN_AT } from "../../shared/media";
 import type { ViewerSource } from "./viewerSource";
+
+const text = {
+  downloading: "Downloading",
+  finished: "Finished",
+  downloadingFollowing: "Downloading accounts you follow",
+  noViewer: "Could not find your account.",
+  noPicture: "no picture",
+  pictureFailed: "Could not download the profile picture",
+  folderUnchanged: "The download folder was not changed.",
+} as const;
+
+// Ends a profile picture's id, so its file cannot clash with a post's.
+const profilePictureSuffix = "_profile";
 
 export class DownloadAccountCommand {
   constructor(
@@ -18,7 +32,7 @@ export class DownloadAccountCommand {
 
   run(username: string): Promise<void> {
     const job: BulkJob = {
-      title: `Downloading ${username}`,
+      title: `${text.downloading} ${username}`,
       run: async (folder, signal, reporter) => {
         reporter.heading(username);
         const counts = await this.archiver.archive({
@@ -28,7 +42,7 @@ export class DownloadAccountCommand {
           signal,
           reporter,
         });
-        return `Finished: ${describeCounts(counts)}.`;
+        return `${text.finished}: ${describeCounts(counts)}.`;
       },
     };
     return this.runner.run(job);
@@ -44,11 +58,10 @@ export class DownloadFollowingCommand {
 
   run(): Promise<void> {
     return this.runner.run({
-      title: "Downloading accounts you follow",
+      title: text.downloadingFollowing,
       run: async (folder, signal, reporter) => {
         const viewer = await this.viewers.current();
-        if (viewer === undefined)
-          throw new Error("Could not find your account.");
+        if (viewer === undefined) throw new Error(text.noViewer);
         return this.following.run({ viewer, folder, signal, reporter });
       },
     });
@@ -65,17 +78,15 @@ export class ProfilePictureCommand {
   async run(username: string): Promise<void> {
     try {
       const account = await this.bridge.call("account", { username });
-      if (account.profilePicUrl === undefined) throw new Error("no picture");
+      if (account.profilePicUrl === undefined) throw new Error(text.noPicture);
       await this.downloader.download({
-        id: `${account.id}_profile`,
+        id: `${account.id}${profilePictureSuffix}`,
         username,
-        takenAt: 0,
+        takenAt: UNKNOWN_TAKEN_AT,
         url: account.profilePicUrl,
       });
     } catch (error) {
-      this.notifier.error(
-        `Could not download the profile picture: ${errorMessage(error)}`,
-      );
+      this.notifier.error(`${text.pictureFailed}: ${errorMessage(error)}`);
     }
   }
 }
@@ -90,7 +101,7 @@ export class ChangeFolderCommand {
     try {
       await this.folders.pick(true);
     } catch {
-      this.notifier.error("The download folder was not changed.");
+      this.notifier.error(text.folderUnchanged);
     }
   }
 }

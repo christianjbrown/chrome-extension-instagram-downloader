@@ -1,14 +1,19 @@
 // The words the progress panel shows while a bulk download runs.
-import type { WriteOutcome } from "../saving/directoryWriter";
+import { WRITE_OUTCOMES, type WriteOutcome } from "../saving/directoryWriter";
+import { FULL_PERCENT, percentText } from "../ui/percent";
 
 export type Counts = Record<WriteOutcome, number>;
+
+/** Nothing saved, skipped or failed yet. */
+export const noCounts = (): Counts =>
+  Object.fromEntries(WRITE_OUTCOMES.map((outcome) => [outcome, 0])) as Counts;
 
 const plural = (n: number, one: string, many: string): string =>
   `${String(n)} ${n === 1 ? one : many}`;
 
 /** Whole percent done, never rounded up to a hundred before the end. */
 export const percent = (done: number, total: number): number =>
-  Math.floor((Math.min(done, total) / total) * 100);
+  Math.floor((Math.min(done, total) / total) * FULL_PERCENT);
 
 // Counts files rather than posts, since a carousel post holds several.
 export function describeCounts(counts: Counts): string {
@@ -27,13 +32,13 @@ export function describeProgress(
 ): string {
   const of =
     total !== undefined && post <= total
-      ? ` of ${String(total)} (${String(percent(post, total))}%)`
+      ? ` of ${String(total)} (${percentText(percent(post, total))})`
       : "";
   return `Post ${String(post)}${of}: ${describeCounts(counts)}`;
 }
 
 const accountLine = (position: number, total: number, done: number): string =>
-  `Account ${String(position)} of ${String(total)} (${String(percent(done, total))}%)`;
+  `Account ${String(position)} of ${String(total)} (${percentText(percent(done, total))})`;
 
 /** The account being worked on, counting only those before it as done. */
 export const describeAccount = (position: number, total: number): string =>

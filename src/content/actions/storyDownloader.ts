@@ -6,6 +6,11 @@ import { errorMessage } from "../errors";
 import type { ItemDownloader } from "../saving/fileDownloader";
 import type { Notifier } from "../ui/notifier";
 
+const text = {
+  unknownStory: "could not tell which story is showing",
+  failed: "Could not download this story",
+} as const;
+
 export type StoryRoute = Extract<Route, { kind: "story" | "highlight" }>;
 
 export class StoryDownloader {
@@ -37,7 +42,7 @@ export class StoryDownloader {
     if (route.kind === "story" && route.mediaId !== undefined)
       return this.bridge.call("media", { mediaId: route.mediaId });
     if (asset !== undefined) return this.bridge.call("mediaByAsset", { asset });
-    return Promise.reject(new Error("could not tell which story is showing"));
+    return Promise.reject(new Error(text.unknownStory));
   }
 
   private reel(route: StoryRoute): Promise<Reel> {
@@ -52,9 +57,7 @@ export class StoryDownloader {
     try {
       for (const item of await items()) await this.downloader.download(item);
     } catch (error) {
-      this.notifier.error(
-        `Could not download this story: ${errorMessage(error)}`,
-      );
+      this.notifier.error(`${text.failed}: ${errorMessage(error)}`);
     }
   }
 }

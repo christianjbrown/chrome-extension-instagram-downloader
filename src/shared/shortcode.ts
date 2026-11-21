@@ -1,5 +1,7 @@
 const alphabet =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+// Each character is one digit in a number written in the alphabet's base.
+const base = BigInt(alphabet.length);
 
 // Private posts carry a 28 character suffix after the real shortcode.
 const privateSuffixLength = 28;
@@ -11,7 +13,7 @@ export function shortcodeToMediaId(shortcode: string): string {
       : shortcode;
   let id = 0n;
   for (const character of code) {
-    id = id * 64n + BigInt(alphabet.indexOf(character));
+    id = id * base + BigInt(alphabet.indexOf(character));
   }
   return id.toString();
 }

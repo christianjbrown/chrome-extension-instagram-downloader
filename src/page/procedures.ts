@@ -12,6 +12,12 @@ interface Dependencies {
   readonly following: FollowingClient;
 }
 
+const text = {
+  notFound: "Could not find",
+  storyNotLoaded: "This story has not loaded yet",
+  pictureNotLoaded: "That picture has not loaded yet",
+} as const;
+
 // Runs a lookup that may throw, as a promise that rejects instead.
 const settle = <T>(lookup: () => T): Promise<T> =>
   Promise.resolve().then(lookup);
@@ -30,7 +36,7 @@ async function userId(
   // Pinned collaborations can put someone else's post first.
   const { items } = await queries.postsPage(username, undefined);
   const own = items.find((item) => item.user?.username === username);
-  return String(found(own?.user?.pk, `Could not find ${username}`));
+  return String(found(own?.user?.pk, `${text.notFound} ${username}`));
 }
 
 async function account(
@@ -57,7 +63,7 @@ async function postsPage(
 function reel(cache: MediaCache, reelId: string | undefined): Reel {
   return found(
     reelId === undefined ? undefined : cache.reel(reelId),
-    "This story has not loaded yet",
+    text.storyNotLoaded,
   );
 }
 
@@ -72,9 +78,7 @@ export function createProcedures(dependencies: Dependencies): Handlers {
     media: async ({ mediaId }) =>
       cache.mediaById(mediaId) ?? queries.mediaById(mediaId),
     mediaByAsset: ({ asset }) =>
-      settle(() =>
-        found(cache.mediaByAsset(asset), "That picture has not loaded yet"),
-      ),
+      settle(() => found(cache.mediaByAsset(asset), text.pictureNotLoaded)),
     postsPage: ({ username, cursor }) =>
       postsPage(dependencies, username, cursor),
     account: ({ username }) => account(dependencies, username),

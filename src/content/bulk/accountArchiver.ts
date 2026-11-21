@@ -5,7 +5,7 @@ import type { Pacer } from "../pacing/pacer";
 import type { ItemWriter } from "../saving/directoryWriter";
 import type { RunReporter } from "../ui/progressPanel";
 import type { PostTotals } from "./postTotals";
-import { describeProgress, type Counts } from "./progressText";
+import { describeProgress, noCounts, type Counts } from "./progressText";
 
 interface Tally {
   readonly counts: Counts;
@@ -38,7 +38,7 @@ export class AccountArchiver {
       create: true,
     });
     const tally: Tally = {
-      counts: { saved: 0, skipped: 0, failed: 0 },
+      counts: noCounts(),
       post: 0,
       total: undefined,
     };

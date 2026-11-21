@@ -1,5 +1,11 @@
 // The parts of Instagram's media objects this extension reads. The REST API,
 // the Relay queries and the page's own responses all use this shape.
+import { pageOrigin } from "./origin";
+
+/** Names the files of a post that does not say whose it is. */
+const UNKNOWN_USERNAME = "unknown";
+/** Stands in for the time a post was taken when nothing says. */
+export const UNKNOWN_TAKEN_AT = 0;
 
 export interface MediaVersion {
   readonly url: string;
@@ -59,10 +65,10 @@ function itemFor(
 // One item per file: a carousel gives one per slide.
 export function downloadItems(
   media: InstagramMedia,
-  fallbackUsername = "unknown",
+  fallbackUsername = UNKNOWN_USERNAME,
 ): DownloadItem[] {
   const username = media.user?.username ?? fallbackUsername;
-  const takenAt = media.taken_at ?? 0;
+  const takenAt = media.taken_at ?? UNKNOWN_TAKEN_AT;
   const slides = media.carousel_media ?? [media];
   return slides.flatMap((slide) => itemFor(slide, username, takenAt));
 }
@@ -70,7 +76,7 @@ export function downloadItems(
 // The last path segment of a CDN URL is the same for every size of a picture,
 // which is how a picture on screen is matched back to its media.
 export function assetName(url: string): string {
-  const path = new URL(url, "https://www.instagram.com").pathname;
+  const path = new URL(url, pageOrigin).pathname;
   return path.slice(path.lastIndexOf("/") + 1);
 }
 

@@ -1,4 +1,5 @@
 import { assetName } from "../../shared/media";
+import { MEDIA_ELEMENTS } from "./selectors";
 
 const minimumSide = 150;
 
@@ -24,7 +25,7 @@ export function largestVisibleAsset(
   viewportHeight: number,
 ): string | undefined {
   let best: { asset: string; area: number } | undefined;
-  for (const element of container.querySelectorAll("img, video")) {
+  for (const element of container.querySelectorAll(MEDIA_ELEMENTS)) {
     const source = sourceOf(element);
     const area = visibleArea(element, viewportHeight);
     if (source === undefined || area === 0) continue;

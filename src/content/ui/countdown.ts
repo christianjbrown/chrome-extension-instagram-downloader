@@ -1,4 +1,5 @@
 import type { Scheduler } from "../scheduler";
+import { SECOND_MS } from "../time";
 
 export interface Countdown {
   /** Calls show with the time left now and as each second passes, down to zero. The returned function stops it. */
@@ -20,7 +21,7 @@ export class SecondCountdown implements Countdown {
       const remaining = Math.max(0, end - this.now());
       show(remaining);
       if (remaining === 0) return;
-      cancel = this.scheduler.after(remaining % 1000 || 1000, tick);
+      cancel = this.scheduler.after(remaining % SECOND_MS || SECOND_MS, tick);
     };
     tick();
     return () => {

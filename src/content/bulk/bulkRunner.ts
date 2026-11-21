@@ -3,6 +3,12 @@ import type { FolderSource } from "../saving/folderPicker";
 import type { Notifier } from "../ui/notifier";
 import type { RunPanel, RunReporter } from "../ui/progressPanel";
 
+const text = {
+  alreadyRunning: "A download is already running.",
+  noFolder: "Could not get access to the download folder.",
+  stopped: "Stopped. Start it again to carry on where it left off.",
+} as const;
+
 export interface BulkJob {
   readonly title: string;
   run(
@@ -26,7 +32,7 @@ export class BulkRunner {
 
   async run(job: BulkJob): Promise<void> {
     if (this.running) {
-      this.notifier.error("A download is already running.");
+      this.notifier.error(text.alreadyRunning);
       return;
     }
     this.running = true;
@@ -42,7 +48,7 @@ export class BulkRunner {
     try {
       folder = await this.folders.pick();
     } catch {
-      this.notifier.error("Could not get access to the download folder.");
+      this.notifier.error(text.noFolder);
       return;
     }
     const controller = new this.controllerClass();
@@ -53,9 +59,7 @@ export class BulkRunner {
       this.panel.finish(await job.run(folder, controller.signal, this.panel));
     } catch (error) {
       this.panel.finish(
-        isAbortError(error)
-          ? "Stopped. Start it again to carry on where it left off."
-          : errorMessage(error),
+        isAbortError(error) ? text.stopped : errorMessage(error),
       );
     }
   }

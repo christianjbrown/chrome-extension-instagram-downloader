@@ -35,7 +35,7 @@ import { FileDownloader } from "./saving/fileDownloader";
 import { FolderPicker, type ShowDirectoryPicker } from "./saving/folderPicker";
 import { MemoryFolderStore } from "./saving/folderStore";
 import { LegacyFolderDatabase } from "./saving/legacyFolderDatabase";
-import { pageOrigin } from "../shared/bridge";
+import { pageOrigin } from "../shared/origin";
 import { isMediaUrl } from "../shared/mediaUrl";
 import { ValidatedBridge } from "./validatedBridge";
 import { TimeoutScheduler, type Scheduler } from "./scheduler";

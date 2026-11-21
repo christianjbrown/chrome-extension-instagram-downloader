@@ -3,7 +3,9 @@ import type { PostDownloader, PostTarget } from "../actions/postDownloader";
 import { carouselSlide, isCarousel } from "../dom/carousel";
 import { parseRoute } from "../dom/route";
 import { largestVisibleAsset } from "../dom/visibleAsset";
+import { ARTICLE, MAIN } from "../dom/selectors";
 import { createButton } from "../ui/buttons";
+import { bySelector, CLASS, classes } from "../ui/classNames";
 import type { Notifier } from "../ui/notifier";
 import type { Feature, PageView } from "./feature";
 
@@ -16,10 +18,19 @@ const loneChild = 1;
 
 const postLink = 'a[href*="/p/"], a[href*="/reel/"]';
 
+// The element that wraps an action bar's buttons.
+const actionButton = '[role="button"], button';
+
+const text = {
+  download: "Download",
+  downloadAll: "Download all slides",
+  unknownPost: "Could not tell which post this is.",
+} as const;
+
 // The outermost element around the bookmark that holds nothing else, which is
 // the slot in the action bar our buttons go beside.
 function actionSlot(icon: Element): Element | undefined {
-  let slot = icon.closest('[role="button"], button');
+  let slot = icon.closest(actionButton);
   while (slot?.parentElement?.childElementCount === loneChild)
     slot = slot.parentElement;
   return slot ?? undefined;
@@ -47,22 +58,21 @@ export class PostActions implements Feature {
     for (const icon of this.view.document.querySelectorAll(bookmarkIcon)) {
       const slot = actionSlot(icon);
       if (slot === undefined) continue;
-      if (slot.parentElement?.querySelector(".igdl-post-actions")) continue;
+      if (slot.parentElement?.querySelector(bySelector(CLASS.postActions)))
+        continue;
       place(this.buttons(slot), slot);
     }
   }
 
   private container(element: Element): ParentNode {
     return (
-      element.closest("article") ??
-      element.closest("main") ??
-      this.view.document
+      element.closest(ARTICLE) ?? element.closest(MAIN) ?? this.view.document
     );
   }
 
   private buttons(slot: Element): HTMLElement {
     const group = this.view.document.createElement("span");
-    group.className = "igdl-post-actions";
+    group.className = CLASS.postActions;
     const container = this.container(slot);
     const add = (label: string, className: string, all: boolean): void => {
       group.append(
@@ -73,16 +83,16 @@ export class PostActions implements Feature {
         }),
       );
     };
-    add("Download", "igdl-button igdl-download", false);
+    add(text.download, classes(CLASS.button, CLASS.download), false);
     if (isCarousel(container))
-      add("Download all slides", "igdl-button igdl-download-all", true);
+      add(text.downloadAll, classes(CLASS.button, CLASS.downloadAll), true);
     return group;
   }
 
   private async download(container: ParentNode, all: boolean): Promise<void> {
     const target = this.target(container, all);
     if (target === undefined) {
-      this.notifier.error("Could not tell which post this is.");
+      this.notifier.error(text.unknownPost);
       return;
     }
     await this.downloader.download(target);

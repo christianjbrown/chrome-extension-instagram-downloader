@@ -12,6 +12,9 @@ export type Route =
 
 const other: Route = { kind: "other" };
 
+const storiesSegment = "stories";
+const highlightsSegment = "highlights";
+
 const postPrefixes = new Set(["p", "reel", "tv"]);
 
 const reservedFirstSegments = new Set([
@@ -19,13 +22,13 @@ const reservedFirstSegments = new Set([
   "direct",
   "explore",
   "reels",
-  "stories",
+  storiesSegment,
   ...postPrefixes,
 ]);
 
 function storyRoute([owner, media]: readonly string[]): Route {
   if (owner === undefined) return other;
-  if (owner !== "highlights")
+  if (owner !== highlightsSegment)
     return { kind: "story", username: owner, mediaId: media };
   return media === undefined
     ? other
@@ -49,7 +52,7 @@ export function parseRoute(pathname: string): Route {
   const segments = pathname.split("/").filter((segment) => segment !== "");
   const [first, ...rest] = segments;
   if (first === undefined) return other;
-  if (first === "stories") return storyRoute(rest);
+  if (first === storiesSegment) return storyRoute(rest);
   const post = postRoute(first, segments);
   if (post !== undefined) return post;
   return rest.length === 0 && !reservedFirstSegments.has(first)

@@ -1,4 +1,5 @@
 import type { Scheduler } from "../scheduler";
+import { CLASS } from "./classNames";
 
 export interface Notifier {
   error(message: string): void;
@@ -14,7 +15,7 @@ export class ToastNotifier implements Notifier {
 
   error(message: string): void {
     const toast = this.document.createElement("div");
-    toast.className = "igdl-toast";
+    toast.className = CLASS.toast;
     toast.setAttribute("role", "alert");
     toast.textContent = message;
     this.document.body.append(toast);

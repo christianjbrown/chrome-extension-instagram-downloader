@@ -12,11 +12,13 @@ export interface KeyValueArea {
   set(items: Record<string, unknown>): Promise<void>;
 }
 
+const keyPrefix = "followingDownload:";
+
 export class RunStore {
   constructor(private readonly area: KeyValueArea) {}
 
   private key(viewerId: string): string {
-    return `followingDownload:${viewerId}`;
+    return `${keyPrefix}${viewerId}`;
   }
 
   async load(viewerId: string): Promise<RunState> {

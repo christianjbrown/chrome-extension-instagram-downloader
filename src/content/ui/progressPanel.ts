@@ -1,5 +1,7 @@
 import { describeWait } from "../pacing/pacing";
 import { createTextButton } from "./buttons";
+import { bySelector, CLASS } from "./classNames";
+import { FULL_PERCENT, NO_PERCENT, percentText } from "./percent";
 import type { Countdown } from "./countdown";
 
 export interface RunReporter {
@@ -28,7 +30,15 @@ const parts = [
   "note",
 ] as const;
 type Part = (typeof parts)[number];
-const isBar = (part: Part): boolean => part.endsWith("-bar");
+const barSuffix = "-bar";
+const isBar = (part: Part): boolean => part.endsWith(barSuffix);
+const partClass = (part: Part): string => `${CLASS.panelPartPrefix}${part}`;
+
+const text = {
+  note: "Keep this tab open while it runs.",
+  stop: "Stop",
+  close: "Close",
+} as const;
 
 // A fixed panel showing what a bulk download is doing, with a Stop button.
 export class ProgressPanel implements RunPanel {
@@ -44,14 +54,14 @@ export class ProgressPanel implements RunPanel {
     this.stopCountdown();
     this.element?.remove();
     const panel = this.document.createElement("div");
-    panel.className = "igdl-panel";
+    panel.className = CLASS.panel;
     for (const part of parts) panel.append(this.line(part));
     this.set("title", title, panel);
-    this.set("note", "Keep this tab open while it runs.", panel);
+    this.set("note", text.note, panel);
     panel.append(
       createTextButton(this.document, {
-        label: "Stop",
-        className: "igdl-panel-button",
+        label: text.stop,
+        className: CLASS.panelButton,
         onClick: onStop,
       }),
     );
@@ -61,18 +71,20 @@ export class ProgressPanel implements RunPanel {
 
   private line(part: Part): HTMLElement {
     const line = this.document.createElement("div");
-    line.className = `igdl-panel-${part}`;
+    line.className = partClass(part);
     if (!isBar(part)) return line;
     line.hidden = true;
     line.setAttribute("role", "progressbar");
-    line.setAttribute("aria-valuemin", "0");
-    line.setAttribute("aria-valuemax", "100");
+    line.setAttribute("aria-valuemin", String(NO_PERCENT));
+    line.setAttribute("aria-valuemax", String(FULL_PERCENT));
     line.append(this.document.createElement("div"));
     return line;
   }
 
   private find(part: Part, panel = this.element): HTMLElement | null {
-    return panel?.querySelector<HTMLElement>(`.igdl-panel-${part}`) ?? null;
+    return (
+      panel?.querySelector<HTMLElement>(bySelector(partClass(part))) ?? null
+    );
   }
 
   private set(part: Part, text: string, panel = this.element): void {
@@ -84,10 +96,10 @@ export class ProgressPanel implements RunPanel {
     const bar = this.find(part);
     if (!bar) return;
     bar.hidden = fraction === undefined;
-    const value = Math.round((fraction ?? 0) * 100);
+    const value = Math.round((fraction ?? 0) * FULL_PERCENT);
     bar.setAttribute("aria-valuenow", String(value));
     const fill = bar.firstElementChild as HTMLElement;
-    fill.style.width = `${String(value)}%`;
+    fill.style.width = percentText(value);
   }
 
   heading(text: string): void {
@@ -119,10 +131,10 @@ export class ProgressPanel implements RunPanel {
   finish(message: string): void {
     this.detail(message);
     const panel = this.element;
-    panel?.querySelector(".igdl-panel-button")?.replaceWith(
+    panel?.querySelector(bySelector(CLASS.panelButton))?.replaceWith(
       createTextButton(this.document, {
-        label: "Close",
-        className: "igdl-panel-button",
+        label: text.close,
+        className: CLASS.panelButton,
         onClick: () => {
           panel.remove();
         },

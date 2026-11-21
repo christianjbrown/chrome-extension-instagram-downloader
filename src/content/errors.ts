@@ -2,11 +2,15 @@ export class BlockedError extends Error {
   override readonly name = "BlockedError";
 }
 
+// The name the platform gives an error from an aborted signal.
+const abortErrorName = "AbortError";
+const stoppedMessage = "Stopped";
+
 export const abortError = (): DOMException =>
-  new DOMException("Stopped", "AbortError");
+  new DOMException(stoppedMessage, abortErrorName);
 
 export const isAbortError = (error: unknown): boolean =>
-  error instanceof DOMException && error.name === "AbortError";
+  error instanceof DOMException && error.name === abortErrorName;
 
 // What Chrome throws at a content script left running in an open tab after
 // the extension is reloaded or updated. Only reloading the page fixes it.

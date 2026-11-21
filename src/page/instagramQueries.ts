@@ -8,6 +8,7 @@ import {
   type ModuleRequire,
   type RelayClient,
 } from "./relayClient";
+import { MODULES, POST_BY_ID_MEMBER, RESPONSE_KEYS } from "./instagramApi";
 
 export interface ProfileUser {
   readonly username: string;
@@ -15,13 +16,22 @@ export interface ProfileUser {
   readonly totalPosts: number;
 }
 
+const text = {
+  unexpected: "Unexpected response",
+  postNotFound: "Post not found",
+  accountNotFound: "Account not found",
+} as const;
+
+// An account that does not say how many posts it has is counted as empty.
+const noPosts = 0;
+
 function field(value: unknown, key: string): unknown {
-  if (!isJsonObject(value)) throw new Error(`Unexpected response at ${key}`);
+  if (!isJsonObject(value)) throw new Error(`${text.unexpected} at ${key}`);
   return value[key];
 }
 
 function asArray(value: unknown): unknown[] {
-  if (!Array.isArray(value)) throw new Error("Unexpected response");
+  if (!Array.isArray(value)) throw new Error(text.unexpected);
   return value as unknown[];
 }
 
@@ -52,21 +62,18 @@ export class InstagramQueries {
   ) {}
 
   viewerId(): string {
-    const config = this.require("PolarisConfig") as {
+    const config = this.require(MODULES.config) as {
       getViewerId(): string | number;
     };
     return String(config.getViewerId());
   }
 
   async mediaById(mediaId: string): Promise<InstagramMedia> {
-    const query = this.relay.query(
-      "PolarisPostActionLoadPostQuery",
-      "POST_QUERY_MEDIA_ID",
-    );
+    const query = this.relay.query(MODULES.postQuery, POST_BY_ID_MEMBER);
     const data = await this.relay.run(query, { mediaId });
-    const info = field(data, "xdt_api__v1__media__media_id_web_info");
-    const [media] = asArray(field(info, "items"));
-    if (!isJsonObject(media)) throw new Error("Post not found");
+    const info = field(data, RESPONSE_KEYS.mediaInfo);
+    const [media] = asArray(field(info, RESPONSE_KEYS.items));
+    if (!isJsonObject(media)) throw new Error(text.postNotFound);
     return media as unknown as InstagramMedia;
   }
 
@@ -74,18 +81,15 @@ export class InstagramQueries {
     username: string,
     cursor: string | undefined,
   ): Promise<PostsPage> {
-    const query = this.relay.query("PolarisProfilePostsQuery");
+    const query = this.relay.query(MODULES.profilePostsQuery);
     const data = await this.relay.run(query, postsVariables(username, cursor));
-    const connection = field(
-      data,
-      "xdt_api__v1__feed__user_timeline_graphql_connection",
-    );
-    const items = asArray(field(connection, "edges")).map((edge) =>
-      field(edge, "node"),
+    const connection = field(data, RESPONSE_KEYS.timeline);
+    const items = asArray(field(connection, RESPONSE_KEYS.edges)).map((edge) =>
+      field(edge, RESPONSE_KEYS.node),
     ) as InstagramMedia[];
-    const pageInfo = field(connection, "page_info");
-    const more = field(pageInfo, "has_next_page") === true;
-    const end = field(pageInfo, "end_cursor");
+    const pageInfo = field(connection, RESPONSE_KEYS.pageInfo);
+    const more = field(pageInfo, RESPONSE_KEYS.hasNextPage) === true;
+    const end = field(pageInfo, RESPONSE_KEYS.endCursor);
     return {
       items,
       cursor: more && typeof end === "string" ? end : undefined,
@@ -93,18 +97,19 @@ export class InstagramQueries {
   }
 
   async profile(userId: string): Promise<ProfileUser> {
-    const query = this.relay.query("PolarisProfilePageContentQuery");
+    const query = this.relay.query(MODULES.profilePageQuery);
     const data = await this.relay.run(query, {
       id: userId,
       enable_integrity_filters: true,
     });
-    const user = field(data, "user");
+    const user = field(data, RESPONSE_KEYS.user);
     if (!isJsonObject(user) || typeof user.username !== "string")
-      throw new Error("Account not found");
+      throw new Error(text.accountNotFound);
     return {
       username: user.username,
       profilePicUrl: profilePicture(user),
-      totalPosts: typeof user.media_count === "number" ? user.media_count : 0,
+      totalPosts:
+        typeof user.media_count === "number" ? user.media_count : noPosts,
     };
   }
 }
