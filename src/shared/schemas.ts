@@ -15,13 +15,19 @@ export const record = (value: unknown, what: string): JsonObject =>
 export const text = (value: unknown, what: string): string =>
   typeof value === "string" ? value : reject(what);
 
+const isCount = (value: unknown): value is number =>
+  typeof value === "number" && Number.isFinite(value);
+
 export const count = (value: unknown, what: string): number =>
-  typeof value === "number" && Number.isFinite(value) ? value : reject(what);
+  isCount(value) ? value : reject(what);
 
 // Instagram marks a missing field with null as often as it leaves it out: a
 // photo arrives with video_versions and carousel_media set to null.
+const isAbsent = (value: unknown): value is undefined | null =>
+  value === undefined || value === null;
+
 export const optional = <T>(value: unknown, parse: Parser<T>): T | undefined =>
-  value === undefined || value === null ? undefined : parse(value);
+  isAbsent(value) ? undefined : parse(value);
 
 export const list = <T>(value: unknown, parse: Parser<T>, what: string): T[] =>
   Array.isArray(value) ? (value as unknown[]).map(parse) : reject(what);

@@ -9,3 +9,13 @@ export const isJsonObject = (value: unknown): value is JsonObject =>
 /** An object with named fields, which an array is not. */
 export const isRecord = (value: unknown): value is JsonObject =>
   isJsonObject(value) && !Array.isArray(value);
+
+/** An object that names an account. */
+export const hasUsername = (
+  value: unknown,
+): value is JsonObject & { username: string } =>
+  isJsonObject(value) && typeof value.username === "string";
+
+/** The value when it is text, and undefined when it is anything else. */
+export const textOrUndefined = (value: unknown): string | undefined =>
+  typeof value === "string" ? value : undefined;
