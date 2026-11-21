@@ -1,6 +1,6 @@
 import type { Viewer } from "../../shared/bridge";
 import type { RunReporter } from "../ui/progressPanel";
-import { describeAccount } from "./progressText";
+import { describeAccount, describeAccountsFinished } from "./progressText";
 import type { AccountArchiver } from "./accountArchiver";
 import type { FailureTally } from "./failureTally";
 import type { FollowingSource } from "./followingLister";
@@ -49,6 +49,8 @@ export class FollowingDownloader {
       reporter.heading(username);
       await this.archiveOne(request, state, username);
     }
+    if (following.length > 0)
+      reporter.overall(describeAccountsFinished(following.length), 1);
     await this.deps.store.save(viewer.id, {
       ...state,
       following: null,

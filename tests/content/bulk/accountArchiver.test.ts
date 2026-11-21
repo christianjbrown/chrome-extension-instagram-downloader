@@ -95,7 +95,8 @@ describe("AccountArchiver", () => {
     expect(report.detail).toHaveBeenLastCalledWith(
       "Post 4 of 8 (50%): 4 new files, 0 already exist",
     );
-    expect(report.accountBar).toHaveBeenLastCalledWith(0.5);
+    expect(report.accountBar).toHaveBeenNthCalledWith(5, 0.5);
+    expect(report.accountBar).toHaveBeenLastCalledWith(1);
   });
 
   it("caps the bar when Instagram's count is behind", async () => {
