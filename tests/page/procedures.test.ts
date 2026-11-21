@@ -1,5 +1,3 @@
-import type { FollowingClient } from "../../src/page/followingClient";
-import type { InstagramQueries } from "../../src/page/instagramQueries";
 import { MediaCache } from "../../src/page/mediaCache";
 import { createProcedures } from "../../src/page/procedures";
 import { photo } from "../fixtures";
@@ -28,8 +26,8 @@ function setup() {
   };
   const procedures = createProcedures({
     cache,
-    queries: queries as unknown as InstagramQueries,
-    following: following as unknown as FollowingClient,
+    queries: queries,
+    following: following,
   });
   return { cache, queries, following, procedures };
 }

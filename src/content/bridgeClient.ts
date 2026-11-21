@@ -8,6 +8,11 @@ import {
 import { RefusedError } from "../shared/refusal";
 import type { Scheduler } from "./scheduler";
 
+const text = {
+  noAnswer: "The page did not answer",
+  unreadable: "The page sent an unreadable answer",
+} as const;
+
 export interface Bridge {
   call<N extends ProcedureName>(name: N, input: Input<N>): Promise<Output<N>>;
 }
@@ -24,7 +29,7 @@ export interface BridgeEnvironment {
   readonly pageOrigin: string;
   readonly newChannel: ChannelFactory;
   readonly scheduler: Scheduler;
-  readonly timeoutMs?: number;
+  readonly timeoutMs: number;
 }
 
 export class PageBridge implements Bridge {
@@ -36,19 +41,15 @@ export class PageBridge implements Bridge {
   call<N extends ProcedureName>(name: N, input: Input<N>): Promise<Output<N>> {
     return new Promise((resolve, reject) => {
       const channel = this.env.newChannel();
-      const cancel = this.env.scheduler.after(
-        this.env.timeoutMs ?? 60_000,
-        () => {
-          channel.port1.close();
-          reject(new Error("The page did not answer"));
-        },
-      );
+      const cancel = this.env.scheduler.after(this.env.timeoutMs, () => {
+        channel.port1.close();
+        reject(new Error(text.noAnswer));
+      });
       channel.port1.onmessage = (event: MessageEvent<unknown>) => {
         cancel();
         channel.port1.close();
         const response = event.data;
-        if (!isBridgeResponse(response))
-          reject(new Error("The page sent an unreadable answer"));
+        if (!isBridgeResponse(response)) reject(new Error(text.unreadable));
         else if (response.ok) resolve(response.value as Output<N>);
         else if (response.refused === true)
           reject(new RefusedError(response.error));

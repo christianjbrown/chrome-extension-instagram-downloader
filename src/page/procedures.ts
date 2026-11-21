@@ -2,15 +2,21 @@
 // of what Instagram already sent whenever possible, and from a query if not.
 import type { Account, PostsPage, Reel } from "../shared/bridge";
 import type { Handlers } from "./bridgeServer";
-import type { FollowingClient } from "./followingClient";
-import type { InstagramQueries } from "./instagramQueries";
-import type { MediaCache } from "./mediaCache";
+import type { FollowingPages } from "./followingClient";
+import type { Queries } from "./instagramQueries";
+import type { MediaLookups } from "./mediaCache";
 
 interface Dependencies {
-  readonly cache: MediaCache;
-  readonly queries: InstagramQueries;
-  readonly following: FollowingClient;
+  readonly cache: MediaLookups;
+  readonly queries: Queries;
+  readonly following: FollowingPages;
 }
+
+const text = {
+  notFound: "Could not find",
+  storyNotLoaded: "This story has not loaded yet",
+  pictureNotLoaded: "That picture has not loaded yet",
+} as const;
 
 // Runs a lookup that may throw, as a promise that rejects instead.
 const settle = <T>(lookup: () => T): Promise<T> =>
@@ -30,7 +36,7 @@ async function userId(
   // Pinned collaborations can put someone else's post first.
   const { items } = await queries.postsPage(username, undefined);
   const own = items.find((item) => item.user?.username === username);
-  return String(found(own?.user?.pk, `Could not find ${username}`));
+  return String(found(own?.user?.pk, `${text.notFound} ${username}`));
 }
 
 async function account(
@@ -54,10 +60,10 @@ async function postsPage(
   return total === undefined ? page : { ...page, total };
 }
 
-function reel(cache: MediaCache, reelId: string | undefined): Reel {
+function reel(cache: MediaLookups, reelId: string | undefined): Reel {
   return found(
     reelId === undefined ? undefined : cache.reel(reelId),
-    "This story has not loaded yet",
+    text.storyNotLoaded,
   );
 }
 
@@ -72,9 +78,7 @@ export function createProcedures(dependencies: Dependencies): Handlers {
     media: async ({ mediaId }) =>
       cache.mediaById(mediaId) ?? queries.mediaById(mediaId),
     mediaByAsset: ({ asset }) =>
-      settle(() =>
-        found(cache.mediaByAsset(asset), "That picture has not loaded yet"),
-      ),
+      settle(() => found(cache.mediaByAsset(asset), text.pictureNotLoaded)),
     postsPage: ({ username, cursor }) =>
       postsPage(dependencies, username, cursor),
     account: ({ username }) => account(dependencies, username),

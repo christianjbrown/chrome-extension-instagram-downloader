@@ -6,6 +6,9 @@ export default defineConfig({
     environment: "jsdom",
     include: ["tests/**/*.test.ts"],
     restoreMocks: true,
+    // The class name tests read the stylesheet's text, which Vitest otherwise
+    // swaps for an empty one.
+    css: { include: [/content\.css/] },
     coverage: {
       provider: "v8",
       include: ["src/**/*.ts"],

@@ -3,3 +3,6 @@
 export class RefusedError extends Error {
   override readonly name = "RefusedError";
 }
+
+/** The HTTP status Instagram answers with when it wants fewer requests. */
+export const TOO_MANY_REQUESTS = 429;

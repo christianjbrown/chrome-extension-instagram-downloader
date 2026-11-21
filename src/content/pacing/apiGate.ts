@@ -4,6 +4,13 @@ import type { HourlyBudget } from "./hourlyBudget";
 import type { Pacing, WaitReporter } from "./pacing";
 import type { Sleeper } from "./sleeper";
 
+const text = {
+  hourlyLimit: "Hourly request limit reached",
+  slowDown: "Instagram asked us to slow down",
+  blocked:
+    "Instagram kept refusing requests, so the run stopped. Try again tomorrow.",
+} as const;
+
 export interface Gate {
   call<T>(
     request: () => Promise<T>,
@@ -32,7 +39,7 @@ export class ApiGate implements Gate {
   ): Promise<T> {
     for (;;) {
       await this.budget.take(signal, (ms) => {
-        reporter.waiting("Hourly request limit reached", ms);
+        reporter.waiting(text.hourlyLimit, ms);
       });
       await this.sleeper.between(this.pacing.apiDelayMs, signal);
       try {
@@ -53,12 +60,10 @@ export class ApiGate implements Gate {
     const wait = this.pacing.backoffMs[this.refusals];
     if (wait === undefined) {
       this.refusals = 0;
-      throw new BlockedError(
-        "Instagram kept refusing requests, so the run stopped. Try again tomorrow.",
-      );
+      throw new BlockedError(text.blocked);
     }
     this.refusals += 1;
-    reporter.waiting("Instagram asked us to slow down", wait);
+    reporter.waiting(text.slowDown, wait);
     await this.sleeper.sleep(wait, signal);
   }
 }

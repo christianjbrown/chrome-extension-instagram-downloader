@@ -1,7 +1,7 @@
+import { errorMessage } from "../../src/content/errorText";
 import {
   BlockedError,
   abortError,
-  errorMessage,
   isAbortError,
   isContextInvalidated,
 } from "../../src/content/errors";

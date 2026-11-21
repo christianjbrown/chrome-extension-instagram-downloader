@@ -2,8 +2,6 @@
 // page. Only the page can reach Instagram's own modules and responses.
 import type { InstagramMedia } from "./media";
 
-export const pageOrigin = "https://www.instagram.com";
-
 export interface Viewer {
   readonly id: string;
   readonly username: string;

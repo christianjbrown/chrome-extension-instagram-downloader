@@ -1,4 +1,6 @@
-import { scanEmbeddedJson, startPage } from "../../src/page/startPage";
+import { PAGE_CONFIG } from "../../src/page/config";
+import { scanEmbeddedJson } from "../../src/page/embeddedJson";
+import { startPage } from "../../src/page/startPage";
 import { photo } from "../fixtures";
 
 class FakeXhr {
@@ -40,7 +42,7 @@ function fakeWindow(readyState: DocumentReadyState) {
       listener: (event: MessageEvent) => void,
     ) => listeners.push(listener),
   };
-  startPage(target as never);
+  startPage(target as never, PAGE_CONFIG);
   const ask = async (igdlProcedure: string, input: unknown) => {
     const port = { postMessage: vi.fn() };
     listeners[0]?.({

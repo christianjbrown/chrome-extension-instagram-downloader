@@ -1,4 +1,8 @@
-import { largestVisibleAsset } from "../../../src/content/dom/visibleAsset";
+import { VisibleAssetFinder } from "../../../src/content/dom/visibleAsset";
+
+const finder = new VisibleAssetFinder({ viewportHeight: () => 800 }, 150);
+const largestVisibleAsset = (container: ParentNode) =>
+  finder.largest(container);
 
 function element(html: string, boxes: Partial<DOMRect>[]): HTMLElement {
   const container = document.createElement("div");
@@ -16,13 +20,13 @@ function element(html: string, boxes: Partial<DOMRect>[]): HTMLElement {
   return container;
 }
 
-describe("largestVisibleAsset", () => {
+describe("VisibleAssetFinder", () => {
   it("names the largest picture or video poster on screen", () => {
     const container = element(
       '<img src="https://cdn/a.jpg"><video poster="https://cdn/b.jpg"></video><img src="https://cdn/c.jpg">',
       [{}, { width: 400, height: 400 }, {}],
     );
-    expect(largestVisibleAsset(container, 800)).toBe("b.jpg");
+    expect(largestVisibleAsset(container)).toBe("b.jpg");
   });
 
   it("prefers the image's chosen source", () => {
@@ -30,7 +34,7 @@ describe("largestVisibleAsset", () => {
     Object.defineProperty(container.querySelector("img"), "currentSrc", {
       value: "https://cdn/hd.jpg",
     });
-    expect(largestVisibleAsset(container, 800)).toBe("hd.jpg");
+    expect(largestVisibleAsset(container)).toBe("hd.jpg");
   });
 
   it("ignores small, off-screen and poster-less elements", () => {
@@ -43,6 +47,6 @@ describe("largestVisibleAsset", () => {
         {},
       ],
     );
-    expect(largestVisibleAsset(container, 800)).toBeUndefined();
+    expect(largestVisibleAsset(container)).toBeUndefined();
   });
 });

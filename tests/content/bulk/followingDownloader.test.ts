@@ -1,10 +1,8 @@
 import type { FollowingPage } from "../../../src/shared/bridge";
-import type { AccountArchiver } from "../../../src/content/bulk/accountArchiver";
 import { ConsecutiveFailureTally } from "../../../src/content/bulk/failureTally";
 import { FollowingDownloader } from "../../../src/content/bulk/followingDownloader";
 import { FollowingLister } from "../../../src/content/bulk/followingLister";
 import { RunStore } from "../../../src/content/bulk/runStore";
-import { defaultPacing } from "../../../src/content/pacing/pacing";
 import {
   MemoryFolder,
   asFolder,
@@ -34,14 +32,12 @@ function setup(initial?: unknown, followingPage = twoPages) {
       Promise.resolve({ saved: 1, skipped: 0, failed: 0 }),
     ),
   };
-  const pacer = {
-    gate: { call: vi.fn((request: () => Promise<unknown>) => request()) },
-    sleeper: { sleep: vi.fn(), between: vi.fn(() => Promise.resolve()) },
-    pacing: defaultPacing,
+  const gate = {
+    call: vi.fn((request: () => Promise<unknown>) => request()),
   };
   const downloader = new FollowingDownloader({
-    lister: new FollowingLister(bridge, pacer as never),
-    archiver: archiver as unknown as AccountArchiver,
+    lister: new FollowingLister(bridge, gate as never),
+    archiver: archiver,
     store,
     now: () => 1234,
     tally: new ConsecutiveFailureTally(2),
@@ -54,12 +50,12 @@ function setup(initial?: unknown, followingPage = twoPages) {
       signal: signal(),
       reporter: report,
     });
-  return { data, archiver, pacer, bridge, run, report };
+  return { data, archiver, gate, bridge, run, report };
 }
 
 describe("FollowingDownloader", () => {
   it("lists everyone followed, archives each straight after the last and clears the run", async () => {
-    const { run, archiver, pacer, data, report } = setup();
+    const { run, archiver, gate, data, report } = setup();
     await expect(run()).resolves.toBe("Finished all 3 accounts you follow.");
     expect(report.overall.mock.calls).toEqual([
       ["Account 1 of 3 (0%)", 0],
@@ -71,7 +67,8 @@ describe("FollowingDownloader", () => {
     expect(
       archiver.archive.mock.calls.map(([request]) => request.username),
     ).toEqual(["a", "b", "c"]);
-    expect(pacer.sleeper.between).not.toHaveBeenCalled();
+    // Only the two pages of the list are paced; accounts follow straight on.
+    expect(gate.call).toHaveBeenCalledTimes(2);
     expect(data["followingDownload:1"]).toMatchObject({
       following: null,
       done: [],

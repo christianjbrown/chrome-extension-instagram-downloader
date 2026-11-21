@@ -10,7 +10,7 @@ export class PageScanner {
   constructor(
     private readonly features: readonly Feature[],
     private readonly scheduler: Scheduler,
-    private readonly delayMs = 250,
+    private readonly delayMs: number,
   ) {}
 
   start(

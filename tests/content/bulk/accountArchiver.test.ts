@@ -1,5 +1,6 @@
 import { AccountArchiver } from "../../../src/content/bulk/accountArchiver";
-import { defaultPacing } from "../../../src/content/pacing/pacing";
+import { PinnedAwareCatchUp } from "../../../src/content/bulk/catchUp";
+import { CONTENT_CONFIG } from "../../../src/content/config";
 import type { ItemWriter } from "../../../src/content/saving/directoryWriter";
 import { photo } from "../../fixtures";
 import {
@@ -9,6 +10,8 @@ import {
   reporter,
   signal,
 } from "../helpers";
+
+const defaultPacing = CONTENT_CONFIG.pacing;
 
 const pages = [
   { items: [photo("1", "a.jpg"), photo("2", "b.jpg")], cursor: "c1" },
@@ -36,7 +39,7 @@ function setup(
   const pacer = {
     gate: { call: vi.fn((request: () => Promise<unknown>) => request()) },
     sleeper: { sleep: vi.fn(), between: vi.fn(() => Promise.resolve()) },
-    pacing: defaultPacing,
+    fileDelayMs: defaultPacing.fileDelayMs,
   };
   const totals = { find: vi.fn(() => Promise.resolve(total)) };
   return {
@@ -44,7 +47,13 @@ function setup(
     writer,
     pacer,
     totals,
-    archiver: new AccountArchiver(bridge, writer, pacer as never, totals),
+    archiver: new AccountArchiver({
+      bridge,
+      writer,
+      pacer: pacer as never,
+      totals,
+      catchUp: new PinnedAwareCatchUp(),
+    }),
   };
 }
 

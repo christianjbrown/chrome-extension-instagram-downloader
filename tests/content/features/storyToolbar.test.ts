@@ -1,6 +1,5 @@
-import type { StoryDownloader } from "../../../src/content/actions/storyDownloader";
 import { StoryToolbar } from "../../../src/content/features/storyToolbar";
-import { view } from "./view";
+import { assets, view } from "./view";
 
 function setup(path: string) {
   const downloader = {
@@ -10,10 +9,7 @@ function setup(path: string) {
   const page = view(path, '<img src="https://cdn/story.jpg">');
   document.querySelector("img")!.getBoundingClientRect = () =>
     ({ top: 0, bottom: 500, width: 400, height: 500 }) as DOMRect;
-  const feature = new StoryToolbar(
-    page,
-    downloader as unknown as StoryDownloader,
-  );
+  const feature = new StoryToolbar(page, downloader, assets());
   feature.scan();
   return { downloader, feature, page };
 }

@@ -2,7 +2,11 @@ import type { DownloadItem } from "../../shared/media";
 import type { FetchBlob } from "./fetchBlob";
 import type { FileNamer } from "./fileNamer";
 
-export type WriteOutcome = "saved" | "skipped" | "failed";
+export const WRITE_OUTCOMES = ["saved", "skipped", "failed"] as const;
+export type WriteOutcome = (typeof WRITE_OUTCOMES)[number];
+
+// What the File System Access API throws for a file that is not there.
+const notFoundErrorName = "NotFoundError";
 
 export interface ItemWriter {
   exists(
@@ -32,7 +36,7 @@ export class DirectoryWriter implements ItemWriter {
       return (await handle.getFile()).size > 0;
     } catch (error) {
       // A file that is not there is a plain no; asking must not create it.
-      if (error instanceof DOMException && error.name === "NotFoundError")
+      if (error instanceof DOMException && error.name === notFoundErrorName)
         return false;
       throw error;
     }

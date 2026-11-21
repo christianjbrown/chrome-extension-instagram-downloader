@@ -73,21 +73,11 @@ describe("PageBridge", () => {
   });
 });
 
-it("waits a minute by default", () => {
-  const scheduler = new ManualScheduler();
-  void new PageBridge(vi.fn(), {
-    pageOrigin: origin,
-    newChannel: () => new MessageChannel(),
-    scheduler,
-  }).call("viewer", {});
-  expect([...scheduler.pending.values()][0]?.ms).toBe(60_000);
-});
-
 describe("TimeoutScheduler", () => {
   it("runs the callback after the delay, unless cancelled", () => {
     vi.useFakeTimers();
     const ran = vi.fn();
-    const scheduler = new TimeoutScheduler();
+    const scheduler = new TimeoutScheduler(globalThis);
     scheduler.after(10, ran);
     scheduler.after(10, ran)();
     vi.advanceTimersByTime(10);

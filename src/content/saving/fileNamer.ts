@@ -5,7 +5,16 @@ export interface FileNamer {
 }
 
 const extensionPattern = /\.([0-9a-z]+)(?:[?#]|$)/i;
-const knownExtensions = new Set(["jpg", "jpeg", "png", "webp", "heic", "mp4"]);
+const knownExtensions: ReadonlySet<string> = new Set([
+  "jpg",
+  "jpeg",
+  "png",
+  "webp",
+  "heic",
+  "mp4",
+]);
+const videoExtension = "mp4";
+const imageExtension = "jpg";
 
 // Only extensions Instagram really serves; anything else gets the usual one
 // for the kind of file.
@@ -13,7 +22,7 @@ function fileExtension(url: string, video = false): string {
   const found = extensionPattern.exec(new URL(url).pathname)?.[1];
   if (found !== undefined && knownExtensions.has(found.toLowerCase()))
     return found;
-  return video ? "mp4" : "jpg";
+  return video ? videoExtension : imageExtension;
 }
 
 // Names are built from the page's data, so only the characters real

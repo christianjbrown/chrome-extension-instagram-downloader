@@ -1,4 +1,9 @@
-import { isProcedureName, isValidInput } from "../../src/page/procedureInputs";
+import { PAGE_CONFIG } from "../../src/page/config";
+import { ProcedureInputs } from "../../src/page/procedureInputs";
+
+const inputs = new ProcedureInputs(PAGE_CONFIG.inputLimits);
+const isValidInput = inputs.isValidInput.bind(inputs);
+const isProcedureName = inputs.isProcedureName.bind(inputs);
 
 describe("procedure inputs", () => {
   it("accepts what the content script really sends", () => {

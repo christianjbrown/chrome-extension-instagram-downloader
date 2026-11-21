@@ -1,5 +1,5 @@
 import { InstagramQueries } from "../../src/page/instagramQueries";
-import type { RelayClient } from "../../src/page/relayClient";
+import type { Relay } from "../../src/page/relayClient";
 import { photo } from "../fixtures";
 
 function queries(data: unknown, modules: Record<string, unknown> = {}) {
@@ -12,8 +12,9 @@ function queries(data: unknown, modules: Record<string, unknown> = {}) {
   return {
     relay,
     queries: new InstagramQueries(
-      relay as unknown as RelayClient,
+      relay as unknown as Relay,
       (name) => modules[name],
+      12,
     ),
   };
 }

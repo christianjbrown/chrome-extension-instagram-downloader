@@ -1,63 +1,53 @@
 // Lists the accounts a user follows, a page at a time, through the same REST
 // endpoint Instagram's own "Following" dialog uses.
 import type { FollowingPage } from "../shared/bridge";
-import { RefusedError } from "../shared/refusal";
-import { isJsonObject, type ModuleRequire } from "./relayClient";
+import { parseFollowingPage } from "./followingResponse";
+import { FOLLOWING_QUERY } from "./instagramApi";
+import type { HeaderSource } from "./instagramHeaders";
 
 type Fetch = (url: string, init: RequestInit) => Promise<Response>;
 
-function usernames(users: unknown): string[] {
-  if (!Array.isArray(users)) return [];
-  return (users as unknown[]).flatMap((user) =>
-    isJsonObject(user) && typeof user.username === "string"
-      ? [user.username]
-      : [],
-  );
+/** Marks where the user's id goes in the endpoint's path. */
+export const USER_ID_PLACEHOLDER = "{userId}";
+
+export interface FollowingEndpoint {
+  /** The path, with USER_ID_PLACEHOLDER where the id goes. */
+  readonly path: string;
+  readonly pageSize: number;
 }
 
-function failureReason(response: Response, body: unknown): string {
-  const said =
-    isJsonObject(body) && typeof body.message === "string"
-      ? body.message
-      : undefined;
-  return said ?? `HTTP ${String(response.status)}`;
+const invalidUser = "Invalid user id";
+const numericId = /^\d+$/;
+
+export interface FollowingPages {
+  page(userId: string, next: string | undefined): Promise<FollowingPage>;
 }
 
-export class FollowingClient {
+export class FollowingClient implements FollowingPages {
   constructor(
-    private readonly require: ModuleRequire,
+    private readonly headers: HeaderSource,
     private readonly fetch: Fetch,
+    private readonly endpoint: FollowingEndpoint,
   ) {}
 
-  private headers(): Record<string, string> {
-    const config = this.require("PolarisConfig") as { getIGAppID(): string };
-    const claim = this.require("PolarisWWWClaim") as {
-      getWWWClaim(): string;
-    };
-    return {
-      "x-ig-app-id": config.getIGAppID(),
-      "x-ig-www-claim": claim.getWWWClaim(),
-    };
+  async page(userId: string, next: string | undefined): Promise<FollowingPage> {
+    if (!numericId.test(userId)) throw new Error(invalidUser);
+    const response = await this.fetch(this.url(userId, next), {
+      headers: this.headers.headers(),
+    });
+    const body: unknown = await response.json().catch(() => undefined);
+    return parseFollowingPage(response.status, body);
   }
 
-  async page(userId: string, next: string | undefined): Promise<FollowingPage> {
-    if (!/^\d+$/.test(userId)) throw new Error("Invalid user id");
-    const query = new URLSearchParams({ count: "25" });
-    if (next !== undefined) query.set("max_id", next);
-    const response = await this.fetch(
-      `/api/v1/friendships/${encodeURIComponent(userId)}/following/?${query.toString()}`,
-      { headers: this.headers() },
+  private url(userId: string, next: string | undefined): string {
+    const path = this.endpoint.path.replace(
+      USER_ID_PLACEHOLDER,
+      encodeURIComponent(userId),
     );
-    const body: unknown = await response.json().catch(() => undefined);
-    if (response.status === 429)
-      throw new RefusedError("Instagram asked us to slow down");
-    if (!isJsonObject(body) || body.status === "fail")
-      throw new Error(
-        `Instagram would not list who you follow (${failureReason(response, body)})`,
-      );
-    return {
-      usernames: usernames(body.users),
-      next: typeof body.next_max_id === "string" ? body.next_max_id : undefined,
-    };
+    const query = new URLSearchParams({
+      [FOLLOWING_QUERY.count]: String(this.endpoint.pageSize),
+    });
+    if (next !== undefined) query.set(FOLLOWING_QUERY.after, next);
+    return `${path}?${query.toString()}`;
   }
 }

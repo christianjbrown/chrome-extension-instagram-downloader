@@ -13,31 +13,3 @@ export interface Pacing {
 export interface WaitReporter {
   waiting(reason: string, ms: number): void;
 }
-
-const second = 1000;
-const minute = 60 * second;
-
-export const defaultPacing: Pacing = {
-  apiDelayMs: [4000, 9000],
-  apiCallsPerHour: 600,
-  fileDelayMs: [400, 1200],
-  backoffMs: [15 * minute, 30 * minute, 60 * minute, 120 * minute],
-};
-
-const count = (n: number, unit: string): string =>
-  `${String(n)} ${unit}${n === 1 ? "" : "s"}`;
-
-// Seconds count for the short waits, where "2 minutes" would overstate a
-// 61 second wait; past ten minutes they are only noise.
-function duration(ms: number): string {
-  const seconds = Math.ceil(ms / second);
-  if (seconds < 60) return count(seconds, "second");
-  if (ms >= 10 * minute) return count(Math.ceil(ms / minute), "minute");
-  const minutes = count(Math.floor(seconds / 60), "minute");
-  const remainder = seconds % 60;
-  return remainder === 0 ? minutes : `${minutes} ${count(remainder, "second")}`;
-}
-
-export function describeWait(reason: string, ms: number): string {
-  return `${reason}. Waiting ${duration(ms)}.`;
-}

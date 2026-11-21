@@ -1,4 +1,5 @@
 import { IDBFactory } from "fake-indexeddb";
+import { CONTENT_CONFIG } from "../../src/content/config";
 import {
   startContent,
   type ContentEnvironment,
@@ -41,13 +42,20 @@ function environment() {
     indexedDB: new IDBFactory(),
     MutationObserver,
     MessageChannel,
+    setTimeout: (callback: () => void, ms: number) => setTimeout(callback, ms),
+    clearTimeout: (timer: number) => {
+      clearTimeout(timer);
+    },
     URL: { createObjectURL: () => "blob:1", revokeObjectURL: vi.fn() },
   };
   const storage = {
     get: () => Promise.resolve({}),
     set: () => Promise.resolve(),
   };
-  startContent({ window: target, storage } as unknown as ContentEnvironment);
+  startContent(
+    { window: target, storage } as unknown as ContentEnvironment,
+    CONTENT_CONFIG,
+  );
   return { postMessage, fetch, showDirectoryPicker, click };
 }
 

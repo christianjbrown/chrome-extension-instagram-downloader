@@ -3,9 +3,11 @@ import type { PostsPage } from "../../shared/bridge";
 import type { Bridge } from "../bridgeClient";
 import type { Pacer } from "../pacing/pacer";
 import type { ItemWriter } from "../saving/directoryWriter";
+import { ALL_DONE } from "../ui/percent";
 import type { RunReporter } from "../ui/progressPanel";
+import type { CatchUpPolicy } from "./catchUp";
 import type { PostTotals } from "./postTotals";
-import { describeProgress, type Counts } from "./progressText";
+import { describeProgress, noCounts, type Counts } from "./progressText";
 
 interface Tally {
   readonly counts: Counts;
@@ -22,39 +24,37 @@ export interface ArchiveRequest {
   readonly reporter: RunReporter;
 }
 
+export interface ArchiverDependencies {
+  readonly bridge: Bridge;
+  readonly writer: ItemWriter;
+  readonly pacer: Pacer;
+  readonly totals: PostTotals;
+  readonly catchUp: CatchUpPolicy;
+}
+
+export interface Archiver {
+  archive(request: ArchiveRequest): Promise<Counts>;
+}
+
 // Writes every post of one account into folder/<username>/, skipping files
 // already there.
-export class AccountArchiver {
-  constructor(
-    private readonly bridge: Bridge,
-    private readonly writer: ItemWriter,
-    private readonly pacer: Pacer,
-    private readonly totals: PostTotals,
-  ) {}
+export class AccountArchiver implements Archiver {
+  constructor(private readonly deps: ArchiverDependencies) {}
 
   async archive(request: ArchiveRequest): Promise<Counts> {
-    const { username, signal, reporter } = request;
+    const { username, onlyNew, signal, reporter } = request;
     const folder = await request.folder.getDirectoryHandle(username, {
       create: true,
     });
-    const tally: Tally = {
-      counts: { saved: 0, skipped: 0, failed: 0 },
-      post: 0,
-      total: undefined,
-    };
+    const tally: Tally = { counts: noCounts(), post: 0, total: undefined };
     reporter.accountBar(undefined);
     let cursor: string | undefined;
     let page = 0;
     do {
-      const result = await this.pacer.gate.call(
-        () => this.bridge.call("postsPage", { username, cursor }),
-        signal,
-        reporter,
-      );
+      const result = await this.postsPage(request, cursor);
       page += 1;
-      // A rerun stops at the first old page, so a total would only mislead.
-      if (page === 1 && !request.onlyNew)
-        tally.total = await this.totals.find(
+      if (this.deps.catchUp.wantsTotal(page, onlyNew))
+        tally.total = await this.deps.totals.find(
           username,
           result,
           signal,
@@ -62,14 +62,25 @@ export class AccountArchiver {
         );
       const saved = tally.counts.saved;
       await this.writePage(folder, result, tally, request);
-      // Page one can be all pinned posts, so only trust a later page.
-      if (request.onlyNew && page > 1 && tally.counts.saved === saved) break;
+      const newFiles = tally.counts.saved - saved;
+      if (this.deps.catchUp.caughtUp(page, onlyNew, newFiles)) break;
       cursor = result.cursor;
     } while (cursor !== undefined);
     // Instagram's count can include posts it never sends, so a finished
     // account fills its bar rather than stopping short of the end.
-    if (tally.total !== undefined) reporter.accountBar(1);
+    if (tally.total !== undefined) reporter.accountBar(ALL_DONE);
     return tally.counts;
+  }
+
+  private postsPage(
+    { username, signal, reporter }: ArchiveRequest,
+    cursor: string | undefined,
+  ): Promise<PostsPage> {
+    return this.deps.pacer.gate.call(
+      () => this.deps.bridge.call("postsPage", { username, cursor }),
+      signal,
+      reporter,
+    );
   }
 
   private async writePage(
@@ -84,7 +95,7 @@ export class AccountArchiver {
     for (const media of result.items) {
       tally.post += 1;
       if (tally.total !== undefined)
-        reporter.accountBar(Math.min(1, tally.post / tally.total));
+        reporter.accountBar(Math.min(ALL_DONE, tally.post / tally.total));
       for (const item of downloadItems(media, username)) {
         await this.writeOne(folder, item, tally.counts, signal);
         reporter.detail(
@@ -101,11 +112,12 @@ export class AccountArchiver {
     signal: AbortSignal,
   ): Promise<void> {
     signal.throwIfAborted();
-    if (await this.writer.exists(folder, item)) {
+    const { writer, pacer } = this.deps;
+    if (await writer.exists(folder, item)) {
       counts.skipped += 1;
       return;
     }
-    await this.pacer.sleeper.between(this.pacer.pacing.fileDelayMs, signal);
-    counts[await this.writer.write(folder, item)] += 1;
+    await pacer.sleeper.between(pacer.fileDelayMs, signal);
+    counts[await writer.write(folder, item)] += 1;
   }
 }

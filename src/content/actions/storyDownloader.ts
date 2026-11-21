@@ -2,13 +2,25 @@ import type { Reel } from "../../shared/bridge";
 import { downloadItems, type InstagramMedia } from "../../shared/media";
 import type { Bridge } from "../bridgeClient";
 import type { Route } from "../dom/route";
-import { errorMessage } from "../errors";
+import { errorMessage } from "../errorText";
 import type { ItemDownloader } from "../saving/fileDownloader";
 import type { Notifier } from "../ui/notifier";
 
+const text = {
+  unknownStory: "could not tell which story is showing",
+  failed: "Could not download this story",
+} as const;
+
 export type StoryRoute = Extract<Route, { kind: "story" | "highlight" }>;
 
-export class StoryDownloader {
+export interface StoryDownloads {
+  /** The story showing, found by its id or by the picture on screen. */
+  current(route: StoryRoute, asset: string | undefined): Promise<void>;
+  /** Every story in the reel or highlight. */
+  all(route: StoryRoute): Promise<void>;
+}
+
+export class StoryDownloader implements StoryDownloads {
   constructor(
     private readonly bridge: Bridge,
     private readonly downloader: ItemDownloader,
@@ -37,7 +49,7 @@ export class StoryDownloader {
     if (route.kind === "story" && route.mediaId !== undefined)
       return this.bridge.call("media", { mediaId: route.mediaId });
     if (asset !== undefined) return this.bridge.call("mediaByAsset", { asset });
-    return Promise.reject(new Error("could not tell which story is showing"));
+    return Promise.reject(new Error(text.unknownStory));
   }
 
   private reel(route: StoryRoute): Promise<Reel> {
@@ -52,9 +64,7 @@ export class StoryDownloader {
     try {
       for (const item of await items()) await this.downloader.download(item);
     } catch (error) {
-      this.notifier.error(
-        `Could not download this story: ${errorMessage(error)}`,
-      );
+      this.notifier.error(`${text.failed}: ${errorMessage(error)}`);
     }
   }
 }

@@ -1,3 +1,5 @@
+import { CLASS, classes } from "./classNames";
+
 export interface ButtonSpec {
   readonly label: string;
   readonly className: string;
@@ -31,9 +33,15 @@ export function createTextButton(
   return button;
 }
 
-export type ButtonIcon =
-  "download" | "download-all" | "picture" | "folder" | "following";
+export const BUTTON_ICONS = [
+  "download",
+  "download-all",
+  "picture",
+  "folder",
+  "following",
+] as const;
+export type ButtonIcon = (typeof BUTTON_ICONS)[number];
 
 // A labelled button with its icon before the text; the icon is drawn in CSS.
 export const textButtonClass = (icon: ButtonIcon): string =>
-  `igdl-text-button igdl-icon-${icon}`;
+  classes(CLASS.textButton, `${CLASS.iconPrefix}${icon}`);

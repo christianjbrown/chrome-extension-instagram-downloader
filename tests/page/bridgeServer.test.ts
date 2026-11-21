@@ -1,4 +1,6 @@
 import { BridgeServer, type Handlers } from "../../src/page/bridgeServer";
+import { PAGE_CONFIG } from "../../src/page/config";
+import { ProcedureInputs } from "../../src/page/procedureInputs";
 
 const pageWindow = {} as unknown as MessageEventSource;
 
@@ -32,9 +34,9 @@ const handlers = {
 describe("BridgeServer", () => {
   const server = new BridgeServer(
     handlers,
-    "https://www.instagram.com",
-    pageWindow,
+    { origin: "https://www.instagram.com", source: pageWindow },
     { isRefusal: (error) => error instanceof Error && error.message === "x" },
+    new ProcedureInputs(PAGE_CONFIG.inputLimits),
   );
 
   it("answers a request on its port", async () => {

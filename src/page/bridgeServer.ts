@@ -6,7 +6,7 @@ import {
   type Output,
   type ProcedureName,
 } from "../shared/bridge";
-import { isProcedureName, isValidInput } from "./procedureInputs";
+import type { InputValidator } from "./procedureInputs";
 import type { RefusalDetector } from "./refusalDetector";
 
 export type Handlers = {
@@ -15,16 +15,26 @@ export type Handlers = {
 
 type AnyHandler = (input: unknown) => Promise<unknown>;
 
+const text = {
+  unknown: "Unknown request",
+  invalid: "Invalid request",
+} as const;
+
 const message = (error: unknown): string =>
   error instanceof Error ? error.message : String(error);
 
+/** Who may ask: the page's own window, from the page's own origin. */
+export interface TrustedSender {
+  readonly origin: string;
+  readonly source: MessageEventSource;
+}
+
 export class BridgeServer {
-  // Only messages the page's own window sent, from the page's own origin.
   constructor(
     private readonly handlers: Handlers,
-    private readonly pageOrigin: string,
-    private readonly source: MessageEventSource,
+    private readonly sender: TrustedSender,
     private readonly refusals: RefusalDetector,
+    private readonly inputs: InputValidator,
   ) {}
 
   listen(target: Pick<Window, "addEventListener">): void {
@@ -35,8 +45,8 @@ export class BridgeServer {
 
   async handle(event: MessageEvent): Promise<void> {
     const [port] = event.ports;
-    if (event.origin !== this.pageOrigin || event.source !== this.source)
-      return;
+    const { origin, source } = this.sender;
+    if (event.origin !== origin || event.source !== source) return;
     if (port === undefined || !isBridgeRequest(event.data)) return;
     const { igdlProcedure, input } = event.data;
     port.postMessage(await this.respond(igdlProcedure, input));
@@ -44,10 +54,13 @@ export class BridgeServer {
 
   private async respond(name: string, input: unknown): Promise<BridgeResponse> {
     // Own properties only: "constructor" and "toString" are not procedures.
-    if (!isProcedureName(name) || !Object.hasOwn(this.handlers, name))
-      return { ok: false, error: "Unknown request" };
-    if (!isValidInput(name, input))
-      return { ok: false, error: "Invalid request" };
+    if (
+      !this.inputs.isProcedureName(name) ||
+      !Object.hasOwn(this.handlers, name)
+    )
+      return { ok: false, error: text.unknown };
+    if (!this.inputs.isValidInput(name, input))
+      return { ok: false, error: text.invalid };
     const handler = this.handlers[name] as AnyHandler;
     try {
       return { ok: true, value: await handler(input) };

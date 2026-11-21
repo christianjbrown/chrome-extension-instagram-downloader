@@ -2,8 +2,10 @@ import { abortError } from "../../../src/content/errors";
 import { RefusedError } from "../../../src/shared/refusal";
 import { ApiGate } from "../../../src/content/pacing/apiGate";
 import type { HourlyBudget } from "../../../src/content/pacing/hourlyBudget";
-import { defaultPacing } from "../../../src/content/pacing/pacing";
+import { CONTENT_CONFIG } from "../../../src/content/config";
 import { reporter, signal } from "../helpers";
+
+const defaultPacing = CONTENT_CONFIG.pacing;
 
 function gate(backoffMs = [10, 20]) {
   const sleeper = {
